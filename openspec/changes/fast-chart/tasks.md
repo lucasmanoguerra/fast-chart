@@ -60,10 +60,10 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: App — Workspace + Window
 
-- [ ] 3.1 Create `fast-chart-app/Cargo.toml` (wgpu/winit/glyphon/tokio/rkyv/serde deps)
-- [ ] 3.2 Create `fast-chart-app/src/main.rs` — winit event loop skeleton with `ControlFlow::Poll`
-- [ ] 3.3 Create `fast-chart-app/src/adapters/mod.rs` — adapter module structure
-- [ ] 3.4 Init wgpu surface/device/queue from winit window handle
+- [x] 3.1 Create `fast-chart-app/Cargo.toml` (wgpu/winit/glyphon/tokio/rkyv/serde deps)
+- [x] 3.2 Create `fast-chart-app/src/main.rs` — winit event loop skeleton with `ControlFlow::Poll`
+- [x] 3.3 Create `fast-chart-app/src/adapters/mod.rs` — adapter module structure
+- [x] 3.4 Init wgpu surface/device/queue from winit window handle
 
 ## Phase 4: Simulated Data
 

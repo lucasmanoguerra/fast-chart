@@ -67,17 +67,17 @@ Chain strategy: feature-branch-chain
 
 ## Phase 4: Simulated Data
 
-- [ ] 4.1 Create `fast-chart-app/src/adapters/data/simulated.rs` — drift-diffusion OHLC generator with seeded RNG
-- [ ] 4.2 Create `fast-chart-app/src/adapters/data/rkyv_archive.rs` — zero-copy persistence for ring buffers
-- [ ] 4.3 Wire tokio task → `mpsc::Sender` → render loop `try_recv()` in `about_to_wait()`
+- [x] 4.1 Create `fast-chart-app/src/adapters/data/simulated.rs` — drift-diffusion OHLC generator with seeded RNG
+- [x] 4.2 Create `fast-chart-app/src/adapters/data/mod.rs` — data adapter module
+- [x] 4.3 Wire tokio task → `mpsc::Sender` → render loop `try_recv()` in `about_to_wait()`
 
 ## Phase 5: Grid + Line Series
 
-- [ ] 5.1 Write `fast-chart-app/src/adapters/rendering/shaders/line.wgsl` — line vertex/fragment shader
-- [ ] 5.2 Create `fast-chart-app/src/adapters/rendering/pipelines.rs` — pipeline layout + shader compilation
-- [ ] 5.3 Create `fast-chart-app/src/adapters/rendering/layers.rs` — draw order (grid→series→crosshair→HUD)
-- [ ] 5.4 Create `fast-chart-app/src/adapters/rendering/wgpu_renderer.rs` — `ChartRenderer` impl
-- [ ] 5.5 Add grid line rendering (horizontal + vertical reference lines)
+- [x] 5.1 Write `fast-chart-app/src/adapters/rendering/shaders/line.wgsl` — line vertex/fragment shader
+- [x] 5.2 Create `fast-chart-app/src/adapters/rendering/pipelines.rs` — pipeline layout + shader compilation
+- [x] 5.3 Create `fast-chart-app/src/adapters/rendering/layers.rs` — draw order (grid→series→crosshair→HUD)
+- [x] 5.4 Create `fast-chart-app/src/adapters/rendering/wgpu_renderer.rs` — `ChartRenderer` impl
+- [x] 5.5 Add grid line rendering (horizontal + vertical reference lines)
 
 ## Phase 6: Candle + Zoom/Pan
 

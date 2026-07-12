@@ -1,4 +1,5 @@
+pub mod data;
 pub mod gpu_renderer;
-// Future adapters will be added here:
-// pub mod simulated_data;
-// pub mod keyboard_handler;
+pub mod rendering;
+// Future adapters:
+// pub mod input;

@@ -1,3 +1,5 @@
+use fast_chart_core::ports::data_provider::{DataEvent, DataProvider};
+use fast_chart_domain::bar::Bar;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -5,13 +7,45 @@ use winit::window::{WindowAttributes, WindowId};
 
 mod adapters;
 
+use adapters::data::simulated::SimulatedDataProvider;
+
 struct App {
     renderer: Option<adapters::gpu_renderer::GpuRenderer>,
+    data_provider: Option<SimulatedDataProvider>,
 }
 
 impl App {
     fn new() -> Self {
-        Self { renderer: None }
+        Self {
+            renderer: None,
+            data_provider: None,
+        }
+    }
+
+    fn poll_data(&mut self) {
+        if let Some(provider) = &self.data_provider {
+            if let Some(rx) = provider.receiver() {
+                let mut new_bars: Vec<Bar> = Vec::new();
+                while let Ok(event) = rx.try_recv() {
+                    match event {
+                        DataEvent::BarClosed(bar) => {
+                            log::debug!(
+                                "Bar received: {} @ {:.2}",
+                                bar.timestamp,
+                                bar.close,
+                            );
+                            new_bars.push(bar);
+                        }
+                        _ => {}
+                    }
+                }
+                if !new_bars.is_empty() {
+                    if let Some(renderer) = &mut self.renderer {
+                        renderer.push_bars(new_bars);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -32,6 +66,12 @@ impl ApplicationHandler for App {
         log::info!("wgpu initialized: {}", renderer.info());
 
         self.renderer = Some(renderer);
+
+        // Start simulated data provider — generates 1-min OHLC bars every 500ms
+        let mut provider = SimulatedDataProvider::new("BTC/USDT", 50000.0, 250.0);
+        provider.start().unwrap();
+        log::info!("Data provider started: {}", provider.name());
+        self.data_provider = Some(provider);
     }
 
     fn window_event(
@@ -42,6 +82,9 @@ impl ApplicationHandler for App {
     ) {
         match event {
             WindowEvent::CloseRequested => {
+                if let Some(mut provider) = self.data_provider.take() {
+                    let _ = provider.stop();
+                }
                 log::info!("Close requested, shutting down.");
                 event_loop.exit();
             }
@@ -63,6 +106,7 @@ impl ApplicationHandler for App {
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        self.poll_data();
         if let Some(renderer) = &self.renderer {
             renderer.request_redraw();
         }

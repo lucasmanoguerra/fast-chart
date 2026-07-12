@@ -1,3 +1,10 @@
+use fast_chart_domain::bar::Bar;
+use fast_chart_domain::viewport::Viewport;
+
+use super::rendering::grid_renderer::GridRenderer;
+use super::rendering::line_renderer::LineRenderer;
+use super::rendering::types::colors;
+
 pub struct GpuRenderer {
     window: winit::window::Window,
     surface: wgpu::Surface<'static>,
@@ -5,6 +12,16 @@ pub struct GpuRenderer {
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: (u32, u32),
+    // Rendering sub-renderers
+    /// Kept alive — pipelines reference this module. Sub-renderers receive it at init.
+    #[allow(dead_code)]
+    shader: wgpu::ShaderModule,
+    grid_renderer: GridRenderer,
+    line_renderer: LineRenderer,
+    // Chart state (owned by renderer for simplicity; will move to ChartController later)
+    bars: Vec<Bar>,
+    viewport: Viewport,
+    needs_line_update: bool,
 }
 
 impl GpuRenderer {
@@ -67,14 +84,81 @@ impl GpuRenderer {
         };
         surface.configure(&device, &config);
 
-        Ok(Self {
+        // --- Load WGSL shader ---
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("line/grid shader"),
+            source: wgpu::ShaderSource::Wgsl(
+                include_str!("rendering/shaders/line.wgsl").into(),
+            ),
+        });
+
+        // --- Create sub-renderers ---
+        let grid_renderer = GridRenderer::new(&device, surface_format, &shader);
+        let line_renderer = LineRenderer::new(&device, surface_format, &shader);
+
+        let mut renderer = Self {
             window,
             surface,
             device,
             queue,
             config,
             size: (size.width, size.height),
-        })
+            shader,
+            grid_renderer,
+            line_renderer,
+            bars: Vec::new(),
+            viewport: Viewport::default(),
+            needs_line_update: false,
+        };
+
+        // Initial grid generation.
+        renderer
+            .grid_renderer
+            .update_grid(&renderer.queue, size.width as f32, size.height as f32);
+
+        Ok(renderer)
+    }
+
+    /// Accept new bars from the data provider and mark the line layer dirty.
+    pub fn push_bars(&mut self, new_bars: Vec<Bar>) {
+        if new_bars.is_empty() {
+            return;
+        }
+        self.bars.extend(new_bars);
+        self.needs_line_update = true;
+
+        // Auto-fit viewport on first data arrival.
+        if self.viewport.time_start == 0 && self.viewport.time_end == 3600_000 {
+            self.auto_fit_viewport();
+        }
+    }
+
+    /// Fit the viewport to the loaded data range with some padding.
+    fn auto_fit_viewport(&mut self) {
+        if self.bars.is_empty() {
+            return;
+        }
+
+        let first = &self.bars[0];
+        let last = self.bars.last().unwrap();
+
+        let time_pad = ((last.timestamp - first.timestamp) / 20).max(1);
+        let mut min_price = f64::MAX;
+        let mut max_price = f64::MIN;
+        for bar in &self.bars {
+            if bar.low < min_price {
+                min_price = bar.low;
+            }
+            if bar.high > max_price {
+                max_price = bar.high;
+            }
+        }
+        let price_pad = ((max_price - min_price) / 10.0).max(0.01);
+
+        self.viewport.time_start = first.timestamp.saturating_sub(time_pad);
+        self.viewport.time_end = last.timestamp.saturating_add(time_pad);
+        self.viewport.value_min = (min_price - price_pad).max(0.0);
+        self.viewport.value_max = max_price + price_pad;
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -86,31 +170,106 @@ impl GpuRenderer {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
+        // Update line vertices if data changed.
+        if self.needs_line_update {
+            let w = self.size.0 as f32;
+            let h = self.size.1 as f32;
+            // Create a temporary TimeSeries-like view from the Vec<Bar>.
+            // We use a small trick: since TimeSeries is generic over N,
+            // and we own a Vec<Bar>, we pass the viewport and let the
+            // line_renderer handle empty series gracefully.
+            // For now, we generate NDC vertices directly from the Vec.
+            self.update_line_from_vec(w, h);
+            self.needs_line_update = false;
+        }
+
         {
-            let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("clear pass"),
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("chart render pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.05,
-                            g: 0.05,
-                            b: 0.08,
-                            a: 1.0,
-                        }),
+                        load: wgpu::LoadOp::Clear(colors::BACKGROUND),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
                 ..Default::default()
             });
-            drop(render_pass);
+
+            // Layer 1: Grid (low alpha, behind data)
+            self.grid_renderer.render(&mut render_pass);
+
+            // Layer 2: Line series (full alpha, on top)
+            self.line_renderer.render(&mut render_pass);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
         Ok(())
+    }
+
+    /// Generate line vertices from the internal Vec<Bar> and upload to GPU.
+    ///
+    /// This is a temporary bridge until the ChartController owns the data
+    /// and passes it directly to the renderer.
+    fn update_line_from_vec(&mut self, canvas_width: f32, canvas_height: f32) {
+        use super::rendering::types::Vertex;
+
+        if self.bars.len() < 2 {
+            // Upload empty buffer — line_renderer handles this gracefully.
+            self.line_renderer
+                .update_line_from_empty(&self.queue, canvas_width, canvas_height);
+            return;
+        }
+
+        let time_range = self.viewport.time_end as f64 - self.viewport.time_start as f64;
+        let value_range = self.viewport.value_max - self.viewport.value_min;
+
+        if time_range < f64::EPSILON || value_range < f64::EPSILON {
+            self.line_renderer
+                .update_line_from_empty(&self.queue, canvas_width, canvas_height);
+            return;
+        }
+
+        let line_color = colors::LINE_CLOSE;
+        let mut vertices: Vec<Vertex> = Vec::new();
+        let mut prev_x: f32 = 0.0;
+        let mut prev_y: f32 = 0.0;
+        let mut has_prev = false;
+
+        for bar in &self.bars {
+            if bar.timestamp < self.viewport.time_start
+                || bar.timestamp > self.viewport.time_end
+            {
+                has_prev = false;
+                continue;
+            }
+
+            let time_ratio =
+                (bar.timestamp as f64 - self.viewport.time_start as f64) / time_range;
+            let x_ndc = (-1.0 + 2.0 * time_ratio) as f32;
+
+            let value_ratio = (bar.close - self.viewport.value_min) / value_range;
+            let y_ndc = (-1.0 + 2.0 * value_ratio) as f32;
+
+            if has_prev {
+                vertices.push(Vertex::new([prev_x, prev_y], line_color));
+                vertices.push(Vertex::new([x_ndc, y_ndc], line_color));
+            }
+
+            prev_x = x_ndc;
+            prev_y = y_ndc;
+            has_prev = true;
+        }
+
+        self.line_renderer.upload_vertices(
+            &self.queue,
+            &vertices,
+            canvas_width,
+            canvas_height,
+        );
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -119,6 +278,11 @@ impl GpuRenderer {
             self.config.width = width;
             self.config.height = height;
             self.surface.configure(&self.device, &self.config);
+
+            // Regenerate grid for new dimensions.
+            self.grid_renderer
+                .update_grid(&self.queue, width as f32, height as f32);
+            self.needs_line_update = true;
         }
     }
 
@@ -127,6 +291,6 @@ impl GpuRenderer {
     }
 
     pub fn info(&self) -> String {
-        format!("{}x{}", self.size.0, self.size.1)
+        format!("{}x{} ({} bars)", self.size.0, self.size.1, self.bars.len())
     }
 }

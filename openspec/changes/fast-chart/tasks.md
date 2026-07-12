@@ -49,14 +49,14 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2: Core Crate
 
-- [ ] 2.1 Create `fast-chart-core/Cargo.toml` (depends on domain only)
-- [ ] 2.2 Create `fast-chart-core/src/ports/render.rs` — `ChartRenderer` trait
-- [ ] 2.3 Create `fast-chart-core/src/ports/data_provider.rs` — `DataProvider` async trait + `DataEvent` enum
-- [ ] 2.4 Create `fast-chart-core/src/ports/interaction.rs` — `InteractionHandler` trait + `InteractionCommand` enum
-- [ ] 2.5 Create `fast-chart-core/src/app/chart_controller.rs` — `ChartController` orchestrator
-- [ ] 2.6 Create `fast-chart-core/src/app/indicator_service.rs` — `IndicatorRegistry` + calc dispatch
-- [ ] 2.7 Create `fast-chart-core/src/app/viewport_management.rs` — zoom/pan/bounds logic
-- [ ] 2.8 Create `fast-chart-core/src/lib.rs` — module exports + unit tests with mocked ports
+- [x] 2.1 Create `fast-chart-core/Cargo.toml` (depends on domain only)
+- [x] 2.2 Create `fast-chart-core/src/ports/render.rs` — `ChartRenderer` trait
+- [x] 2.3 Create `fast-chart-core/src/ports/data_provider.rs` — `DataProvider` async trait + `DataEvent` enum
+- [x] 2.4 Create `fast-chart-core/src/ports/interaction.rs` — `InteractionHandler` trait + `InteractionCommand` enum
+- [x] 2.5 Create `fast-chart-core/src/app/chart_controller.rs` — `ChartController` orchestrator
+- [x] 2.6 Create `fast-chart-core/src/app/indicator_service.rs` — `IndicatorRegistry` + calc dispatch
+- [x] 2.7 Create `fast-chart-core/src/app/viewport_management.rs` — zoom/pan/bounds logic
+- [x] 2.8 Create `fast-chart-core/src/lib.rs` — module exports + unit tests with mocked ports
 
 ## Phase 3: App — Workspace + Window
 

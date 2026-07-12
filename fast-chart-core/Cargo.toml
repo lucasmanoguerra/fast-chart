@@ -1,0 +1,7 @@
+[package]
+name = "fast-chart-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fast-chart-domain = { path = "../fast-chart-domain" }

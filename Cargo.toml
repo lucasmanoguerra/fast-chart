@@ -1,3 +1,3 @@
 [workspace]
-members = ["fast-chart-domain"]
+members = ["fast-chart-domain", "fast-chart-core"]
 resolver = "2"

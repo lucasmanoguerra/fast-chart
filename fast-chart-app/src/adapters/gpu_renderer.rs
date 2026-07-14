@@ -1,8 +1,7 @@
 use fast_chart_core::app::chart_controller::ChartState;
 use fast_chart_core::app::layout_manager::LayoutManager;
 use fast_chart_core::{
-    DefaultPriceFormatter, InvalidationLevel, MarkerSet, PriceFormatter,
-    PriceLineSet, Viewport,
+    DefaultPriceFormatter, InvalidationLevel, PriceFormatter, Viewport,
 };
 use winit::window::CursorIcon;
 
@@ -30,8 +29,10 @@ pub struct GpuRenderer {
     line_renderer: LineRenderer,
     candle_renderer: CandleRenderer,
     crosshair_renderer: CrosshairRenderer,
-    marker_renderer: MarkerRenderer,
-    price_line_renderer: PriceLineRenderer,
+    /// Per-pane marker renderers — one per pane, indexed by pane index.
+    pane_marker_renderers: Vec<MarkerRenderer>,
+    /// Per-pane price line renderers — one per pane, indexed by pane index.
+    pane_price_line_renderers: Vec<PriceLineRenderer>,
     text_renderer: GpuTextRenderer,
     // Divider line renderer
     divider_pipeline: wgpu::RenderPipeline,
@@ -121,8 +122,14 @@ impl GpuRenderer {
         let line_renderer = LineRenderer::new(&device, surface_format, &shader);
         let candle_renderer = CandleRenderer::new(&device, surface_format);
         let crosshair_renderer = CrosshairRenderer::new(&device, surface_format, &shader);
-        let marker_renderer = MarkerRenderer::new(&device, surface_format, &shader);
-        let price_line_renderer = PriceLineRenderer::new(&device, surface_format, &shader);
+
+        // Create per-pane marker and price line renderers (initially 2 for default layout).
+        let mut pane_marker_renderers = Vec::new();
+        let mut pane_price_line_renderers = Vec::new();
+        for _ in 0..2 {
+            pane_marker_renderers.push(MarkerRenderer::new(&device, surface_format, &shader));
+            pane_price_line_renderers.push(PriceLineRenderer::new(&device, surface_format, &shader));
+        }
 
         // --- Create text renderer (glyphon) ---
         let mut text_renderer = GpuTextRenderer::new(&device, &queue, surface_format);
@@ -220,8 +227,8 @@ impl GpuRenderer {
             line_renderer,
             candle_renderer,
             crosshair_renderer,
-            marker_renderer,
-            price_line_renderer,
+            pane_marker_renderers,
+            pane_price_line_renderers,
             text_renderer,
             divider_pipeline,
             divider_vertex_buffer,
@@ -286,8 +293,12 @@ impl GpuRenderer {
 
         // Update text labels (axis + crosshair) if viewport or data changed (Light or Full).
         if mask.contains(InvalidationLevel::Light) || self.crosshair_active {
-            self.update_axis_labels(&state.viewport);
-            self.update_crosshair_labels(&state.viewport, state);
+            let fallback = DefaultPriceFormatter::new(None);
+            let formatter: &dyn PriceFormatter = layout.panes.first()
+                .map(|p| p.formatter())
+                .unwrap_or(&fallback);
+            self.update_axis_labels(&state.viewport, formatter);
+            self.update_crosshair_labels(&state.viewport, state, formatter);
             self.text_renderer
                 .prepare(&self.device, &self.queue, &self.build_text_areas(&state.viewport));
         }
@@ -302,25 +313,42 @@ impl GpuRenderer {
             self.crosshair_active,
         );
 
-        // Update markers — currently empty; will be wired to ChartState panes later.
-        let markers = MarkerSet::new();
-        self.marker_renderer.update(
-            &self.queue,
-            markers.all(),
-            &state.viewport,
-            self.size.0 as f32,
-            self.size.1 as f32,
-        );
+        // Sync per-pane renderer count with layout (pane add/remove is rare).
+        let pane_count = layout.panes.len();
+        while self.pane_marker_renderers.len() < pane_count {
+            self.pane_marker_renderers.push(MarkerRenderer::new(
+                &self.device,
+                self.config.format,
+                &self.shader,
+            ));
+        }
+        while self.pane_price_line_renderers.len() < pane_count {
+            self.pane_price_line_renderers.push(PriceLineRenderer::new(
+                &self.device,
+                self.config.format,
+                &self.shader,
+            ));
+        }
+        self.pane_marker_renderers.truncate(pane_count);
+        self.pane_price_line_renderers.truncate(pane_count);
 
-        // Update price lines — currently empty; will be wired to ChartState panes later.
-        let price_lines = PriceLineSet::new();
-        self.price_line_renderer.update(
-            &self.queue,
-            price_lines.all(),
-            &state.viewport,
-            self.size.0 as f32,
-            self.size.1 as f32,
-        );
+        // Update per-pane marker and price line renderers (must happen before render pass).
+        for (pane_idx, pane) in layout.panes.iter().enumerate() {
+            self.pane_marker_renderers[pane_idx].update(
+                &self.queue,
+                pane.markers().all(),
+                &state.viewport,
+                self.size.0 as f32,
+                self.size.1 as f32,
+            );
+            self.pane_price_line_renderers[pane_idx].update(
+                &self.queue,
+                pane.price_lines().all(),
+                &state.viewport,
+                self.size.0 as f32,
+                self.size.1 as f32,
+            );
+        }
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -352,11 +380,20 @@ impl GpuRenderer {
             // Layer 5: Crosshair lines
             self.crosshair_renderer.render(&mut render_pass);
 
-            // Layer 6: Markers (above data, below text)
-            self.marker_renderer.render(&mut render_pass);
+            // Layers 6–7: Markers + Price lines (per-pane scissor rects)
+            let w = self.size.0;
+            let h = self.size.1;
+            for pane_idx in 0..layout.panes.len() {
+                let y_offset = layout.pane_pixel_offset(pane_idx, h as f64) as u32;
+                let y_height = layout.pane_pixel_height(pane_idx, h as f64) as u32;
+                render_pass.set_scissor_rect(0, y_offset, w, y_height.max(1));
 
-            // Layer 7: Price lines (above markers, below text)
-            self.price_line_renderer.render(&mut render_pass);
+                self.pane_marker_renderers[pane_idx].render(&mut render_pass);
+                self.pane_price_line_renderers[pane_idx].render(&mut render_pass);
+            }
+
+            // Reset scissor rect for text layer.
+            render_pass.set_scissor_rect(0, 0, w, h);
 
             // Layer 8: Text labels (axis + crosshair)
             self.text_renderer.render(&mut render_pass);
@@ -582,13 +619,12 @@ impl GpuRenderer {
     // --- Text labels ---
 
     /// Update axis labels (price ticks on y-axis, time ticks on x-axis).
-    fn update_axis_labels(&mut self, viewport: &Viewport) {
+    fn update_axis_labels(&mut self, viewport: &Viewport, formatter: &dyn PriceFormatter) {
         // Clear all axis label buffers first
         for &buf_idx in &self.axis_label_pool {
             self.text_renderer.set_text(buf_idx, "");
         }
 
-        let formatter = DefaultPriceFormatter::new(None);
         let mut label_idx = 0;
 
         // Y-axis: price labels at grid lines (right edge)
@@ -621,14 +657,13 @@ impl GpuRenderer {
     }
 
     /// Update crosshair labels (price on right, time on bottom, OHLC tooltip).
-    fn update_crosshair_labels(&mut self, viewport: &Viewport, state: &ChartState) {
+    fn update_crosshair_labels(&mut self, viewport: &Viewport, state: &ChartState, formatter: &dyn PriceFormatter) {
         if !self.crosshair_active {
             self.text_renderer
                 .set_text(self.crosshair_label_buffer, "");
             return;
         }
 
-        let formatter = DefaultPriceFormatter::new(None);
         let mut text = String::new();
 
         // Price at cursor Y

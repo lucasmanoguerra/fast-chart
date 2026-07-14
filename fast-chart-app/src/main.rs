@@ -3,7 +3,6 @@ use fast_chart_core::FrameCounter;
 use fast_chart_core::app::layout_manager::LayoutManager;
 use fast_chart_core::ports::data_provider::DataProvider;
 use fast_chart_core::ports::interaction::InteractionCommand;
-use fast_chart_core::ports::render::ChartRenderer;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use winit::application::ApplicationHandler;
@@ -20,35 +19,8 @@ use adapters::gpu_renderer::GpuRenderer;
 use adapters::input::handler::WinitInteractionHandler;
 use config::{ChartConfig, ConfigWatcher};
 
-// ---------------------------------------------------------------------------
-// RendererBridge — wraps Arc<Mutex<GpuRenderer>> and implements ChartRenderer
-// so ChartController can own a `Box<dyn ChartRenderer>` while App retains
-// direct access to the GPU renderer through the shared Arc.
-//
-// The trait only carries resize(); rendering is done by the App layer
-// calling GpuRenderer::render() directly with a ChartState reference.
-// ---------------------------------------------------------------------------
-
-struct RendererBridge {
-    inner: Arc<Mutex<GpuRenderer>>,
-}
-
-impl RendererBridge {
-    fn new(inner: Arc<Mutex<GpuRenderer>>) -> Self {
-        Self { inner }
-    }
-}
-
-impl ChartRenderer for RendererBridge {
-    fn resize(&mut self, width: u32, height: u32) {
-        if let Ok(mut renderer) = self.inner.lock() {
-            renderer.resize(width, height);
-        }
-    }
-}
-
 struct App {
-    /// Shared GPU renderer — also owned (via RendererBridge) by ChartController.
+    /// Shared GPU renderer.
     gpu: Option<Arc<Mutex<GpuRenderer>>>,
     /// Central chart logic: viewport, crosshair, kinetic scroll, data polling.
     chart_controller: Option<ChartController>,
@@ -144,9 +116,7 @@ impl ApplicationHandler for App {
         provider.start().unwrap();
         log::info!("Data provider started: {}", provider.name());
 
-        let bridge = RendererBridge::new(gpu.clone());
         let chart_controller = ChartController::new(
-            Box::new(bridge),
             Box::new(provider),
             Box::new(WinitInteractionHandler::new()),
         );

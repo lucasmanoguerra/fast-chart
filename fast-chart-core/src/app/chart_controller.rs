@@ -1,6 +1,5 @@
 use crate::ports::data_provider::{DataEvent, DataProvider};
 use crate::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
-use crate::ports::render::ChartRenderer;
 use fast_chart_domain::bar::Bar;
 use fast_chart_domain::crosshair::Crosshair;
 use fast_chart_domain::invalidation::{InvalidationLevel, InvalidationMask};
@@ -53,18 +52,13 @@ impl ChartState {
     }
 }
 
-/// Central orchestrator that owns the data pipeline, interaction handler,
-/// and renderer.
+/// Central orchestrator that owns the data pipeline and interaction handler.
 ///
 /// `ChartController` sits at the application layer: it polls a [`DataProvider`]
-/// for new market events, applies user interactions via an
-/// [`InteractionHandler`], and drives a [`ChartRenderer`] whenever the
-/// invalidation mask signals that a redraw is needed.
+/// for new market events and applies user interactions via an
+/// [`InteractionHandler`]. Rendering is handled by the app layer
+/// (e.g. `GpuRenderer`) which reads [`ChartState`] directly.
 pub struct ChartController {
-    /// Renderer port — currently only used for resize() via the trait.
-    /// Rendering is driven by the app layer calling GpuRenderer::render() directly.
-    #[allow(dead_code)]
-    renderer: Box<dyn ChartRenderer>,
     data_provider: Box<dyn DataProvider>,
     interaction: Box<dyn InteractionHandler>,
     state: ChartState,
@@ -74,12 +68,10 @@ pub struct ChartController {
 
 impl ChartController {
     pub fn new(
-        renderer: Box<dyn ChartRenderer>,
         data_provider: Box<dyn DataProvider>,
         interaction: Box<dyn InteractionHandler>,
     ) -> Self {
         Self {
-            renderer,
             data_provider,
             interaction,
             state: ChartState::new(),
@@ -248,23 +240,9 @@ mod tests {
     use super::*;
     use crate::ports::data_provider::DataProvider;
     use crate::ports::interaction::{InteractionHandler, InteractionCommand, ViewportCommand};
-    use crate::ports::render::ChartRenderer;
     use std::cell::RefCell;
     use std::error::Error;
     use std::sync::mpsc;
-
-    // --- Mock Renderer ---
-    struct MockRenderer;
-
-    impl MockRenderer {
-        fn new() -> Self {
-            Self
-        }
-    }
-
-    impl ChartRenderer for MockRenderer {
-        fn resize(&mut self, _width: u32, _height: u32) {}
-    }
 
     // --- Mock Data Provider ---
     struct MockDataProvider {
@@ -334,10 +312,9 @@ mod tests {
     fn make_controller() -> (ChartController, mpsc::Sender<DataEvent>) {
         let mock_provider = MockDataProvider::new();
         let sender = mock_provider.sender().unwrap();
-        let renderer = Box::new(MockRenderer::new());
         let provider = Box::new(mock_provider);
         let handler = Box::new(MockInteractionHandler::new());
-        (ChartController::new(renderer, provider, handler), sender)
+        (ChartController::new(provider, handler), sender)
     }
 
     #[test]
@@ -390,11 +367,10 @@ mod tests {
             time: 5000,
             price: 105.0,
         }]);
-        // We need to construct with our handler. Use a simple renderer/provider.
+        // We need to construct with our handler. Use a simple provider.
         let mock_provider = MockDataProvider::new();
-        let renderer = Box::new(MockRenderer::new());
         let provider = Box::new(mock_provider);
-        let mut ctrl = ChartController::new(renderer, provider, handler);
+        let mut ctrl = ChartController::new(provider, handler);
 
         ctrl.handle_input(InteractionCommand::UpdateCrosshair {
             screen_x: 400.0,
@@ -411,9 +387,8 @@ mod tests {
         let handler = Box::new(MockInteractionHandler::new());
         handler.push_response(vec![ViewportCommand::DeactivateCrosshair]);
         let mock_provider = MockDataProvider::new();
-        let renderer = Box::new(MockRenderer::new());
         let provider = Box::new(mock_provider);
-        let mut ctrl = ChartController::new(renderer, provider, handler);
+        let mut ctrl = ChartController::new(provider, handler);
 
         // First activate
         ctrl.state.crosshair.active = true;
@@ -429,9 +404,8 @@ mod tests {
             end: 10000,
         }]);
         let mock_provider = MockDataProvider::new();
-        let renderer = Box::new(MockRenderer::new());
         let provider = Box::new(mock_provider);
-        let mut ctrl = ChartController::new(renderer, provider, handler);
+        let mut ctrl = ChartController::new(provider, handler);
 
         ctrl.handle_input(InteractionCommand::PanBy { time_delta: 5000 });
         assert_eq!(ctrl.state().viewport.time_start, 5000);

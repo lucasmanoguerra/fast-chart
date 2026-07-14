@@ -22,3 +22,5 @@ Thumbs.db
 
 # Project-specific
 *.log
+.atl/
+opencode.json

@@ -7,7 +7,6 @@ use fast_chart_core::app::chart_controller::ChartController;
 use fast_chart_core::app::layout_manager::LayoutManager;
 use fast_chart_core::ports::data_provider::{DataEvent, DataProvider};
 use fast_chart_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
-use fast_chart_core::ports::render::ChartRenderer;
 use fast_chart_domain::bar::Bar;
 use fast_chart_domain::kinetic::KineticScroll;
 use fast_chart_domain::marker::{Marker, MarkerPosition, MarkerSet, MarkerShape};
@@ -15,22 +14,6 @@ use fast_chart_domain::price_line::{LineStyle, PriceLine, PriceLineId, PriceLine
 use fast_chart_domain::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScaleId};
 use std::error::Error;
 use std::sync::{mpsc, Arc, Mutex};
-
-// ---------------------------------------------------------------------------
-// Mock Renderer
-// ---------------------------------------------------------------------------
-
-struct MockRenderer;
-
-impl MockRenderer {
-    fn new() -> Self {
-        Self
-    }
-}
-
-impl ChartRenderer for MockRenderer {
-    fn resize(&mut self, _width: u32, _height: u32) {}
-}
 
 // ---------------------------------------------------------------------------
 // Mock Data Provider
@@ -111,10 +94,9 @@ impl InteractionHandler for MockInteractionHandler {
 fn make_controller() -> (ChartController, mpsc::Sender<DataEvent>) {
     let mock_provider = MockDataProvider::new();
     let sender = mock_provider.sender().unwrap();
-    let renderer = Box::new(MockRenderer::new());
     let provider = Box::new(mock_provider);
     let handler = Box::new(MockInteractionHandler::new());
-    (ChartController::new(renderer, provider, handler), sender)
+    (ChartController::new(provider, handler), sender)
 }
 
 /// Build a controller and return a handle to the interaction handler for pushing
@@ -122,13 +104,12 @@ fn make_controller() -> (ChartController, mpsc::Sender<DataEvent>) {
 fn make_controller_with_handler() -> (ChartController, mpsc::Sender<DataEvent>, MockInteractionHandler) {
     let mock_provider = MockDataProvider::new();
     let sender = mock_provider.sender().unwrap();
-    let renderer = Box::new(MockRenderer::new());
     let provider = Box::new(mock_provider);
     let handler = MockInteractionHandler::new();
     let handler_for_push = MockInteractionHandler {
         responses: Arc::clone(&handler.responses),
     };
-    (ChartController::new(renderer, provider, Box::new(handler)), sender, handler_for_push)
+    (ChartController::new(provider, Box::new(handler)), sender, handler_for_push)
 }
 
 // ---------------------------------------------------------------------------

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Application layer and ports for the fast-chart trading library"
 license = "MIT"
-repository = "https://github.com/user/fast-chart"
+repository = "https://github.com/lucasmanoguerra/fast-chart"
 keywords = ["trading", "chart", "finance", "ohlc", "indicators"]
 categories = ["finance", "gui", "rendering"]
 

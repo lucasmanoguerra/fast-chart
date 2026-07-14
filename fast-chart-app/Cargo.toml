@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "GPU-accelerated trading chart application"
 license = "MIT"
-repository = "https://github.com/user/fast-chart"
+repository = "https://github.com/lucasmanoguerra/fast-chart"
 
 [dependencies]
 fast-chart-core = { path = "../fast-chart-core" }

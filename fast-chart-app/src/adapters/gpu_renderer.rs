@@ -1,10 +1,9 @@
+use fast_chart_core::app::chart_controller::ChartState;
 use fast_chart_core::app::layout_manager::LayoutManager;
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::invalidation::{InvalidationLevel, InvalidationMask};
-use fast_chart_domain::marker::MarkerSet;
-use fast_chart_domain::price_line::PriceLineSet;
-use fast_chart_domain::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScale};
-use fast_chart_domain::viewport::Viewport;
+use fast_chart_core::{
+    DefaultPriceFormatter, InvalidationLevel, MarkerSet, PriceFormatter,
+    PriceLineSet, Viewport,
+};
 use winit::window::CursorIcon;
 
 use super::rendering::candle_renderer::CandleRenderer;
@@ -43,19 +42,10 @@ pub struct GpuRenderer {
     // Text buffer indices
     axis_label_pool: Vec<usize>, // pool of text buffer indices for axis labels (12 y + 12 x)
     crosshair_label_buffer: usize,
-    // Crosshair state
+    // Crosshair state (transient UI — not chart data)
     crosshair_active: bool,
     crosshair_x: f32,
     crosshair_y: f32,
-    // Chart state (owned by renderer for simplicity; will move to ChartController later)
-    bars: Vec<Bar>,
-    viewport: Viewport,
-    invalidation: InvalidationMask,
-    // Formatter for price axis labels
-    formatter: Box<dyn PriceFormatter>,
-    // Markers and price lines for future rendering
-    markers: MarkerSet,
-    price_lines: PriceLineSet,
 }
 
 impl GpuRenderer {
@@ -218,7 +208,7 @@ impl GpuRenderer {
             }],
         });
 
-        let mut renderer = Self {
+        let renderer = Self {
             window,
             surface,
             device,
@@ -243,19 +233,10 @@ impl GpuRenderer {
             crosshair_active: false,
             crosshair_x: 0.0,
             crosshair_y: 0.0,
-            bars: Vec::new(),
-            viewport: Viewport::default(),
-            invalidation: {
-                let mut m = InvalidationMask::single_pane(InvalidationLevel::Full, 0);
-                m.merge(InvalidationMask::single_pane(InvalidationLevel::Light, 0));
-                m
-            },
-            formatter: Box::new(DefaultPriceFormatter::new(None)),
-            markers: MarkerSet::new(),
-            price_lines: PriceLineSet::new(),
         };
 
-        // Initial grid generation.
+        // SAFETY: We can borrow renderer mutably here since we just created it.
+        let mut renderer = renderer;
         renderer
             .grid_renderer
             .update_grid(&renderer.queue, size.width as f32, size.height as f32);
@@ -263,50 +244,16 @@ impl GpuRenderer {
         Ok(renderer)
     }
 
-    /// Accept new bars from the data provider and mark the line layer dirty.
-    pub fn push_bars(&mut self, new_bars: Vec<Bar>) {
-        if new_bars.is_empty() {
-            return;
-        }
-        self.bars.extend(new_bars);
-        self.invalidation
-            .merge(InvalidationMask::all_panes(InvalidationLevel::Full));
-
-        // Auto-fit viewport on first data arrival.
-        if self.viewport.time_start == 0 && self.viewport.time_end == 3600_000 {
-            self.auto_fit_viewport();
-        }
-    }
-
-    /// Fit the viewport to the loaded data range with some padding.
-    fn auto_fit_viewport(&mut self) {
-        if self.bars.is_empty() {
-            return;
-        }
-
-        let first = &self.bars[0];
-        let last = self.bars.last().unwrap();
-
-        let time_pad = ((last.timestamp - first.timestamp) / 20).max(1);
-        let mut min_price = f64::MAX;
-        let mut max_price = f64::MIN;
-        for bar in &self.bars {
-            if bar.low < min_price {
-                min_price = bar.low;
-            }
-            if bar.high > max_price {
-                max_price = bar.high;
-            }
-        }
-        let price_pad = ((max_price - min_price) / 10.0).max(0.01);
-
-        self.viewport.time_start = first.timestamp.saturating_sub(time_pad);
-        self.viewport.time_end = last.timestamp.saturating_add(time_pad);
-        self.viewport.value_min = (min_price - price_pad).max(0.0);
-        self.viewport.value_max = max_price + price_pad;
-    }
-
-    pub fn render(&mut self, layout: &LayoutManager) -> Result<(), wgpu::SurfaceError> {
+    /// GPU-render the chart frame.
+    ///
+    /// Reads all chart data from `state` (single source of truth) and renders
+    /// directly to the surface. The caller is responsible for clearing the
+    /// invalidation mask on `state` after this call returns.
+    pub fn render(
+        &mut self,
+        layout: &LayoutManager,
+        state: &ChartState,
+    ) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -315,35 +262,34 @@ impl GpuRenderer {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
-        let mask = self.invalidation;
-        self.invalidation.clear();
+        // Read invalidation mask (Copy) — caller clears state.invalidation later.
+        let mask = state.invalidation;
 
         // Update line vertices if data changed (Full level).
         if mask.contains(InvalidationLevel::Full) {
             let w = self.size.0 as f32;
             let h = self.size.1 as f32;
-            self.update_line_from_vec(w, h);
+            self.update_line_from_state(w, h, state);
         }
 
         // Update candle vertex/index buffers if data changed (Full level).
         if mask.contains(InvalidationLevel::Full) {
-            self.update_candle_data();
+            self.update_candle_data(state);
         }
 
         // Always update candle uniform with current viewport (zoom/pan changes viewport).
-        self.update_candle_uniforms();
+        self.update_candle_uniforms(&state.viewport);
 
-        // Update divider lines if layout changed (Full level).
-        if mask.contains(InvalidationLevel::Full) {
-            self.update_divider_lines(layout);
-        }
+        // Always update divider lines — layout may change without an
+        // invalidation mask (e.g., divider drag at the App level). This is cheap.
+        self.update_divider_lines(layout);
 
         // Update text labels (axis + crosshair) if viewport or data changed (Light or Full).
         if mask.contains(InvalidationLevel::Light) || self.crosshair_active {
-            self.update_axis_labels();
-            self.update_crosshair_labels();
+            self.update_axis_labels(&state.viewport);
+            self.update_crosshair_labels(&state.viewport, state);
             self.text_renderer
-                .prepare(&self.device, &self.queue, &self.build_text_areas());
+                .prepare(&self.device, &self.queue, &self.build_text_areas(&state.viewport));
         }
 
         // Update crosshair lines.
@@ -356,20 +302,22 @@ impl GpuRenderer {
             self.crosshair_active,
         );
 
-        // Update markers for the current viewport.
+        // Update markers — currently empty; will be wired to ChartState panes later.
+        let markers = MarkerSet::new();
         self.marker_renderer.update(
             &self.queue,
-            self.markers.all(),
-            &self.viewport,
+            markers.all(),
+            &state.viewport,
             self.size.0 as f32,
             self.size.1 as f32,
         );
 
-        // Update price lines for the current viewport.
+        // Update price lines — currently empty; will be wired to ChartState panes later.
+        let price_lines = PriceLineSet::new();
         self.price_line_renderer.update(
             &self.queue,
-            self.price_lines.all(),
-            &self.viewport,
+            price_lines.all(),
+            &state.viewport,
             self.size.0 as f32,
             self.size.1 as f32,
         );
@@ -419,22 +367,24 @@ impl GpuRenderer {
         Ok(())
     }
 
-    /// Generate line vertices from the internal Vec<Bar> and upload to GPU.
-    ///
-    /// This is a temporary bridge until the ChartController owns the data
-    /// and passes it directly to the renderer.
-    fn update_line_from_vec(&mut self, canvas_width: f32, canvas_height: f32) {
+    /// Generate line vertices from ChartState time series and upload to GPU.
+    fn update_line_from_state(
+        &mut self,
+        canvas_width: f32,
+        canvas_height: f32,
+        state: &ChartState,
+    ) {
         use super::rendering::types::Vertex;
 
-        if self.bars.len() < 2 {
-            // Upload empty buffer — line_renderer handles this gracefully.
+        if state.time_series.len() < 2 {
             self.line_renderer
                 .update_line_from_empty(&self.queue, canvas_width, canvas_height);
             return;
         }
 
-        let time_range = self.viewport.time_end as f64 - self.viewport.time_start as f64;
-        let value_range = self.viewport.value_max - self.viewport.value_min;
+        let viewport = &state.viewport;
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
+        let value_range = viewport.value_max - viewport.value_min;
 
         if time_range < f64::EPSILON || value_range < f64::EPSILON {
             self.line_renderer
@@ -448,19 +398,17 @@ impl GpuRenderer {
         let mut prev_y: f32 = 0.0;
         let mut has_prev = false;
 
-        for bar in &self.bars {
-            if bar.timestamp < self.viewport.time_start
-                || bar.timestamp > self.viewport.time_end
-            {
+        for bar in state.time_series.iter() {
+            if bar.timestamp < viewport.time_start || bar.timestamp > viewport.time_end {
                 has_prev = false;
                 continue;
             }
 
             let time_ratio =
-                (bar.timestamp as f64 - self.viewport.time_start as f64) / time_range;
+                (bar.timestamp as f64 - viewport.time_start as f64) / time_range;
             let x_ndc = (-1.0 + 2.0 * time_ratio) as f32;
 
-            let value_ratio = (bar.close - self.viewport.value_min) / value_range;
+            let value_ratio = (bar.close - viewport.value_min) / value_range;
             let y_ndc = (-1.0 + 2.0 * value_ratio) as f32;
 
             if has_prev {
@@ -493,8 +441,6 @@ impl GpuRenderer {
                 .update_grid(&self.queue, width as f32, height as f32);
             self.text_renderer
                 .update_resolution(&self.queue, width, height);
-            self.invalidation
-                .merge(InvalidationMask::all_panes(InvalidationLevel::Full));
         }
     }
 
@@ -510,42 +456,9 @@ impl GpuRenderer {
         self.size.1 as f32
     }
 
-    /// Get the price formatter used by this renderer.
-    pub fn formatter(&self) -> &dyn PriceFormatter {
-        self.formatter.as_ref()
-    }
-
-    /// Get the marker set for this renderer.
-    pub fn markers(&self) -> &MarkerSet {
-        &self.markers
-    }
-
-    /// Get a mutable reference to the marker set for this renderer.
-    pub fn markers_mut(&mut self) -> &mut MarkerSet {
-        &mut self.markers
-    }
-
-    /// Get the price line set for this renderer.
-    pub fn price_lines(&self) -> &PriceLineSet {
-        &self.price_lines
-    }
-
-    /// Get a mutable reference to the price line set for this renderer.
-    pub fn price_lines_mut(&mut self) -> &mut PriceLineSet {
-        &mut self.price_lines
-    }
-
     /// Set the window cursor icon (e.g., RowResize when hovering a divider).
     pub fn set_cursor(&self, icon: CursorIcon) {
         self.window.set_cursor(icon);
-    }
-
-    /// Sync the renderer's internal state with a new layout configuration.
-    ///
-    /// Marks dividers and line data as needing re-render.
-    pub fn sync_layout(&mut self, _layout: &LayoutManager) {
-        self.invalidation
-            .merge(InvalidationMask::all_panes(InvalidationLevel::Full));
     }
 
     /// Regenerate divider line vertices from the layout.
@@ -588,116 +501,8 @@ impl GpuRenderer {
         render_pass.draw(0..self.divider_vertex_count, 0..1);
     }
 
-    pub fn viewport(&self) -> &Viewport {
-        &self.viewport
-    }
-
-    pub fn viewport_mut(&mut self) -> &mut Viewport {
-        &mut self.viewport
-    }
-
-    /// Signal that the viewport changed (zoom/pan) — triggers candle vertex re-upload.
-    pub fn mark_candles_dirty(&mut self) {
-        self.invalidation
-            .merge(InvalidationMask::all_panes(InvalidationLevel::Light));
-    }
-
-    // --- ChartRenderer trait impl ---
-
-    /// Sync state from `ChartState` into the renderer's internal fields.
-    ///
-    /// Called by `ChartController::tick()` through the `ChartRenderer` trait.
-    /// After this call the renderer's viewport, bars, and invalidation mask
-    /// are up-to-date. The actual GPU render still happens via
-    /// [`render_frame`](Self::render_frame) which is triggered by
-    /// `RedrawRequested`.
-    fn sync_state_from_chart(&mut self, state: &fast_chart_core::app::chart_controller::ChartState) {
-        // Sync viewport
-        self.viewport = state.viewport.clone();
-
-        // Sync bars from time_series (full replace — avoids incremental diffing)
-        self.bars.clear();
-        for bar in state.time_series.iter() {
-            self.bars.push(*bar);
-        }
-
-        // Mark as dirty so the next render_frame picks up the changes
-        self.invalidation
-            .merge(InvalidationMask::all_panes(InvalidationLevel::Full));
-    }
-}
-
-impl fast_chart_core::ports::render::ChartRenderer for GpuRenderer {
-    fn render(
-        &mut self,
-        state: &fast_chart_core::app::chart_controller::ChartState,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.sync_state_from_chart(state);
-        Ok(())
-    }
-
-    fn resize(&mut self, width: u32, height: u32) {
-        // Delegate to the inherent method (same logic, avoids ambiguity).
-        GpuRenderer::resize(self, width, height);
-    }
-}
-
-impl GpuRenderer {
-    /// Recompute candle vertex/index data from bars and current viewport.
-    fn update_candle_data(&mut self) {
-        if self.bars.is_empty() {
-            return;
-        }
-        let visible_bars = self.visible_bar_count();
-        let bar_width = self.compute_bar_width(visible_bars);
-        let visible = self.visible_bars();
-        self.candle_renderer
-            .update_candles(&self.queue, &visible, bar_width);
-    }
-
-    /// Upload viewport uniform to the candle renderer's buffer.
-    fn update_candle_uniforms(&self) {
-        let w = self.size.0 as f32;
-        let h = self.size.1 as f32;
-        self.candle_renderer.update_uniforms(
-            &self.queue,
-            w,
-            h,
-            self.viewport.time_start as f32,
-            self.viewport.time_end as f32,
-            self.viewport.value_min as f32,
-            self.viewport.value_max as f32,
-        );
-    }
-
-    /// Number of bars whose timestamps fall inside the current viewport.
-    fn visible_bar_count(&self) -> usize {
-        self.bars
-            .iter()
-            .filter(|b| self.viewport.contains_time(b.timestamp))
-            .count()
-    }
-
-    /// Collect bars visible in the current viewport.
-    fn visible_bars(&self) -> Vec<Bar> {
-        self.bars
-            .iter()
-            .filter(|b| self.viewport.contains_time(b.timestamp))
-            .copied()
-            .collect()
-    }
-
-    /// Candle body width in world units (timestamp space).
-    ///
-    /// Target: 70 % of the per-bar slot so candles have 30 % gap.
-    fn compute_bar_width(&self, visible_count: usize) -> f32 {
-        let count = visible_count.max(1) as f32;
-        let time_range = (self.viewport.time_end - self.viewport.time_start) as f32;
-        (time_range / count) * 0.7
-    }
-
     pub fn info(&self) -> String {
-        format!("{}x{} ({} bars)", self.size.0, self.size.1, self.bars.len())
+        format!("{}x{}", self.size.0, self.size.1)
     }
 
     // --- Crosshair ---
@@ -707,82 +512,91 @@ impl GpuRenderer {
         self.crosshair_x = x;
         self.crosshair_y = y;
         self.crosshair_active = active;
-        self.invalidation
-            .merge(InvalidationMask::all_panes(InvalidationLevel::Cursor));
     }
 
     /// Deactivate the crosshair (e.g., when cursor leaves window).
     pub fn deactivate_crosshair(&mut self) {
         self.crosshair_active = false;
-        self.invalidation
-            .merge(InvalidationMask::all_panes(InvalidationLevel::Cursor));
+    }
+
+    // --- ChartRenderer trait impl ---
+
+    // --- Private helpers (read from ChartState) ---
+
+    /// Recompute candle vertex/index data from bars and current viewport.
+    fn update_candle_data(&mut self, state: &ChartState) {
+        if state.time_series.is_empty() {
+            return;
+        }
+        let visible_count = visible_bar_count(state);
+        let bar_width = self.compute_bar_width(visible_count, &state.viewport);
+        let visible = collect_visible_bars(state);
+        self.candle_renderer
+            .update_candles(&self.queue, &visible, bar_width);
+    }
+
+    /// Upload viewport uniform to the candle renderer's buffer.
+    fn update_candle_uniforms(&self, viewport: &Viewport) {
+        let w = self.size.0 as f32;
+        let h = self.size.1 as f32;
+        self.candle_renderer.update_uniforms(
+            &self.queue,
+            w,
+            h,
+            viewport.time_start as f32,
+            viewport.time_end as f32,
+            viewport.value_min as f32,
+            viewport.value_max as f32,
+        );
+    }
+
+    /// Candle body width in world units (timestamp space).
+    ///
+    /// Target: 70 % of the per-bar slot so candles have 30 % gap.
+    fn compute_bar_width(&self, visible_count: usize, viewport: &Viewport) -> f32 {
+        let count = visible_count.max(1) as f32;
+        let time_range = (viewport.time_end - viewport.time_start) as f32;
+        (time_range / count) * 0.7
     }
 
     /// Find the bar closest to the crosshair time.
-    fn find_bar_at_crosshair(&self) -> Option<&Bar> {
+    fn find_bar_at_crosshair<'a>(
+        &self,
+        state: &'a ChartState,
+    ) -> Option<&'a fast_chart_core::Bar> {
         if !self.crosshair_active {
             return None;
         }
-        let crosshair_time = self.screen_x_to_timestamp(self.crosshair_x);
-        self.bars
+        let crosshair_time = screen_x_to_timestamp(
+            &state.viewport,
+            self.crosshair_x,
+            self.size.0 as f64,
+        );
+        state
+            .time_series
             .iter()
-            .min_by_key(|b| {
-                (b.timestamp as f64 - crosshair_time).abs() as u64
-            })
-            .filter(|b| {
-                (b.timestamp as f64 - crosshair_time).abs() < 60_000.0
-            })
-    }
-
-    /// Convert a screen x coordinate to a timestamp in the current viewport.
-    fn screen_x_to_timestamp(&self, screen_x: f32) -> f64 {
-        let w = self.size.0 as f64;
-        if w < 1.0 {
-            return self.viewport.time_start as f64;
-        }
-        let ratio = (screen_x as f64 / w).clamp(0.0, 1.0);
-        self.viewport.time_start as f64
-            + ratio * (self.viewport.time_end as f64 - self.viewport.time_start as f64)
-    }
-
-    /// Convert a screen y coordinate to a price in the current viewport.
-    fn screen_y_to_price(&self, screen_y: f32) -> f64 {
-        let h = self.size.1 as f64;
-        if h < 1.0 {
-            return self.viewport.value_min;
-        }
-        // Y is flipped: screen 0 = top = max price, screen h = bottom = min price
-        let ratio = (screen_y as f64 / h).clamp(0.0, 1.0);
-        self.viewport.value_max - ratio * (self.viewport.value_max - self.viewport.value_min)
-    }
-
-    /// Convert a screen y coordinate to a price using the given price scale.
-    fn screen_y_to_price_with_scale(&self, screen_y: f32, scale: &PriceScale) -> f64 {
-        self.viewport.y_to_price(screen_y, scale, self.size.1 as f32)
-    }
-
-    /// Convert a price to screen y using the given price scale.
-    fn price_to_screen_y_with_scale(&self, price: f64, scale: &PriceScale) -> f32 {
-        self.viewport.price_to_y(price, scale, self.size.1 as f32)
+            .min_by_key(|b| (b.timestamp as f64 - crosshair_time).abs() as u64)
+            .filter(|b| (b.timestamp as f64 - crosshair_time).abs() < 60_000.0)
     }
 
     // --- Text labels ---
 
     /// Update axis labels (price ticks on y-axis, time ticks on x-axis).
-    fn update_axis_labels(&mut self) {
+    fn update_axis_labels(&mut self, viewport: &Viewport) {
         // Clear all axis label buffers first
         for &buf_idx in &self.axis_label_pool {
             self.text_renderer.set_text(buf_idx, "");
         }
 
+        let formatter = DefaultPriceFormatter::new(None);
         let mut label_idx = 0;
 
         // Y-axis: price labels at grid lines (right edge)
         let h_count = 10;
-        let price_step = (self.viewport.value_max - self.viewport.value_min) / h_count as f64;
+        let price_step = (viewport.value_max - viewport.value_min) / h_count as f64;
         for i in 0..=h_count {
-            let price = self.viewport.value_min + price_step * i as f64;
-            let text = self.formatter.format(price);
+            let price = viewport.value_min + price_step * i as f64;
+            let text = formatter.format(price);
             if label_idx < self.axis_label_pool.len() {
                 self.text_renderer
                     .set_text(self.axis_label_pool[label_idx], &text);
@@ -792,11 +606,11 @@ impl GpuRenderer {
 
         // X-axis: time labels at vertical grid lines (bottom edge)
         let x_tick_count = 8;
-        let time_range = self.viewport.time_end as f64 - self.viewport.time_start as f64;
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
         let time_step = time_range / x_tick_count as f64;
 
         for i in 0..=x_tick_count {
-            let timestamp = self.viewport.time_start as f64 + time_step * i as f64;
+            let timestamp = viewport.time_start as f64 + time_step * i as f64;
             let text = format_timestamp(timestamp as u64);
             if label_idx < self.axis_label_pool.len() {
                 self.text_renderer
@@ -807,31 +621,36 @@ impl GpuRenderer {
     }
 
     /// Update crosshair labels (price on right, time on bottom, OHLC tooltip).
-    fn update_crosshair_labels(&mut self) {
+    fn update_crosshair_labels(&mut self, viewport: &Viewport, state: &ChartState) {
         if !self.crosshair_active {
             self.text_renderer
                 .set_text(self.crosshair_label_buffer, "");
             return;
         }
 
+        let formatter = DefaultPriceFormatter::new(None);
         let mut text = String::new();
 
         // Price at cursor Y
-        let price = self.screen_y_to_price(self.crosshair_y);
-        text.push_str(&format!("{}\n", self.formatter.format_short(price)));
+        let price = screen_y_to_price(viewport, self.crosshair_y, self.size.1 as f64);
+        text.push_str(&format!("{}\n", formatter.format_short(price)));
 
         // Time at cursor X
-        let timestamp = self.screen_x_to_timestamp(self.crosshair_x);
+        let timestamp = screen_x_to_timestamp(
+            viewport,
+            self.crosshair_x,
+            self.size.0 as f64,
+        );
         text.push_str(&format!("{}\n", format_timestamp(timestamp as u64)));
 
         // OHLC tooltip if hovering over a bar
-        if let Some(bar) = self.find_bar_at_crosshair() {
+        if let Some(bar) = self.find_bar_at_crosshair(state) {
             text.push_str(&format!(
                 "O:{} H:{} L:{} C:{}",
-                self.formatter.format_short(bar.open),
-                self.formatter.format_short(bar.high),
-                self.formatter.format_short(bar.low),
-                self.formatter.format_short(bar.close),
+                formatter.format_short(bar.open),
+                formatter.format_short(bar.high),
+                formatter.format_short(bar.low),
+                formatter.format_short(bar.close),
             ));
         }
 
@@ -840,14 +659,14 @@ impl GpuRenderer {
     }
 
     /// Build the list of text areas to render this frame.
-    fn build_text_areas(&self) -> Vec<PreparedTextArea> {
+    fn build_text_areas(&self, viewport: &Viewport) -> Vec<PreparedTextArea> {
         let mut areas = Vec::new();
         let w = self.size.0 as f32;
         let h = self.size.1 as f32;
         let axis_color = glyphon::Color::rgba(200, 200, 200, 200);
 
         let h_count = 10;
-        let price_step = (self.viewport.value_max - self.viewport.value_min) / h_count as f64;
+        let price_step = (viewport.value_max - viewport.value_min) / h_count as f64;
         let mut label_idx = 0;
 
         // Y-axis: price labels at each grid line Y position (right edge)
@@ -855,10 +674,10 @@ impl GpuRenderer {
             if label_idx >= self.axis_label_pool.len() {
                 break;
             }
-            let price_y = self.viewport.value_min + price_step * i as f64;
+            let price_y = viewport.value_min + price_step * i as f64;
             // Convert price to pixel Y (flipped: max = top = 0px, min = bottom = h px)
-            let ratio = (price_y - self.viewport.value_min)
-                / (self.viewport.value_max - self.viewport.value_min);
+            let ratio = (price_y - viewport.value_min)
+                / (viewport.value_max - viewport.value_min);
             let pixel_y = h - ratio as f32 * h;
 
             areas.push(PreparedTextArea {
@@ -875,16 +694,16 @@ impl GpuRenderer {
 
         // X-axis: time labels at each vertical grid line X position (bottom edge)
         let x_tick_count = 8;
-        let time_range = self.viewport.time_end as f64 - self.viewport.time_start as f64;
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
         let time_step = time_range / x_tick_count as f64;
 
         for i in 0..=x_tick_count {
             if label_idx >= self.axis_label_pool.len() {
                 break;
             }
-            let timestamp = self.viewport.time_start as f64 + time_step * i as f64;
+            let timestamp = viewport.time_start as f64 + time_step * i as f64;
             // Convert timestamp to pixel X
-            let time_ratio = (timestamp - self.viewport.time_start as f64) / time_range;
+            let time_ratio = (timestamp - viewport.time_start as f64) / time_range;
             let pixel_x = time_ratio as f32 * w;
 
             areas.push(PreparedTextArea {
@@ -915,6 +734,55 @@ impl GpuRenderer {
 
         areas
     }
+}
+
+impl fast_chart_core::ports::render::ChartRenderer for GpuRenderer {
+    fn resize(&mut self, width: u32, height: u32) {
+        GpuRenderer::resize(self, width, height);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Free functions — pure computations over ChartState, no &self needed.
+// ---------------------------------------------------------------------------
+
+/// Number of bars whose timestamps fall inside the viewport.
+fn visible_bar_count(state: &ChartState) -> usize {
+    state
+        .time_series
+        .iter()
+        .filter(|b| state.viewport.contains_time(b.timestamp))
+        .count()
+}
+
+/// Collect bars visible in the current viewport.
+fn collect_visible_bars(state: &ChartState) -> Vec<fast_chart_core::Bar> {
+    state
+        .time_series
+        .iter()
+        .filter(|b| state.viewport.contains_time(b.timestamp))
+        .copied()
+        .collect()
+}
+
+/// Convert a screen x coordinate to a timestamp in the current viewport.
+fn screen_x_to_timestamp(viewport: &Viewport, screen_x: f32, canvas_width: f64) -> f64 {
+    if canvas_width < 1.0 {
+        return viewport.time_start as f64;
+    }
+    let ratio = (screen_x as f64 / canvas_width).clamp(0.0, 1.0);
+    viewport.time_start as f64
+        + ratio * (viewport.time_end as f64 - viewport.time_start as f64)
+}
+
+/// Convert a screen y coordinate to a price in the current viewport.
+fn screen_y_to_price(viewport: &Viewport, screen_y: f32, canvas_height: f64) -> f64 {
+    if canvas_height < 1.0 {
+        return viewport.value_min;
+    }
+    // Y is flipped: screen 0 = top = max price, screen h = bottom = min price
+    let ratio = (screen_y as f64 / canvas_height).clamp(0.0, 1.0);
+    viewport.value_max - ratio * (viewport.value_max - viewport.value_min)
 }
 
 /// Format a timestamp (milliseconds since epoch) to a short time string.

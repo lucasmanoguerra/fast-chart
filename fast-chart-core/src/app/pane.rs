@@ -18,21 +18,21 @@ pub struct Pane {
     /// Proportional height as a fraction of the total canvas (0.0 – 1.0).
     pub height: f64,
     /// Series that belong to this pane.
-    pub series: Vec<SeriesRef>,
+    series: Vec<SeriesRef>,
     /// Indicators rendered as overlays in this pane.
-    pub indicators: Vec<IndicatorOverlay>,
+    indicators: Vec<IndicatorOverlay>,
     /// Whether the pane is currently visible.
-    pub visible: bool,
+    visible: bool,
     /// Price scales owned by this pane (Left, Right, and optional overlays).
-    pub price_scales: Vec<PriceScale>,
+    price_scales: Vec<PriceScale>,
     /// The default (primary) price scale used by new series.
-    pub primary_scale_id: PriceScaleId,
+    primary_scale_id: PriceScaleId,
     /// Markers (annotations) attached to this pane.
-    pub markers: MarkerSet,
+    markers: MarkerSet,
     /// Horizontal price lines drawn across this pane.
-    pub price_lines: PriceLineSet,
+    price_lines: PriceLineSet,
     /// Formatter for price values displayed on this pane.
-    pub formatter: Box<dyn PriceFormatter>,
+    formatter: Box<dyn PriceFormatter>,
 }
 
 /// Reference to a named series with its rendering type.
@@ -106,7 +106,49 @@ impl Pane {
         });
     }
 
+    // --- Field accessors ---
+
+    /// Get a slice of all series references in this pane.
+    pub fn series(&self) -> &[SeriesRef] {
+        &self.series
+    }
+
+    /// Get a slice of all indicator overlays in this pane.
+    pub fn indicators(&self) -> &[IndicatorOverlay] {
+        &self.indicators
+    }
+
+    /// Whether the pane is currently visible.
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
+
+    /// Set the pane's visibility.
+    pub fn set_visible(&mut self, v: bool) {
+        self.visible = v;
+    }
+
+    /// Get a slice of all price scales owned by this pane.
+    pub fn price_scales(&self) -> &[PriceScale] {
+        &self.price_scales
+    }
+
+    /// Get the primary (default) price scale ID used by new series.
+    pub fn primary_scale_id(&self) -> PriceScaleId {
+        self.primary_scale_id.clone()
+    }
+
     // --- Price scale accessors ---
+
+    /// Add a price scale to this pane.
+    pub fn add_price_scale(&mut self, scale: PriceScale) {
+        self.price_scales.push(scale);
+    }
+
+    /// Remove all price scales from this pane.
+    pub fn clear_price_scales(&mut self) {
+        self.price_scales.clear();
+    }
 
     /// Guarantee at least Left + Right price scales exist.
     pub fn ensure_price_scales(&mut self) {
@@ -197,11 +239,11 @@ mod tests {
         let pane = Pane::new(0, 0.7);
         assert_eq!(pane.id, 0);
         assert_eq!(pane.height, 0.7);
-        assert!(pane.series.is_empty());
-        assert!(pane.indicators.is_empty());
-        assert!(pane.visible);
-        assert!(pane.markers.is_empty());
-        assert!(pane.price_lines.is_empty());
+        assert!(pane.series().is_empty());
+        assert!(pane.indicators().is_empty());
+        assert!(pane.is_visible());
+        assert!(pane.markers().is_empty());
+        assert!(pane.price_lines().is_empty());
     }
 
     #[test]
@@ -216,9 +258,9 @@ mod tests {
     fn add_series() {
         let mut pane = Pane::new(0, 0.7);
         pane.add_series("BTC".into(), SeriesType::Candle);
-        assert_eq!(pane.series.len(), 1);
-        assert_eq!(pane.series[0].name, "BTC");
-        assert_eq!(pane.series[0].series_type, SeriesType::Candle);
+        assert_eq!(pane.series().len(), 1);
+        assert_eq!(pane.series()[0].name, "BTC");
+        assert_eq!(pane.series()[0].series_type, SeriesType::Candle);
     }
 
     #[test]
@@ -226,16 +268,16 @@ mod tests {
         let mut pane = Pane::new(0, 0.7);
         pane.add_series("BTC".into(), SeriesType::Candle);
         pane.add_series("ETH".into(), SeriesType::Line);
-        assert_eq!(pane.series.len(), 2);
+        assert_eq!(pane.series().len(), 2);
     }
 
     #[test]
     fn add_indicator() {
         let mut pane = Pane::new(0, 0.7);
         pane.add_indicator("SMA(14)".into());
-        assert_eq!(pane.indicators.len(), 1);
-        assert_eq!(pane.indicators[0].name, "SMA(14)");
-        assert_eq!(pane.indicators[0].pane_id, 0);
+        assert_eq!(pane.indicators().len(), 1);
+        assert_eq!(pane.indicators()[0].name, "SMA(14)");
+        assert_eq!(pane.indicators()[0].pane_id, 0);
     }
 
     #[test]
@@ -264,7 +306,7 @@ mod tests {
     #[test]
     fn pane_has_left_and_right_scales() {
         let pane = Pane::new(0, 0.7);
-        assert_eq!(pane.price_scales.len(), 2);
+        assert_eq!(pane.price_scales().len(), 2);
         assert!(pane.price_scale(&PriceScaleId::Left).is_some());
         assert!(pane.price_scale(&PriceScaleId::Right).is_some());
     }
@@ -282,8 +324,8 @@ mod tests {
             PriceScaleId::Overlay("RSI".into()),
             Default::default(),
         );
-        pane.price_scales.push(scale);
-        assert_eq!(pane.price_scales.len(), 3);
+        pane.add_price_scale(scale);
+        assert_eq!(pane.price_scales().len(), 3);
         assert!(pane.price_scale(&PriceScaleId::Overlay("RSI".into())).is_some());
     }
 
@@ -300,16 +342,16 @@ mod tests {
     #[test]
     fn ensure_price_scales_populates_empty() {
         let mut pane = Pane::new(0, 0.7);
-        pane.price_scales.clear();
+        pane.clear_price_scales();
         pane.ensure_price_scales();
-        assert_eq!(pane.price_scales.len(), 2);
+        assert_eq!(pane.price_scales().len(), 2);
     }
 
     #[test]
     fn series_defaults_to_left_scale() {
         let mut pane = Pane::new(0, 0.7);
         pane.add_series("BTC".into(), SeriesType::Candle);
-        assert_eq!(pane.series[0].price_scale_id, PriceScaleId::Left);
+        assert_eq!(pane.series()[0].price_scale_id, PriceScaleId::Left);
     }
 
     #[test]

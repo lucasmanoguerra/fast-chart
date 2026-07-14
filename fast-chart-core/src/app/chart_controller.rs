@@ -61,6 +61,9 @@ impl ChartState {
 /// [`InteractionHandler`], and drives a [`ChartRenderer`] whenever the
 /// invalidation mask signals that a redraw is needed.
 pub struct ChartController {
+    /// Renderer port — currently only used for resize() via the trait.
+    /// Rendering is driven by the app layer calling GpuRenderer::render() directly.
+    #[allow(dead_code)]
     renderer: Box<dyn ChartRenderer>,
     data_provider: Box<dyn DataProvider>,
     interaction: Box<dyn InteractionHandler>,
@@ -128,11 +131,10 @@ impl ChartController {
             }
         }
 
-        // 3. Call renderer.render() if needs invalidation
-        if self.state.invalidation.level() > InvalidationLevel::Nothing {
-            let _ = self.renderer.render(&self.state);
-            self.state.invalidation.clear();
-        }
+        // NOTE: Rendering is no longer driven from tick().
+        // The app layer calls GpuRenderer::render() directly with a
+        // reference to ChartState, which consumes the invalidation mask.
+        // tick() only manages data and marks state dirty.
     }
 
     /// Forward an interaction command to the handler and apply the resulting
@@ -195,6 +197,10 @@ impl ChartController {
         &self.state
     }
 
+    pub fn state_mut(&mut self) -> &mut ChartState {
+        &mut self.state
+    }
+
     pub fn add_indicator_overlay(&mut self, name: String, data: TimeSeries<f64, CHART_CAPACITY>) {
         self.indicator_overlays.push((name, data));
         self.state.mark_dirty(InvalidationLevel::Full);
@@ -248,36 +254,15 @@ mod tests {
     use std::sync::mpsc;
 
     // --- Mock Renderer ---
-    struct MockRenderer {
-        render_count: usize,
-        _last_state: Option<ChartStateSnapshot>,
-    }
-
-    #[derive(Clone)]
-    struct ChartStateSnapshot {
-        _series_len: usize,
-        _invalidation_level: InvalidationLevel,
-    }
+    struct MockRenderer;
 
     impl MockRenderer {
         fn new() -> Self {
-            Self {
-                render_count: 0,
-                _last_state: None,
-            }
+            Self
         }
     }
 
     impl ChartRenderer for MockRenderer {
-        fn render(&mut self, state: &ChartState) -> Result<(), Box<dyn Error>> {
-            self.render_count += 1;
-            self._last_state = Some(ChartStateSnapshot {
-                _series_len: state.time_series.len(),
-                _invalidation_level: state.invalidation.level(),
-            });
-            Ok(())
-        }
-
         fn resize(&mut self, _width: u32, _height: u32) {}
     }
 
@@ -372,8 +357,8 @@ mod tests {
         let bar = Bar::new(1000, 100.0, 105.0, 99.0, 102.0, 5000).unwrap();
         tx.send(DataEvent::BarClosed(bar)).unwrap();
         ctrl.tick();
-        // After tick, invalidation should be cleared (renderer was called)
-        assert!(ctrl.state().invalidation.is_empty());
+        // After tick, invalidation stays set — the renderer consumes it later.
+        assert!(ctrl.state().invalidation.level() > InvalidationLevel::Nothing);
     }
 
     #[test]

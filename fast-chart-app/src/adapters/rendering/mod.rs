@@ -8,7 +8,6 @@ pub mod layers;
 pub(crate) mod marker_renderer;
 pub(crate) mod pipeline_utils;
 pub mod line_renderer;
-pub(crate) mod plugin;
 pub(crate) mod price_line_renderer;
 pub mod text_renderer;
 pub mod types;

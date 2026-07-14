@@ -1,5 +1,4 @@
-use fast_chart_domain::marker::{Marker, MarkerPosition, MarkerShape};
-use fast_chart_domain::viewport::Viewport;
+use fast_chart_core::{Marker, MarkerPosition, MarkerShape, Viewport};
 
 use super::types::{Uniforms, Vertex};
 
@@ -15,7 +14,6 @@ pub struct MarkerRenderer {
     pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
-    uniform_buffer: wgpu::Buffer,
     bind_group: wgpu::BindGroup,
     vertex_count: u32,
     index_count: u32,
@@ -112,7 +110,6 @@ impl MarkerRenderer {
             pipeline,
             vertex_buffer,
             index_buffer,
-            uniform_buffer,
             bind_group,
             vertex_count: 0,
             index_count: 0,

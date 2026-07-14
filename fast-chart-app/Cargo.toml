@@ -2,9 +2,11 @@
 name = "fast-chart-app"
 version = "0.1.0"
 edition = "2021"
+description = "GPU-accelerated trading chart application"
+license = "MIT"
+repository = "https://github.com/user/fast-chart"
 
 [dependencies]
-fast-chart-domain = { path = "../fast-chart-domain" }
 fast-chart-core = { path = "../fast-chart-core" }
 winit = "0.30"
 wgpu = "22"

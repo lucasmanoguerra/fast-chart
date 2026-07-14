@@ -1,5 +1,4 @@
 use fast_chart_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
-use fast_chart_domain::viewport::Viewport;
 
 /// Stateless adapter mapping winit window events to `InteractionCommand`s.
 pub struct WinitInteractionHandler;
@@ -65,42 +64,5 @@ impl WinitInteractionHandler {
 impl Default for WinitInteractionHandler {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-/// Map a winit `WindowEvent` to an `InteractionCommand` for the current viewport.
-///
-/// Returns `None` when the event has no chart interaction meaning.
-pub fn winit_event_to_command(
-    event: &winit::event::WindowEvent,
-    screen_x: f32,
-    _viewport: &Viewport,
-) -> Option<InteractionCommand> {
-    use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
-
-    match event {
-        WindowEvent::CursorMoved { position, .. } => {
-            Some(InteractionCommand::UpdateCrosshair {
-                screen_x: position.x as f64,
-                screen_y: position.y as f64,
-            })
-        }
-        WindowEvent::MouseWheel {
-            delta: MouseScrollDelta::LineDelta(_, dy),
-            ..
-        } => {
-            let factor = if *dy > 0.0 { 1.1 } else { 0.9 };
-            Some(InteractionCommand::ZoomAtCursor {
-                factor,
-                screen_x: screen_x as f64,
-            })
-        }
-        WindowEvent::MouseInput {
-            state: ElementState::Released,
-            button: MouseButton::Left,
-            ..
-        } => Some(InteractionCommand::PanBy { time_delta: 0 }),
-        WindowEvent::CursorLeft { .. } => Some(InteractionCommand::DeactivateCrosshair),
-        _ => None,
     }
 }

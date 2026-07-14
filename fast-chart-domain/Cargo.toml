@@ -2,6 +2,11 @@
 name = "fast-chart-domain"
 version = "0.1.0"
 edition = "2021"
+description = "Pure domain types for the fast-chart trading library"
+license = "MIT"
+repository = "https://github.com/user/fast-chart"
+keywords = ["trading", "chart", "finance", "ohlc", "indicators"]
+categories = ["finance", "gui", "rendering"]
 
 [dependencies]
 # ZERO external dependencies — strict architectural boundary

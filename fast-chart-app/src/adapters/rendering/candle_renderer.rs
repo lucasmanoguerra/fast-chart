@@ -1,4 +1,4 @@
-use fast_chart_domain::bar::Bar;
+use fast_chart_core::Bar;
 
 use super::types::{Uniforms, Vertex, colors};
 

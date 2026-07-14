@@ -1,4 +1,4 @@
-use fast_chart_domain::bar::Bar;
+use fast_chart_core::Bar;
 
 use super::pipeline_utils;
 use super::types::{Uniforms, Vertex, colors};
@@ -9,6 +9,7 @@ use super::types::{Uniforms, Vertex, colors};
 /// Typically used for volume or oscillator displays. Each bar
 /// generates a quad (4 vertices + 6 indices) rendered with the
 /// `fill.wgsl` shader.
+#[allow(dead_code)]
 pub struct HistogramRenderer {
     pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
@@ -24,6 +25,7 @@ pub struct HistogramRenderer {
     baseline_price: f64,
 }
 
+#[allow(dead_code)]
 impl HistogramRenderer {
     pub fn new(device: &wgpu::Device, format: wgpu::TextureFormat) -> Self {
         let fill = pipeline_utils::create_fill_pipeline(device, format, "histogram");

@@ -10,11 +10,11 @@ pub struct LayoutManager {
     /// Normalized y-positions of dividers (0.0–1.0), one fewer than panes.
     pub dividers: Vec<f64>,
     /// Minimum height fraction any pane can occupy (default 0.1 = 10%).
-    pub min_pane_height: f64,
+    min_pane_height: f64,
     /// Index of the divider currently being dragged, if any.
-    pub dragging_divider: Option<usize>,
+    dragging_divider: Option<usize>,
     /// Height of the divider hit-zone in pixels (default 6.0).
-    pub divider_hit_zone: f64,
+    divider_hit_zone: f64,
 }
 
 impl LayoutManager {
@@ -31,6 +31,11 @@ impl LayoutManager {
             dragging_divider: None,
             divider_hit_zone: 6.0,
         }
+    }
+
+    /// Minimum height fraction any pane can occupy.
+    pub fn min_pane_height(&self) -> f64 {
+        self.min_pane_height
     }
 
     /// Sum of all pane heights (should always be ≈1.0).
@@ -276,7 +281,7 @@ mod tests {
         layout.start_drag(0);
         layout.update_drag(-700.0, 700.0); // huge negative delta
         layout.end_drag();
-        assert!(layout.panes[0].height >= layout.min_pane_height - 0.001);
+        assert!(layout.panes[0].height >= layout.min_pane_height() - 0.001);
     }
 
     #[test]
@@ -286,7 +291,7 @@ mod tests {
         layout.start_drag(0);
         layout.update_drag(700.0, 700.0); // huge positive delta
         layout.end_drag();
-        assert!(layout.panes[1].height >= layout.min_pane_height - 0.001);
+        assert!(layout.panes[1].height >= layout.min_pane_height() - 0.001);
     }
 
     #[test]

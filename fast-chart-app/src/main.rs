@@ -1,5 +1,5 @@
 use fast_chart_core::app::chart_controller::ChartController;
-use fast_chart_core::app::frame_counter::FrameCounter;
+use fast_chart_core::FrameCounter;
 use fast_chart_core::app::layout_manager::LayoutManager;
 use fast_chart_core::ports::data_provider::DataProvider;
 use fast_chart_core::ports::interaction::InteractionCommand;
@@ -24,6 +24,9 @@ use config::{ChartConfig, ConfigWatcher};
 // RendererBridge — wraps Arc<Mutex<GpuRenderer>> and implements ChartRenderer
 // so ChartController can own a `Box<dyn ChartRenderer>` while App retains
 // direct access to the GPU renderer through the shared Arc.
+//
+// The trait only carries resize(); rendering is done by the App layer
+// calling GpuRenderer::render() directly with a ChartState reference.
 // ---------------------------------------------------------------------------
 
 struct RendererBridge {
@@ -37,18 +40,6 @@ impl RendererBridge {
 }
 
 impl ChartRenderer for RendererBridge {
-    fn render(
-        &mut self,
-        state: &fast_chart_core::app::chart_controller::ChartState,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let mut guard = self.inner.lock().map_err(|_| "renderer mutex poisoned")?;
-        // We need to call sync_state_from_chart which is an inherent method.
-        // Dereference the MutexGuard to get &mut GpuRenderer, then use the
-        // trait method on it.
-        let renderer: &mut GpuRenderer = &mut *guard;
-        fast_chart_core::ports::render::ChartRenderer::render(renderer, state)
-    }
-
     fn resize(&mut self, width: u32, height: u32) {
         if let Ok(mut renderer) = self.inner.lock() {
             renderer.resize(width, height);
@@ -107,7 +98,7 @@ impl App {
 
     /// Convert a screen x-position to a timestamp using the given viewport.
     fn screen_x_to_timestamp(
-        viewport: &fast_chart_domain::viewport::Viewport,
+        viewport: &fast_chart_core::Viewport,
         screen_x: f64,
         canvas_width: f64,
     ) -> f64 {
@@ -179,11 +170,17 @@ impl ApplicationHandler for App {
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
-                if let Some(gpu) = &self.gpu {
-                    if let Ok(mut r) = gpu.lock() {
-                        r.render(&self.layout).unwrap_or_else(|e| {
-                            log::error!("Render error: {}", e);
-                        });
+                // Render the frame: pass ChartState (single source of truth) to the
+                // GPU renderer, which reads data directly from it.
+                if let Some(ctrl) = &mut self.chart_controller {
+                    if let Some(gpu) = &self.gpu {
+                        if let Ok(mut r) = gpu.lock() {
+                            r.render(&self.layout, ctrl.state()).unwrap_or_else(|e| {
+                                log::error!("Render error: {:?}", e);
+                            });
+                        }
+                        // Clear invalidation after the renderer has consumed it.
+                        ctrl.state_mut().consume_invalidation();
                     }
                 }
             }
@@ -211,8 +208,7 @@ impl ApplicationHandler for App {
                         .unwrap_or(700.0);
                     self.layout.update_drag(delta_y, canvas_height);
                     if let Some(gpu) = &self.gpu {
-                        if let Ok(mut r) = gpu.lock() {
-                            r.sync_layout(&self.layout);
+                        if let Ok(r) = gpu.lock() {
                             r.request_redraw();
                         }
                     }
@@ -422,9 +418,8 @@ impl ApplicationHandler for App {
             }
         }
 
-        // Tick: poll data, update auto-fit, sync state to renderer via ChartController.
-        // ctrl.tick() calls ChartRenderer::render(state) which syncs viewport + bars
-        // into the GpuRenderer through the RendererBridge.
+        // Tick: poll data, update auto-fit. The renderer no longer syncs state
+        // here — it reads ChartState directly in RedrawRequested.
         if let Some(ctrl) = &mut self.chart_controller {
             ctrl.tick();
         }

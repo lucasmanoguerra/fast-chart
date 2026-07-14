@@ -1,5 +1,5 @@
 use fast_chart_core::ports::data_provider::{DataProvider, DataEvent};
-use fast_chart_domain::bar::Bar;
+use fast_chart_core::Bar;
 use std::error::Error;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};

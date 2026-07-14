@@ -5,6 +5,7 @@ use super::types::{Uniforms, Vertex};
 /// All three renderers use the same `fill.wgsl` shader with a single uniform bind
 /// group. This struct bundles the pipeline, uniform buffer, and bind group so the
 /// boilerplate lives in one place.
+#[allow(dead_code)]
 pub(crate) struct FillPipeline {
     pub pipeline: wgpu::RenderPipeline,
     pub uniform_buffer: wgpu::Buffer,
@@ -13,6 +14,7 @@ pub(crate) struct FillPipeline {
 
 /// Create the render pipeline, uniform buffer, and bind group shared by the fill
 /// renderers (area, baseline, histogram).
+#[allow(dead_code)]
 pub(crate) fn create_fill_pipeline(
     device: &wgpu::Device,
     format: wgpu::TextureFormat,

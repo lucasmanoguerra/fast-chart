@@ -3,10 +3,10 @@ use fast_chart_domain::scale::{LinearScale, TimeScale};
 use fast_chart_domain::viewport::Viewport;
 
 pub struct ViewportManager {
-    pub min_zoom: f64,
-    pub max_zoom: f64,
-    pub min_visible_bars: usize,
-    pub max_visible_bars: usize,
+    min_zoom: f64,
+    max_zoom: f64,
+    min_visible_bars: usize,
+    max_visible_bars: usize,
 }
 
 impl Default for ViewportManager {
@@ -23,6 +23,26 @@ impl ViewportManager {
             min_visible_bars: 5,
             max_visible_bars: 10_000,
         }
+    }
+
+    /// Minimum zoom level.
+    pub fn min_zoom(&self) -> f64 {
+        self.min_zoom
+    }
+
+    /// Maximum zoom level.
+    pub fn max_zoom(&self) -> f64 {
+        self.max_zoom
+    }
+
+    /// Minimum number of visible bars.
+    pub fn min_visible_bars(&self) -> usize {
+        self.min_visible_bars
+    }
+
+    /// Maximum number of visible bars.
+    pub fn max_visible_bars(&self) -> usize {
+        self.max_visible_bars
     }
 
     /// Zoom the viewport around `center_time`, clamping to min/max zoom.
@@ -149,10 +169,10 @@ mod tests {
     #[test]
     fn new_has_sensible_defaults() {
         let vm = ViewportManager::new();
-        assert_eq!(vm.min_zoom, 0.01);
-        assert_eq!(vm.max_zoom, 1000.0);
-        assert_eq!(vm.min_visible_bars, 5);
-        assert_eq!(vm.max_visible_bars, 10_000);
+        assert_eq!(vm.min_zoom(), 0.01);
+        assert_eq!(vm.max_zoom(), 1000.0);
+        assert_eq!(vm.min_visible_bars(), 5);
+        assert_eq!(vm.max_visible_bars(), 10_000);
     }
 
     #[test]
@@ -179,7 +199,7 @@ mod tests {
         let mut vp = test_viewport();
         vp.zoom_level = 0.02;
         vm.apply_zoom(&mut vp, 0.01, 1500);
-        assert_eq!(vp.zoom_level, vm.min_zoom);
+        assert_eq!(vp.zoom_level, vm.min_zoom());
     }
 
     #[test]
@@ -188,7 +208,7 @@ mod tests {
         let mut vp = test_viewport();
         vp.zoom_level = 500.0;
         vm.apply_zoom(&mut vp, 10.0, 1500);
-        assert_eq!(vp.zoom_level, vm.max_zoom);
+        assert_eq!(vp.zoom_level, vm.max_zoom());
     }
 
     #[test]

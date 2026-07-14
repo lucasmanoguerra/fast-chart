@@ -1,7 +1,5 @@
 use super::types::{Uniforms, Vertex, colors};
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::series::TimeSeries;
-use fast_chart_domain::viewport::Viewport;
+use fast_chart_core::{Bar, TimeSeries, Viewport};
 
 /// GPU renderer for line series (e.g., close price line).
 ///

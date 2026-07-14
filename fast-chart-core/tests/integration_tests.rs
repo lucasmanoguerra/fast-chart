@@ -3,7 +3,7 @@
 //! Tests markers, price lines, kinetic scroll, price formatting, and the
 //! ChartController end-to-end using mock ports.
 
-use fast_chart_core::app::chart_controller::{ChartController, ChartState};
+use fast_chart_core::app::chart_controller::ChartController;
 use fast_chart_core::app::layout_manager::LayoutManager;
 use fast_chart_core::ports::data_provider::{DataEvent, DataProvider};
 use fast_chart_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
@@ -20,22 +20,15 @@ use std::sync::{mpsc, Arc, Mutex};
 // Mock Renderer
 // ---------------------------------------------------------------------------
 
-struct MockRenderer {
-    render_count: usize,
-}
+struct MockRenderer;
 
 impl MockRenderer {
     fn new() -> Self {
-        Self { render_count: 0 }
+        Self
     }
 }
 
 impl ChartRenderer for MockRenderer {
-    fn render(&mut self, _state: &ChartState) -> Result<(), Box<dyn Error>> {
-        self.render_count += 1;
-        Ok(())
-    }
-
     fn resize(&mut self, _width: u32, _height: u32) {}
 }
 
@@ -617,7 +610,7 @@ fn layout_manager_min_height_enforced() {
     layout.start_drag(0);
     layout.update_drag(-700.0, 700.0); // try to make top pane tiny
     layout.end_drag();
-    assert!(layout.panes[0].height >= layout.min_pane_height - 0.001);
+    assert!(layout.panes[0].height >= layout.min_pane_height() - 0.001);
 }
 
 #[test]

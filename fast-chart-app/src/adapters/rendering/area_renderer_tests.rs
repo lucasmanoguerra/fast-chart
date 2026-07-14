@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod area_renderer_tests {
-    use fast_chart_domain::bar::Bar;
+    use fast_chart_core::Bar;
 
     fn test_bars() -> Vec<Bar> {
         vec![
@@ -84,7 +84,7 @@ mod area_renderer_tests {
 
 #[cfg(test)]
 mod baseline_renderer_tests {
-    use fast_chart_domain::bar::Bar;
+    use fast_chart_core::Bar;
 
     fn test_bars() -> Vec<Bar> {
         vec![
@@ -148,7 +148,7 @@ mod baseline_renderer_tests {
 
 #[cfg(test)]
 mod histogram_renderer_tests {
-    use fast_chart_domain::bar::Bar;
+    use fast_chart_core::Bar;
 
     fn test_bars() -> Vec<Bar> {
         vec![

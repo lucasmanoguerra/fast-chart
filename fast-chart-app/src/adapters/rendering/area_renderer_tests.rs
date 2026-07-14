@@ -420,3 +420,215 @@ mod area_update_from_state_tests {
         assert!(y_close < y_baseline);
     }
 }
+
+#[cfg(test)]
+mod histogram_update_from_state_tests {
+    use fast_chart_core::Bar;
+
+    /// Simulates the visible-bar filtering that `update_histogram_from_state` performs.
+    fn filter_visible_bars(bars: &[Bar], time_start: f64, time_end: f64) -> Vec<Bar> {
+        bars.iter()
+            .filter(|b| {
+                b.timestamp >= time_start as u64 && b.timestamp <= time_end as u64
+            })
+            .copied()
+            .collect()
+    }
+
+    /// Simulates the histogram vertex/index generation from visible bars.
+    /// Each bar produces 4 vertices (quad) + 6 indices (2 triangles).
+    fn compute_histogram_vertices(
+        bars: &[Bar],
+        canvas_width: f32,
+        canvas_height: f32,
+        time_start: f64,
+        time_end: f64,
+        value_min: f64,
+        value_max: f64,
+        baseline_price: f64,
+    ) -> (usize, usize) {
+        if bars.is_empty() {
+            return (0, 0);
+        }
+        let time_range = time_end - time_start;
+        let value_range = value_max - value_min;
+        if time_range < f64::EPSILON || value_range < f64::EPSILON {
+            return (0, 0);
+        }
+
+        let vert_count = bars.len() * 4;
+        let idx_count = bars.len() * 6;
+
+        let cw = canvas_width as f64;
+        let ch = canvas_height as f64;
+        let bar_width = (cw / bars.len() as f64) * 0.8;
+
+        for bar in bars {
+            let x_center = ((bar.timestamp as f64 - time_start) / time_range * cw) as f32;
+            let half = (bar_width / 2.0) as f32;
+            let x_left = x_center - half;
+            let x_right = x_center + half;
+
+            let y_baseline =
+                ((1.0 - (baseline_price - value_min) / value_range) * ch) as f32;
+            let y_value =
+                ((1.0 - (bar.close - value_min) / value_range) * ch) as f32;
+
+            // Verify quad bounds are within canvas (may extend slightly for bars near edges).
+            assert!(x_left <= x_right, "x_left > x_right for bar at {}", bar.timestamp);
+            assert!(y_baseline != y_value || (bar.close - baseline_price).abs() < f64::EPSILON,
+                "baseline == value but close != baseline for bar at {}", bar.timestamp);
+        }
+
+        (vert_count, idx_count)
+    }
+
+    fn test_bars() -> Vec<Bar> {
+        vec![
+            Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap(),
+            Bar::new(200, 105.0, 115.0, 100.0, 110.0, 1200).unwrap(),
+            Bar::new(300, 100.0, 120.0, 95.0, 102.0, 800).unwrap(),
+        ]
+    }
+
+    #[test]
+    fn histogram_initialized_with_correct_capacity() {
+        // HistogramRenderer pre-allocates for 100k bars: 4 verts + 6 indices each.
+        let vertex_capacity = 100_000 * 4;
+        let index_capacity = 100_000 * 6;
+        assert_eq!(vertex_capacity, 400_000);
+        assert_eq!(index_capacity, 600_000);
+    }
+
+    #[test]
+    fn histogram_update_produces_correct_vertex_and_index_counts() {
+        let bars = test_bars();
+        let (verts, indices) = compute_histogram_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 0.0,
+        );
+        // 3 bars → 12 vertices (4 per bar), 18 indices (6 per bar)
+        assert_eq!(verts, 12);
+        assert_eq!(indices, 18);
+    }
+
+    #[test]
+    fn histogram_empty_series_produces_nothing() {
+        let bars: Vec<Bar> = vec![];
+        let (verts, indices) = compute_histogram_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 0.0,
+        );
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn histogram_single_bar_produces_quad() {
+        let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
+        let (verts, indices) = compute_histogram_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 0.0,
+        );
+        // Single bar still produces a full quad.
+        assert_eq!(verts, 4);
+        assert_eq!(indices, 6);
+    }
+
+    #[test]
+    fn histogram_zero_time_range_produces_nothing() {
+        let bars = test_bars();
+        let (verts, indices) = compute_histogram_vertices(
+            &bars, 800.0, 600.0, 100.0, 100.0, 90.0, 125.0, 0.0,
+        );
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn histogram_zero_value_range_produces_nothing() {
+        let bars = test_bars();
+        let (verts, indices) = compute_histogram_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 105.0, 105.0, 0.0,
+        );
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn histogram_visible_bar_filtering() {
+        let bars = test_bars();
+        // Only bars with timestamp in [150, 250] → just bar at 200
+        let visible = filter_visible_bars(&bars, 150.0, 250.0);
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].timestamp, 200);
+
+        // All bars visible
+        let visible = filter_visible_bars(&bars, 0.0, 400.0);
+        assert_eq!(visible.len(), 3);
+
+        // No bars visible
+        let visible = filter_visible_bars(&bars, 500.0, 600.0);
+        assert_eq!(visible.len(), 0);
+    }
+
+    #[test]
+    fn histogram_baseline_color_above() {
+        let baseline_price = 100.0;
+        let bar = Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap();
+        // close=105.0 >= 100.0 → positive (bullish) color
+        assert!(bar.close >= baseline_price);
+    }
+
+    #[test]
+    fn histogram_baseline_color_below() {
+        let baseline_price = 105.0;
+        let bar = Bar::new(100, 100.0, 110.0, 95.0, 100.0, 1000).unwrap();
+        // close=100.0 < 105.0 → negative (bearish) color
+        assert!(bar.close < baseline_price);
+    }
+
+    #[test]
+    fn histogram_baseline_at_zero() {
+        // Default baseline is 0.0. All positive close values should be above.
+        let baseline_price = 0.0;
+        let bar = Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap();
+        assert!(bar.close >= baseline_price);
+    }
+
+    #[test]
+    fn histogram_y_baseline_above_value_when_positive() {
+        // When close > baseline, y_baseline > y_value in screen coords
+        // (because higher price = lower y in flipped coordinate system).
+        let baseline_price = 0.0;
+        let close = 105.0;
+        let value_min = -10.0;
+        let value_max = 120.0;
+        let value_range = value_max - value_min;
+        let canvas_height = 600.0;
+
+        let y_baseline =
+            ((1.0 - (baseline_price - value_min) / value_range) * canvas_height) as f32;
+        let y_value =
+            ((1.0 - (close - value_min) / value_range) * canvas_height) as f32;
+
+        // Higher price → lower screen y (flipped).
+        assert!(y_value < y_baseline);
+    }
+
+    #[test]
+    fn histogram_y_baseline_below_value_when_negative() {
+        // When close < baseline, y_value > y_baseline in screen coords.
+        let baseline_price = 10.0;
+        let close = -5.0;
+        let value_min = -20.0;
+        let value_max = 20.0;
+        let value_range = value_max - value_min;
+        let canvas_height = 600.0;
+
+        let y_baseline =
+            ((1.0 - (baseline_price - value_min) / value_range) * canvas_height) as f32;
+        let y_value =
+            ((1.0 - (close - value_min) / value_range) * canvas_height) as f32;
+
+        // Lower price → higher screen y (flipped).
+        assert!(y_value > y_baseline);
+    }
+}

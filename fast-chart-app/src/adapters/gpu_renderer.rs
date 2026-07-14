@@ -10,6 +10,7 @@ use super::rendering::bar_renderer::BarRenderer;
 use super::rendering::candle_renderer::CandleRenderer;
 use super::rendering::crosshair_renderer::CrosshairRenderer;
 use super::rendering::grid_renderer::GridRenderer;
+use super::rendering::histogram_renderer::HistogramRenderer;
 use super::rendering::line_renderer::LineRenderer;
 use super::rendering::marker_renderer::MarkerRenderer;
 use super::rendering::price_line_renderer::PriceLineRenderer;
@@ -30,6 +31,7 @@ pub struct GpuRenderer {
     grid_renderer: GridRenderer,
     line_renderer: LineRenderer,
     area_renderer: AreaRenderer,
+    histogram_renderer: HistogramRenderer,
     candle_renderer: CandleRenderer,
     bar_renderer: BarRenderer,
     crosshair_renderer: CrosshairRenderer,
@@ -125,6 +127,7 @@ impl GpuRenderer {
         let grid_renderer = GridRenderer::new(&device, surface_format, &shader);
         let line_renderer = LineRenderer::new(&device, surface_format, &shader);
         let area_renderer = AreaRenderer::new(&device, surface_format);
+        let histogram_renderer = HistogramRenderer::new(&device, surface_format);
         let candle_renderer = CandleRenderer::new(&device, surface_format);
         let bar_renderer = BarRenderer::new(&device, surface_format);
         let crosshair_renderer = CrosshairRenderer::new(&device, surface_format, &shader);
@@ -232,6 +235,7 @@ impl GpuRenderer {
             grid_renderer,
             line_renderer,
             area_renderer,
+            histogram_renderer,
             candle_renderer,
             bar_renderer,
             crosshair_renderer,
@@ -286,6 +290,7 @@ impl GpuRenderer {
             let h = self.size.1 as f32;
             self.update_line_from_state(w, h, state);
             self.update_area_from_state(w, h, state);
+            self.update_histogram_from_state(w, h, state);
         }
 
         // Update candle vertex/index buffers if data changed (Full level).
@@ -392,6 +397,9 @@ impl GpuRenderer {
 
             // Layer 3.5: Area fill (below line, alpha-blended)
             self.area_renderer.render(&mut render_pass);
+
+            // Layer 3.7: Histogram bars (volume/oscillator)
+            self.histogram_renderer.render(&mut render_pass);
 
             // Layer 4: Pane divider lines
             self.render_dividers(&mut render_pass);
@@ -550,6 +558,80 @@ impl GpuRenderer {
         );
 
         self.area_renderer.update_area(
+            &self.queue,
+            &visible,
+            canvas_width,
+            canvas_height,
+            viewport.time_start as f64,
+            viewport.time_end as f64,
+            viewport.value_min,
+            viewport.value_max,
+        );
+    }
+
+    /// Generate histogram bar vertices from ChartState and upload to GPU.
+    ///
+    /// Bars extend from baseline (default 0.0) to each bar's close value.
+    /// Color is bullish when close >= baseline, bearish otherwise.
+    fn update_histogram_from_state(
+        &mut self,
+        canvas_width: f32,
+        canvas_height: f32,
+        state: &ChartState,
+    ) {
+        if state.time_series.is_empty() {
+            self.histogram_renderer.update_histogram(
+                &self.queue,
+                &[],
+                canvas_width,
+                canvas_height,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            );
+            return;
+        }
+
+        let viewport = &state.viewport;
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
+        let value_range = viewport.value_max - viewport.value_min;
+
+        if time_range < f64::EPSILON || value_range < f64::EPSILON {
+            self.histogram_renderer.update_histogram(
+                &self.queue,
+                &[],
+                canvas_width,
+                canvas_height,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            );
+            return;
+        }
+
+        // Collect visible bars (same filter as line/area renderers).
+        let visible: Vec<_> = state
+            .time_series
+            .iter()
+            .filter(|b| {
+                b.timestamp >= viewport.time_start as u64
+                    && b.timestamp <= viewport.time_end as u64
+            })
+            .copied()
+            .collect();
+
+        // Baseline at 0.0 (typical for volume/oscillator histograms).
+        self.histogram_renderer.set_baseline(0.0);
+
+        // Bullish/bearish color scheme.
+        self.histogram_renderer.set_colors(
+            colors::BULLISH,
+            colors::BEARISH,
+        );
+
+        self.histogram_renderer.update_histogram(
             &self.queue,
             &visible,
             canvas_width,

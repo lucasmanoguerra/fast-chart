@@ -5,6 +5,7 @@ use fast_chart_core::{
 };
 use winit::window::CursorIcon;
 
+use super::rendering::bar_renderer::BarRenderer;
 use super::rendering::candle_renderer::CandleRenderer;
 use super::rendering::crosshair_renderer::CrosshairRenderer;
 use super::rendering::grid_renderer::GridRenderer;
@@ -28,6 +29,7 @@ pub struct GpuRenderer {
     grid_renderer: GridRenderer,
     line_renderer: LineRenderer,
     candle_renderer: CandleRenderer,
+    bar_renderer: BarRenderer,
     crosshair_renderer: CrosshairRenderer,
     /// Per-pane marker renderers — one per pane, indexed by pane index.
     pane_marker_renderers: Vec<MarkerRenderer>,
@@ -121,6 +123,7 @@ impl GpuRenderer {
         let grid_renderer = GridRenderer::new(&device, surface_format, &shader);
         let line_renderer = LineRenderer::new(&device, surface_format, &shader);
         let candle_renderer = CandleRenderer::new(&device, surface_format);
+        let bar_renderer = BarRenderer::new(&device, surface_format);
         let crosshair_renderer = CrosshairRenderer::new(&device, surface_format, &shader);
 
         // Create per-pane marker and price line renderers (initially 2 for default layout).
@@ -226,6 +229,7 @@ impl GpuRenderer {
             grid_renderer,
             line_renderer,
             candle_renderer,
+            bar_renderer,
             crosshair_renderer,
             pane_marker_renderers,
             pane_price_line_renderers,
@@ -282,10 +286,14 @@ impl GpuRenderer {
         // Update candle vertex/index buffers if data changed (Full level).
         if mask.contains(InvalidationLevel::Full) {
             self.update_candle_data(state);
+            self.update_bar_data(state);
         }
 
         // Always update candle uniform with current viewport (zoom/pan changes viewport).
         self.update_candle_uniforms(&state.viewport);
+
+        // Always update bar uniform with current viewport.
+        self.update_bar_uniforms(&state.viewport);
 
         // Always update divider lines — layout may change without an
         // invalidation mask (e.g., divider drag at the App level). This is cheap.
@@ -370,6 +378,9 @@ impl GpuRenderer {
 
             // Layer 2: Candlestick series (world-space, GPU-projected)
             self.candle_renderer.render(&mut render_pass);
+
+            // Layer 2.5: OHLC bar series (world-space, GPU-projected)
+            self.bar_renderer.render(&mut render_pass);
 
             // Layer 3: Line series (NDC-space, CPU-projected)
             self.line_renderer.render(&mut render_pass);
@@ -577,6 +588,33 @@ impl GpuRenderer {
         let w = self.size.0 as f32;
         let h = self.size.1 as f32;
         self.candle_renderer.update_uniforms(
+            &self.queue,
+            w,
+            h,
+            viewport.time_start as f32,
+            viewport.time_end as f32,
+            viewport.value_min as f32,
+            viewport.value_max as f32,
+        );
+    }
+
+    /// Recompute OHLC bar vertex data from bars and current viewport.
+    fn update_bar_data(&mut self, state: &ChartState) {
+        if state.time_series.is_empty() {
+            return;
+        }
+        let visible_count = visible_bar_count(state);
+        let bar_width = self.compute_bar_width(visible_count, &state.viewport);
+        let visible = collect_visible_bars(state);
+        self.bar_renderer
+            .update_bars(&self.queue, &visible, bar_width);
+    }
+
+    /// Upload viewport uniform to the bar renderer's buffer.
+    fn update_bar_uniforms(&self, viewport: &Viewport) {
+        let w = self.size.0 as f32;
+        let h = self.size.1 as f32;
+        self.bar_renderer.update_uniforms(
             &self.queue,
             w,
             h,

@@ -92,6 +92,44 @@ impl ViewportManager {
             height: canvas_height,
         }
     }
+
+    /// Convert a screen x-coordinate to a timestamp.
+    pub fn screen_x_to_timestamp(&self, screen_x: f64, canvas_width: f64, viewport: &Viewport) -> f64 {
+        if canvas_width < 1.0 {
+            return viewport.time_start as f64;
+        }
+        let ratio = (screen_x / canvas_width).clamp(0.0, 1.0);
+        viewport.time_start as f64 + ratio * (viewport.time_end as f64 - viewport.time_start as f64)
+    }
+
+    /// Convert a screen y-coordinate to a price value.
+    pub fn screen_y_to_price(&self, screen_y: f64, canvas_height: f64, viewport: &Viewport) -> f64 {
+        if canvas_height < 1.0 {
+            return viewport.value_min;
+        }
+        let ratio = (screen_y / canvas_height).clamp(0.0, 1.0);
+        viewport.value_min + ratio * (viewport.value_max - viewport.value_min)
+    }
+
+    /// Convert a timestamp to a screen x-coordinate.
+    pub fn timestamp_to_screen_x(&self, timestamp: u64, canvas_width: f64, viewport: &Viewport) -> f64 {
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
+        if time_range < f64::EPSILON {
+            return 0.0;
+        }
+        let ratio = (timestamp as f64 - viewport.time_start as f64) / time_range;
+        ratio * canvas_width
+    }
+
+    /// Convert a price to a screen y-coordinate.
+    pub fn price_to_screen_y(&self, price: f64, canvas_height: f64, viewport: &Viewport) -> f64 {
+        let value_range = viewport.value_max - viewport.value_min;
+        if value_range < f64::EPSILON {
+            return 0.0;
+        }
+        let ratio = (price - viewport.value_min) / value_range;
+        (1.0 - ratio) * canvas_height // Y is inverted (0 at top)
+    }
 }
 
 #[cfg(test)]
@@ -266,5 +304,119 @@ mod tests {
         let y = ls.map_to_y(80.0);
         let back_price = ls.map_from_y(y);
         assert!((back_price - 80.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn screen_x_to_timestamp_midpoint() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let ts = vm.screen_x_to_timestamp(400.0, 800.0, &vp);
+        assert_eq!(ts, 1500.0); // midpoint of 1000..2000
+    }
+
+    #[test]
+    fn screen_x_to_timestamp_clamps_at_zero() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let ts = vm.screen_x_to_timestamp(0.0, 800.0, &vp);
+        assert_eq!(ts, 1000.0); // time_start
+    }
+
+    #[test]
+    fn screen_x_to_timestamp_clamps_at_one() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let ts = vm.screen_x_to_timestamp(800.0, 800.0, &vp);
+        assert_eq!(ts, 2000.0); // time_end
+    }
+
+    #[test]
+    fn screen_x_to_timestamp_small_canvas() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let ts = vm.screen_x_to_timestamp(100.0, 0.0, &vp);
+        assert_eq!(ts, 1000.0); // returns time_start for invalid canvas
+    }
+
+    #[test]
+    fn screen_y_to_price_midpoint() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let price = vm.screen_y_to_price(200.0, 400.0, &vp);
+        assert!((price - 100.0).abs() < 1e-10); // midpoint of 90..110
+    }
+
+    #[test]
+    fn screen_y_to_price_top() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let price = vm.screen_y_to_price(0.0, 400.0, &vp);
+        assert_eq!(price, 90.0); // value_min (screen top)
+    }
+
+    #[test]
+    fn screen_y_to_price_bottom() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let price = vm.screen_y_to_price(400.0, 400.0, &vp);
+        assert_eq!(price, 110.0); // value_max (screen bottom)
+    }
+
+    #[test]
+    fn screen_y_to_price_small_canvas() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let price = vm.screen_y_to_price(100.0, 0.0, &vp);
+        assert_eq!(price, 90.0); // returns value_min for invalid canvas
+    }
+
+    #[test]
+    fn timestamp_to_screen_x_midpoint() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let x = vm.timestamp_to_screen_x(1500, 800.0, &vp);
+        assert_eq!(x, 400.0); // midpoint
+    }
+
+    #[test]
+    fn timestamp_to_screen_x_zero_range() {
+        let vm = ViewportManager::new();
+        let mut vp = test_viewport();
+        vp.time_end = vp.time_start; // zero range
+        let x = vm.timestamp_to_screen_x(1000, 800.0, &vp);
+        assert_eq!(x, 0.0);
+    }
+
+    #[test]
+    fn price_to_screen_y_midpoint() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let y = vm.price_to_screen_y(100.0, 400.0, &vp);
+        assert_eq!(y, 200.0); // midpoint, Y inverted
+    }
+
+    #[test]
+    fn price_to_screen_y_top() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let y = vm.price_to_screen_y(110.0, 400.0, &vp);
+        assert_eq!(y, 0.0); // max price → top of screen
+    }
+
+    #[test]
+    fn price_to_screen_y_bottom() {
+        let vm = ViewportManager::new();
+        let vp = test_viewport();
+        let y = vm.price_to_screen_y(90.0, 400.0, &vp);
+        assert_eq!(y, 400.0); // min price → bottom of screen
+    }
+
+    #[test]
+    fn price_to_screen_y_zero_range() {
+        let vm = ViewportManager::new();
+        let mut vp = test_viewport();
+        vp.value_max = vp.value_min; // zero range
+        let y = vm.price_to_screen_y(100.0, 400.0, &vp);
+        assert_eq!(y, 0.0);
     }
 }

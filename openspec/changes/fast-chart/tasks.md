@@ -81,11 +81,11 @@ Chain strategy: feature-branch-chain
 
 ## Phase 6: Candle + Zoom/Pan
 
-- [ ] 6.1 Write `fast-chart-app/src/adapters/rendering/shaders/candle.wgsl` — candlestick shader
-- [ ] 6.2 Add uniform buffer with `mat4x4<f32>` projection matrix
-- [ ] 6.3 Implement zoom/pan uniform update via `queue.write_buffer()` (no vertex rebuild)
-- [ ] 6.4 Create `fast-chart-app/src/adapters/input/winit_input.rs` — `InteractionHandler` impl
-- [ ] 6.5 Wire winit events → viewport update → uniform → `window.request_redraw()`
+- [x] 6.1 Write `fast-chart-app/src/adapters/rendering/shaders/candle.wgsl` — candlestick shader
+- [x] 6.2 Add uniform buffer with `mat4x4<f32>` projection matrix
+- [x] 6.3 Implement zoom/pan uniform update via `queue.write_buffer()` (no vertex rebuild)
+- [x] 6.4 Create `fast-chart-app/src/adapters/input/winit_input.rs` — `InteractionHandler` impl
+- [x] 6.5 Wire winit events → viewport update → uniform → `window.request_redraw()`
 
 ## Phase 7: Indicator Engine
 
@@ -95,11 +95,11 @@ Chain strategy: feature-branch-chain
 
 ## Phase 8: Multi-Pane Layout
 
-- [ ] 8.1 Create `Pane` struct (viewport + series list + indicator overlays)
-- [ ] 8.2 Create `LayoutManager` — vertical stack, main pane ≥50% height
-- [ ] 8.3 Shared x-axis sync across all panes on zoom/pan
-- [ ] 8.4 Draggable pane dividers with minimum height enforcement (60px default)
-- [ ] 8.5 Render indicator overlays in dedicated panes
+- [x] 8.1 Create `Pane` struct (viewport + series list + indicator overlays)
+- [x] 8.2 Create `LayoutManager` — vertical stack, main pane ≥50% height
+- [x] 8.3 Shared x-axis sync across all panes on zoom/pan
+- [x] 8.4 Draggable pane dividers with minimum height enforcement (60px default)
+- [x] 8.5 Render indicator overlays in dedicated panes
 
 ## Phase 9: Text + Crosshair
 
@@ -110,8 +110,8 @@ Chain strategy: feature-branch-chain
 
 ## Phase 10: Config + Polish
 
-- [ ] 10.1 Create `fast-chart-app/src/config/chart_config.rs` — `ChartConfig` TOML serde with defaults
-- [ ] 10.2 Hot-reload via `notify` crate → `ConfigReloadEvent`
-- [ ] 10.3 Write `fast-chart-app/src/adapters/rendering/shaders/fill.wgsl` — area fill shader
-- [ ] 10.4 Timeframe keyboard shortcuts (1/5/15/60/D/W)
-- [ ] 10.5 Benchmark frame times (target: 60 FPS on 100k bars)
+- [x] 10.1 Create `fast-chart-app/src/config/chart_config.rs` — `ChartConfig` TOML serde with defaults
+- [x] 10.2 Hot-reload via `notify` crate → `ConfigReloadEvent`
+- [x] 10.3 Write `fast-chart-app/src/adapters/rendering/shaders/fill.wgsl` — area fill shader
+- [x] 10.4 Timeframe keyboard shortcuts (1/5/15/60/D/W)
+- [x] 10.5 Benchmark frame times (target: 60 FPS on 100k bars)

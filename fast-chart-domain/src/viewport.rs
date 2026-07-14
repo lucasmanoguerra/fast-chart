@@ -1,3 +1,10 @@
+use crate::price_scale::PriceScale;
+
+/// The visible time and value window of a chart pane.
+///
+/// A `Viewport` tracks the time range (`time_start`..`time_end`), the value
+/// range (`value_min`..`value_max`), and the current zoom level. All rendering
+/// maps this window to pixel coordinates.
 #[derive(Debug, Clone)]
 pub struct Viewport {
     pub time_start: u64,
@@ -35,6 +42,35 @@ impl Viewport {
             self.time_start = self.time_start.saturating_sub(delta);
             self.time_end = self.time_end.saturating_sub(delta);
         }
+    }
+
+    /// Map a price to a pixel y-coordinate using the given scale.
+    ///
+    /// Returns the y-coordinate in **screen pixels** from the top of the pane.
+    /// Y is flipped: `y = 0` corresponds to `value_max` (top), `y = pane_height`
+    /// corresponds to `value_min` (bottom).
+    ///
+    /// When the scale range is zero, returns `pane_height / 2`.
+    pub fn price_to_y(&self, price: f64, scale: &PriceScale, pane_height: f32) -> f32 {
+        let range = scale.value_max - scale.value_min;
+        if range.abs() < f64::EPSILON {
+            return pane_height / 2.0;
+        }
+        let ratio = (price - scale.value_min) / range;
+        let clamped = ratio.clamp(0.0, 1.0);
+        pane_height * (1.0 - clamped as f32) // y-flipped: top=0
+    }
+
+    /// Map a pixel y-coordinate back to a price using the given scale.
+    ///
+    /// Inverse of [`price_to_y`].
+    pub fn y_to_price(&self, y: f32, scale: &PriceScale, pane_height: f32) -> f64 {
+        if pane_height.abs() < f32::EPSILON {
+            return (scale.value_min + scale.value_max) / 2.0;
+        }
+        let ratio = 1.0 - (y / pane_height);
+        let clamped = ratio.clamp(0.0, 1.0);
+        scale.value_min + clamped as f64 * (scale.value_max - scale.value_min)
     }
 }
 
@@ -128,5 +164,86 @@ mod tests {
         let vp = Viewport::default();
         assert_eq!(vp.zoom_level, 1.0);
         assert_eq!(vp.time_start, 0);
+    }
+
+    // --- price_to_y / y_to_price ---
+
+    use crate::price_scale::{PriceScale, PriceScaleId, PriceScaleOptions};
+
+    fn scale(min: f64, max: f64) -> PriceScale {
+        PriceScale {
+            id: PriceScaleId::Right,
+            options: PriceScaleOptions::default(),
+            value_min: min,
+            value_max: max,
+        }
+    }
+
+    #[test]
+    fn price_to_y_midpoint() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let y = vp.price_to_y(150.0, &s, 400.0);
+        assert!((y - 200.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn price_to_y_top() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let y = vp.price_to_y(200.0, &s, 400.0);
+        assert!((y - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn price_to_y_bottom() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let y = vp.price_to_y(100.0, &s, 400.0);
+        assert!((y - 400.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn y_to_price_roundtrip() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let price = 150.0;
+        let y = vp.price_to_y(price, &s, 400.0);
+        let back = vp.y_to_price(y, &s, 400.0);
+        assert!((back - price).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn price_to_y_zero_range() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 100.0);
+        let y = vp.price_to_y(100.0, &s, 400.0);
+        assert!((y - 200.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn price_to_y_clamps_above() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let y = vp.price_to_y(300.0, &s, 400.0);
+        // clamped to top
+        assert!((y - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn price_to_y_clamps_below() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let y = vp.price_to_y(50.0, &s, 400.0);
+        // clamped to bottom
+        assert!((y - 400.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn y_to_price_zero_height() {
+        let vp = Viewport::default();
+        let s = scale(100.0, 200.0);
+        let price = vp.y_to_price(0.0, &s, 0.0);
+        assert!((price - 150.0).abs() < 0.001);
     }
 }

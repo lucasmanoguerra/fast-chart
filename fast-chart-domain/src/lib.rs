@@ -1,12 +1,76 @@
+//! # fast-chart-domain
+//!
+//! Pure domain types for the fast-chart trading library.
+//! Zero external dependencies.
+//!
+//! This crate provides the foundational building blocks for financial charting:
+//! OHLCV bars, ticks, time series, viewport management, price scales,
+//! markers, price lines, crosshair magnet, kinetic scrolling, and
+//! chart invalidation — all as pure, testable domain logic.
+
+// ---------------------------------------------------------------------------
+// Internal modules
+// ---------------------------------------------------------------------------
 pub mod bar;
 pub mod crosshair;
 pub mod error;
 pub mod indicator;
+pub mod indicators;
+pub mod invalidation;
+pub mod kinetic;
+pub mod localization;
+pub mod marker;
+pub mod price_line;
+pub mod price_scale;
 pub mod scale;
 pub mod series;
 pub mod series_type;
 pub mod tick;
 pub mod viewport;
+
+// ---------------------------------------------------------------------------
+// Primary re-exports — the ergonomic public API
+// ---------------------------------------------------------------------------
+
+// Core data types
+pub use bar::Bar;
+pub use tick::Tick;
+pub use viewport::Viewport;
+
+// Series
+pub use series::TimeSeries;
+pub use series_type::SeriesType;
+
+// Indicators
+pub use indicator::Indicator;
+
+// Price formatting
+pub use price_line::{LabelPosition, LineStyle, PriceLine, PriceLineId, PriceLineSet};
+pub use price_scale::{
+    DefaultPriceFormatter, PriceFormatter, PriceScale, PriceScaleId, PriceScaleMode,
+    PriceScaleOptions,
+};
+
+// Crosshair & Magnet
+pub use crosshair::{Crosshair, MagnetMode};
+
+// Markers
+pub use marker::{Marker, MarkerId, MarkerPosition, MarkerSet, MarkerShape};
+
+// Invalidation
+pub use invalidation::{InvalidationLevel, InvalidationMask, PaneBitmask};
+
+// Kinetic scroll
+pub use kinetic::KineticScroll;
+
+// Localization
+pub use localization::{EnglishLocalizer, Localizer, SpanishLocalizer};
+
+// Scales
+pub use scale::{LinearScale, TimeScale};
+
+// Error
+pub use error::ChartError;
 
 #[cfg(test)]
 mod integration_tests {

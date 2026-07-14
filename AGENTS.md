@@ -1,0 +1,280 @@
+# AGENTS.md
+
+# Contexto General
+
+Trabajas sobre una librería profesional de gráficos para trading desarrollada en Rust.
+
+El objetivo principal es construir una librería que combine:
+
+- Alto rendimiento
+- Baja latencia
+- Precisión visual
+- Arquitectura limpia
+- Escalabilidad
+- Mantenibilidad a largo plazo
+- APIs estables
+- Extensibilidad
+- Bajo consumo de memoria
+
+Salvo que el usuario indique lo contrario, todas las decisiones deben alinearse con este documento.
+
+---
+
+# Orden de Prioridades
+
+Cuando existan conflictos entre principios, seguir siempre este orden:
+
+1. Correctitud
+2. Seguridad
+3. Simplicidad del diseño
+4. Arquitectura
+5. Mantenibilidad
+6. Testabilidad
+7. Rendimiento
+8. Optimizaciones de bajo nivel
+
+Nunca sacrificar la correctitud o la arquitectura por microoptimizaciones.
+
+---
+
+# Arquitectura
+
+Toda implementación debe respetar:
+
+- Arquitectura Hexagonal (Ports & Adapters)
+- Clean Architecture
+- Diseño modular
+- Componentes desacoplados
+- Alta cohesión
+- Responsabilidad única (SRP)
+- SOLID
+- Separación clara de responsabilidades
+- Dependencias dirigidas hacia el dominio
+
+Las capas nunca deben romper su aislamiento por conveniencia.
+
+---
+
+# Diseño de Componentes
+
+Los componentes deben ser:
+
+- Pequeños
+- Reutilizables
+- Intercambiables
+- Independientes
+- Fáciles de probar
+
+Cada módulo debe tener una única responsabilidad claramente definida.
+
+Evitar módulos "Dios" que concentren múltiples responsabilidades.
+
+---
+
+# Modularización
+
+Dividir el código únicamente cuando mejore:
+
+- claridad
+- reutilización
+- mantenibilidad
+- aislamiento de responsabilidades
+
+No fragmentar el código innecesariamente.
+
+La atomización debe mejorar la comprensión, no dificultarla.
+
+---
+
+# Abstracciones
+
+Utilizar traits e interfaces únicamente cuando:
+
+- exista más de una implementación posible;
+- aporten desacoplamiento real;
+- simplifiquen las pruebas;
+- permitan extensibilidad futura claramente justificada.
+
+No crear abstracciones por anticipación (YAGNI).
+
+---
+
+# Filosofía de Ingeniería
+
+Aplicar siempre:
+
+- KISS
+- DRY
+- YAGNI
+
+Priorizar soluciones simples antes que soluciones sofisticadas.
+
+Evitar sobreingeniería.
+
+---
+
+# Rendimiento
+
+El rendimiento es un objetivo permanente.
+
+Preferir implementaciones que reduzcan:
+
+- asignaciones dinámicas innecesarias;
+- copias de memoria;
+- clonados innecesarios;
+- bloqueos de sincronización prolongados;
+- indirecciones evitables.
+
+Optimizar únicamente cuando exista un beneficio medible o una razón técnica clara.
+
+No realizar optimizaciones prematuras.
+
+Priorizar siempre la claridad fuera de los hot paths.
+
+---
+
+# Consumo de Memoria
+
+Buscar siempre minimizar:
+
+- allocations;
+- reallocations;
+- uso innecesario del heap;
+- estructuras temporales.
+
+Preferir referencias, borrowing e iteradores cuando sea apropiado.
+
+---
+
+# Concurrencia
+
+Toda concurrencia debe ser segura.
+
+Preferir:
+
+- ownership;
+- paso de mensajes;
+- estructuras lock-free cuando sean apropiadas;
+- paralelismo únicamente cuando aporte beneficios reales.
+
+Minimizar:
+
+- Mutex;
+- RwLock;
+- estado mutable compartido.
+
+---
+
+# Manejo de Errores
+
+Nunca utilizar `unwrap()` o `expect()` en código de producción salvo que exista una justificación explícita.
+
+Propagar errores mediante `Result`.
+
+Los errores deben contener contexto suficiente para facilitar el diagnóstico.
+
+No ocultar errores silenciosamente.
+
+---
+
+# Rust Idiomático
+
+Seguir siempre las mejores prácticas del ecosistema Rust.
+
+Preferir:
+
+- ownership;
+- borrowing;
+- pattern matching;
+- enums;
+- Result;
+- Option;
+- iteradores;
+- composición sobre herencia.
+
+Evitar trasladar patrones propios de C++, Java o C# cuando Rust ofrece una alternativa idiomática.
+
+---
+
+# Dependencias
+
+Agregar dependencias externas únicamente cuando aporten un beneficio claro.
+
+Preferir la biblioteca estándar (`std`) cuando sea suficiente.
+
+Evitar crates pesados para funcionalidades pequeñas.
+
+Mantener el árbol de dependencias lo más reducido posible.
+
+---
+
+# API Pública
+
+Las APIs públicas deben ser:
+
+- pequeñas;
+- consistentes;
+- fáciles de comprender;
+- bien documentadas;
+- estables.
+
+Evitar breaking changes innecesarios.
+
+Toda API pública debe diseñarse pensando en su mantenimiento a largo plazo.
+
+---
+
+# Documentación
+
+Todo elemento público debe documentarse.
+
+Incluir cuando sea posible:
+
+- propósito;
+- comportamiento;
+- invariantes;
+- limitaciones;
+- ejemplos de uso.
+
+La documentación debe mantenerse sincronizada con el código.
+
+---
+
+# Testing
+
+Todo comportamiento relevante debe poder probarse de forma aislada.
+
+Priorizar:
+
+- pruebas unitarias;
+- pruebas de integración;
+- pruebas deterministas.
+
+Evitar dependencias ocultas que dificulten el testing.
+
+---
+
+# Consistencia
+
+Mantener consistencia con la arquitectura, estilo y patrones ya presentes en el proyecto.
+
+No introducir nuevos patrones cuando ya exista uno equivalente.
+
+La consistencia tiene prioridad sobre preferencias personales.
+
+---
+
+# Criterios de Implementación
+
+Antes de implementar cualquier cambio, evaluar:
+
+- ¿Respeta la arquitectura?
+- ¿Reduce o aumenta el acoplamiento?
+- ¿Es la solución más simple posible?
+- ¿Es fácilmente testeable?
+- ¿Puede mantenerse durante años?
+- ¿Tiene un impacto negativo en el rendimiento?
+- ¿Introduce complejidad innecesaria?
+- ¿Es idiomática en Rust?
+
+Si alguna respuesta genera dudas, reconsiderar el diseño antes de escribir código.

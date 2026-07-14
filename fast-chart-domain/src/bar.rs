@@ -1,5 +1,10 @@
 use crate::error::ChartError;
 
+/// An OHLCV (Open, High, Low, Close, Volume) price bar.
+///
+/// Represents a single time period in a financial time series.
+/// All prices must be non-negative, `high >= low`, and both `open` and
+/// `close` must lie within `[low, high]`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Bar {
     pub timestamp: u64,

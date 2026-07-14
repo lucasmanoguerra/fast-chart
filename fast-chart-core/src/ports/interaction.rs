@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum InteractionCommand {
     ZoomAtCursor { factor: f64, screen_x: f64 },
     PanBy { time_delta: i64 },
@@ -12,6 +13,8 @@ pub enum ViewportCommand {
     SetValueRange { min: f64, max: f64 },
     SetCrosshairPosition { x: f64, y: f64, time: u64, price: f64 },
     DeactivateCrosshair,
+    ZoomAtCursor { factor: f64, screen_x: f64 },
+    PanBy { time_delta: i64 },
     RequestRedraw,
 }
 

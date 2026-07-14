@@ -1,5 +1,9 @@
 use crate::error::ChartError;
 
+/// A single tick (bid/ask/last) snapshot from a live market feed.
+///
+/// Unlike [`Bar`](crate::Bar), a tick represents an instantaneous price
+/// point rather than an aggregated time period.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tick {
     pub timestamp: u64,

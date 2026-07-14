@@ -3,19 +3,26 @@ use crate::ports::interaction::{InteractionCommand, InteractionHandler, Viewport
 use crate::ports::render::ChartRenderer;
 use fast_chart_domain::bar::Bar;
 use fast_chart_domain::crosshair::Crosshair;
+use fast_chart_domain::invalidation::{InvalidationLevel, InvalidationMask};
+use fast_chart_domain::kinetic::KineticScroll;
 use fast_chart_domain::series::TimeSeries;
 use fast_chart_domain::series_type::SeriesType;
 use fast_chart_domain::viewport::Viewport;
 
 const CHART_CAPACITY: usize = 100_000;
 
+/// Snapshot of all mutable chart state.
+///
+/// Owned by [`ChartController`], passed by reference to the renderer on
+/// every draw call. Contains the time series, viewport, crosshair,
+/// pane heights, series type, and invalidation mask.
 pub struct ChartState {
     pub time_series: TimeSeries<Bar, CHART_CAPACITY>,
     pub viewport: Viewport,
     pub crosshair: Crosshair,
     pub pane_heights: Vec<f64>,
     pub series_type: SeriesType,
-    pub needs_redraw: bool,
+    pub invalidation: InvalidationMask,
 }
 
 impl ChartState {
@@ -26,17 +33,40 @@ impl ChartState {
             crosshair: Crosshair::default(),
             pane_heights: vec![400.0],
             series_type: SeriesType::default(),
-            needs_redraw: false,
+            invalidation: InvalidationMask::NONE,
         }
+    }
+
+    pub fn mark_dirty(&mut self, level: InvalidationLevel) {
+        self.invalidation.merge(InvalidationMask::all_panes(level));
+    }
+
+    pub fn mark_pane_dirty(&mut self, level: InvalidationLevel, pane_index: usize) {
+        self.invalidation
+            .merge(InvalidationMask::single_pane(level, pane_index));
+    }
+
+    pub fn consume_invalidation(&mut self) -> InvalidationMask {
+        let mask = self.invalidation;
+        self.invalidation.clear();
+        mask
     }
 }
 
+/// Central orchestrator that owns the data pipeline, interaction handler,
+/// and renderer.
+///
+/// `ChartController` sits at the application layer: it polls a [`DataProvider`]
+/// for new market events, applies user interactions via an
+/// [`InteractionHandler`], and drives a [`ChartRenderer`] whenever the
+/// invalidation mask signals that a redraw is needed.
 pub struct ChartController {
     renderer: Box<dyn ChartRenderer>,
     data_provider: Box<dyn DataProvider>,
     interaction: Box<dyn InteractionHandler>,
     state: ChartState,
     indicator_overlays: Vec<(String, TimeSeries<f64, CHART_CAPACITY>)>,
+    kinetic: KineticScroll,
 }
 
 impl ChartController {
@@ -51,6 +81,7 @@ impl ChartController {
             interaction,
             state: ChartState::new(),
             indicator_overlays: Vec::new(),
+            kinetic: KineticScroll::new(0.95),
         }
     }
 
@@ -63,25 +94,27 @@ impl ChartController {
                 match event {
                     DataEvent::BarClosed(bar) => {
                         self.state.time_series.push(bar);
-                        self.state.needs_redraw = true;
+                        self.state.mark_dirty(InvalidationLevel::Full);
                     }
                     DataEvent::TickUpdate(_tick) => {
                         // Tick updates update the latest bar in-place
                         // For now, mark dirty — actual tick→bar aggregation
                         // lives in the adapter layer.
-                        self.state.needs_redraw = true;
+                        self.state.mark_dirty(InvalidationLevel::Full);
                     }
                     DataEvent::SymbolChanged(_) | DataEvent::TimeframeChanged(_) => {
                         // Symbol/timeframe changes require a full data reload
                         // at the adapter level. Core just marks dirty.
-                        self.state.needs_redraw = true;
+                        self.state.mark_dirty(InvalidationLevel::Full);
                     }
                 }
             }
         }
 
         // 2. Update viewport if dirty (auto-fit on first data)
-        if self.state.needs_redraw && self.state.time_series.len() > 0 {
+        if self.state.invalidation.contains(InvalidationLevel::Full)
+            && self.state.time_series.len() > 0
+        {
             // Ensure viewport shows data range on first load
             if self.state.viewport.time_start == 0 && self.state.viewport.time_end == 3600_000 {
                 if let Some(first) = self.state.time_series.get(0) {
@@ -95,10 +128,10 @@ impl ChartController {
             }
         }
 
-        // 3. Call renderer.render() if needs_redraw
-        if self.state.needs_redraw {
+        // 3. Call renderer.render() if needs invalidation
+        if self.state.invalidation.level() > InvalidationLevel::Nothing {
             let _ = self.renderer.render(&self.state);
-            self.state.needs_redraw = false;
+            self.state.invalidation.clear();
         }
     }
 
@@ -114,12 +147,12 @@ impl ChartController {
                 ViewportCommand::SetTimeRange { start, end } => {
                     self.state.viewport.time_start = start;
                     self.state.viewport.time_end = end;
-                    self.state.needs_redraw = true;
+                    self.state.mark_dirty(InvalidationLevel::Full);
                 }
                 ViewportCommand::SetValueRange { min, max } => {
                     self.state.viewport.value_min = min;
                     self.state.viewport.value_max = max;
-                    self.state.needs_redraw = true;
+                    self.state.mark_dirty(InvalidationLevel::Full);
                 }
                 ViewportCommand::SetCrosshairPosition {
                     x,
@@ -132,14 +165,27 @@ impl ChartController {
                     self.state.crosshair.time = time;
                     self.state.crosshair.price = price;
                     self.state.crosshair.active = true;
-                    self.state.needs_redraw = true;
+                    self.state.mark_dirty(InvalidationLevel::Cursor);
                 }
                 ViewportCommand::DeactivateCrosshair => {
                     self.state.crosshair.deactivate();
-                    self.state.needs_redraw = true;
+                    self.state.mark_dirty(InvalidationLevel::Cursor);
                 }
                 ViewportCommand::RequestRedraw => {
-                    self.state.needs_redraw = true;
+                    self.state.mark_dirty(InvalidationLevel::Full);
+                }
+                ViewportCommand::ZoomAtCursor { factor, screen_x } => {
+                    // Stop kinetic scroll when zooming
+                    self.kinetic.stop();
+                    self.state.viewport.zoom(factor, screen_x);
+                    self.state.mark_dirty(InvalidationLevel::Full);
+                }
+                ViewportCommand::PanBy { time_delta } => {
+                    // Update kinetic scroll velocity from the pan delta
+                    self.kinetic.start(time_delta as f64);
+                    // Apply the immediate pan
+                    self.state.viewport.pan(time_delta);
+                    self.state.mark_dirty(InvalidationLevel::Full);
                 }
             }
         }
@@ -151,12 +197,12 @@ impl ChartController {
 
     pub fn add_indicator_overlay(&mut self, name: String, data: TimeSeries<f64, CHART_CAPACITY>) {
         self.indicator_overlays.push((name, data));
-        self.state.needs_redraw = true;
+        self.state.mark_dirty(InvalidationLevel::Full);
     }
 
     pub fn clear_indicator_overlays(&mut self) {
         self.indicator_overlays.clear();
-        self.state.needs_redraw = true;
+        self.state.mark_dirty(InvalidationLevel::Full);
     }
 
     pub fn start_data_provider(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -165,6 +211,29 @@ impl ChartController {
 
     pub fn stop_data_provider(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.data_provider.stop()
+    }
+
+    /// Update kinetic scroll. Call this each frame.
+    /// Returns true if the viewport was displaced (caller should request redraw).
+    pub fn update_kinetic(&mut self) -> bool {
+        if !self.kinetic.is_active() {
+            return false;
+        }
+
+        let displacement = self.kinetic.update();
+        if displacement.abs() > 0.1 {
+            self.state.viewport.pan(displacement as i64);
+            self.state.mark_dirty(InvalidationLevel::Full);
+            true
+        } else {
+            self.kinetic.stop();
+            false
+        }
+    }
+
+    /// Stop kinetic scrolling.
+    pub fn stop_kinetic(&mut self) {
+        self.kinetic.stop();
     }
 }
 
@@ -187,7 +256,7 @@ mod tests {
     #[derive(Clone)]
     struct ChartStateSnapshot {
         _series_len: usize,
-        _needs_redraw: bool,
+        _invalidation_level: InvalidationLevel,
     }
 
     impl MockRenderer {
@@ -204,7 +273,7 @@ mod tests {
             self.render_count += 1;
             self._last_state = Some(ChartStateSnapshot {
                 _series_len: state.time_series.len(),
-                _needs_redraw: state.needs_redraw,
+                _invalidation_level: state.invalidation.level(),
             });
             Ok(())
         }
@@ -303,8 +372,8 @@ mod tests {
         let bar = Bar::new(1000, 100.0, 105.0, 99.0, 102.0, 5000).unwrap();
         tx.send(DataEvent::BarClosed(bar)).unwrap();
         ctrl.tick();
-        // After tick, needs_redraw should be false (renderer was called)
-        assert!(!ctrl.state().needs_redraw);
+        // After tick, invalidation should be cleared (renderer was called)
+        assert!(ctrl.state().invalidation.is_empty());
     }
 
     #[test]
@@ -313,7 +382,7 @@ mod tests {
         ctrl.tick();
         // No data → no render
         assert_eq!(ctrl.state().time_series.len(), 0);
-        assert!(!ctrl.state().needs_redraw);
+        assert!(ctrl.state().invalidation.is_empty());
     }
 
     #[test]

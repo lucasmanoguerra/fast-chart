@@ -5,6 +5,7 @@ use fast_chart_core::{
 };
 use winit::window::CursorIcon;
 
+use super::rendering::area_renderer::AreaRenderer;
 use super::rendering::bar_renderer::BarRenderer;
 use super::rendering::candle_renderer::CandleRenderer;
 use super::rendering::crosshair_renderer::CrosshairRenderer;
@@ -28,6 +29,7 @@ pub struct GpuRenderer {
     shader: wgpu::ShaderModule,
     grid_renderer: GridRenderer,
     line_renderer: LineRenderer,
+    area_renderer: AreaRenderer,
     candle_renderer: CandleRenderer,
     bar_renderer: BarRenderer,
     crosshair_renderer: CrosshairRenderer,
@@ -122,6 +124,7 @@ impl GpuRenderer {
         // --- Create sub-renderers ---
         let grid_renderer = GridRenderer::new(&device, surface_format, &shader);
         let line_renderer = LineRenderer::new(&device, surface_format, &shader);
+        let area_renderer = AreaRenderer::new(&device, surface_format);
         let candle_renderer = CandleRenderer::new(&device, surface_format);
         let bar_renderer = BarRenderer::new(&device, surface_format);
         let crosshair_renderer = CrosshairRenderer::new(&device, surface_format, &shader);
@@ -228,6 +231,7 @@ impl GpuRenderer {
             shader,
             grid_renderer,
             line_renderer,
+            area_renderer,
             candle_renderer,
             bar_renderer,
             crosshair_renderer,
@@ -281,6 +285,7 @@ impl GpuRenderer {
             let w = self.size.0 as f32;
             let h = self.size.1 as f32;
             self.update_line_from_state(w, h, state);
+            self.update_area_from_state(w, h, state);
         }
 
         // Update candle vertex/index buffers if data changed (Full level).
@@ -385,6 +390,9 @@ impl GpuRenderer {
             // Layer 3: Line series (NDC-space, CPU-projected)
             self.line_renderer.render(&mut render_pass);
 
+            // Layer 3.5: Area fill (below line, alpha-blended)
+            self.area_renderer.render(&mut render_pass);
+
             // Layer 4: Pane divider lines
             self.render_dividers(&mut render_pass);
 
@@ -474,6 +482,82 @@ impl GpuRenderer {
             &vertices,
             canvas_width,
             canvas_height,
+        );
+    }
+
+    /// Generate area fill vertices from ChartState and upload to GPU.
+    ///
+    /// The area fills from the close-price line down to `value_min` (bottom
+    /// of the visible pane), using the same color as the line with alpha
+    /// blending for a translucent fill.
+    fn update_area_from_state(
+        &mut self,
+        canvas_width: f32,
+        canvas_height: f32,
+        state: &ChartState,
+    ) {
+        if state.time_series.len() < 2 {
+            self.area_renderer.update_area(
+                &self.queue,
+                &[],
+                canvas_width,
+                canvas_height,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            );
+            return;
+        }
+
+        let viewport = &state.viewport;
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
+        let value_range = viewport.value_max - viewport.value_min;
+
+        if time_range < f64::EPSILON || value_range < f64::EPSILON {
+            self.area_renderer.update_area(
+                &self.queue,
+                &[],
+                canvas_width,
+                canvas_height,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            );
+            return;
+        }
+
+        // Collect visible bars (same filter as line renderer).
+        let visible: Vec<_> = state
+            .time_series
+            .iter()
+            .filter(|b| {
+                b.timestamp >= viewport.time_start as u64
+                    && b.timestamp <= viewport.time_end as u64
+            })
+            .copied()
+            .collect();
+
+        // Baseline = bottom of visible range so area fills to pane bottom.
+        self.area_renderer
+            .set_baseline(viewport.value_min);
+
+        // Fill color: same hue as line but with transparency.
+        self.area_renderer.set_colors(
+            [colors::LINE_CLOSE[0], colors::LINE_CLOSE[1], colors::LINE_CLOSE[2], 0.25],
+            colors::LINE_CLOSE,
+        );
+
+        self.area_renderer.update_area(
+            &self.queue,
+            &visible,
+            canvas_width,
+            canvas_height,
+            viewport.time_start as f64,
+            viewport.time_end as f64,
+            viewport.value_min,
+            viewport.value_max,
         );
     }
 

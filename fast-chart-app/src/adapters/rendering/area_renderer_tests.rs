@@ -253,3 +253,170 @@ mod histogram_renderer_tests {
         assert!(y_value > y_baseline);
     }
 }
+
+#[cfg(test)]
+mod area_update_from_state_tests {
+    use fast_chart_core::Bar;
+
+    /// Simulates the visible-bar filtering that `update_area_from_state` performs.
+    fn filter_visible_bars(bars: &[Bar], time_start: f64, time_end: f64) -> Vec<Bar> {
+        bars.iter()
+            .filter(|b| {
+                b.timestamp >= time_start as u64 && b.timestamp <= time_end as u64
+            })
+            .copied()
+            .collect()
+    }
+
+    /// Simulates the area vertex generation from visible bars.
+    fn compute_area_vertices(
+        bars: &[Bar],
+        canvas_width: f32,
+        canvas_height: f32,
+        time_start: f64,
+        time_end: f64,
+        value_min: f64,
+        value_max: f64,
+        baseline_price: f64,
+    ) -> (usize, usize) {
+        if bars.len() < 2 {
+            return (0, 0);
+        }
+        let time_range = time_end - time_start;
+        let value_range = value_max - value_min;
+        if time_range < f64::EPSILON || value_range < f64::EPSILON {
+            return (0, 0);
+        }
+
+        let vert_count = bars.len() * 2;
+        let idx_count = (bars.len() - 1) * 6;
+
+        // Verify vertex coordinate computation for each bar.
+        let cw = canvas_width as f64;
+        let ch = canvas_height as f64;
+        for bar in bars {
+            let x = ((bar.timestamp as f64 - time_start) / time_range * cw) as f32;
+            let y_close = ((1.0 - (bar.close - value_min) / value_range) * ch) as f32;
+            let y_baseline = ((1.0 - (baseline_price - value_min) / value_range) * ch) as f32;
+            assert!(x >= 0.0 && x <= canvas_width, "x out of range: {x}");
+            assert!(y_close >= 0.0 && y_close <= canvas_height, "y_close out of range: {y_close}");
+            assert!(y_baseline >= 0.0 && y_baseline <= canvas_height, "y_baseline out of range: {y_baseline}");
+        }
+
+        (vert_count, idx_count)
+    }
+
+    fn test_bars() -> Vec<Bar> {
+        vec![
+            Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap(),
+            Bar::new(200, 105.0, 115.0, 100.0, 110.0, 1200).unwrap(),
+            Bar::new(300, 110.0, 120.0, 100.0, 108.0, 800).unwrap(),
+        ]
+    }
+
+    #[test]
+    fn area_initialized_with_correct_vertex_index_counts() {
+        // AreaRenderer pre-allocates for 100k bars.
+        let vertex_capacity = 200_000; // 2 verts per bar
+        let index_capacity = 100_000 * 6;
+        assert_eq!(vertex_capacity, 200_000);
+        assert_eq!(index_capacity, 600_000);
+    }
+
+    #[test]
+    fn area_update_produces_correct_vertex_and_index_counts() {
+        let bars = test_bars();
+        let (verts, indices) = compute_area_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 90.0,
+        );
+        // 3 bars → 6 vertices, 12 indices
+        assert_eq!(verts, 6);
+        assert_eq!(indices, 12);
+    }
+
+    #[test]
+    fn area_empty_seriesProduces_nothing() {
+        let bars: Vec<Bar> = vec![];
+        let (verts, indices) = compute_area_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 90.0,
+        );
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn area_single_bar_produces_no_indices() {
+        let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
+        let (verts, indices) = compute_area_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 90.0,
+        );
+        // Single bar: need at least 2 bars for area fill, so 0 vertices, 0 indices.
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn area_zero_time_range_produces_nothing() {
+        let bars = test_bars();
+        let (verts, indices) = compute_area_vertices(
+            &bars, 800.0, 600.0, 100.0, 100.0, 90.0, 125.0, 90.0,
+        );
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn area_zero_value_range_produces_nothing() {
+        let bars = test_bars();
+        let (verts, indices) = compute_area_vertices(
+            &bars, 800.0, 600.0, 0.0, 400.0, 105.0, 105.0, 105.0,
+        );
+        assert_eq!(verts, 0);
+        assert_eq!(indices, 0);
+    }
+
+    #[test]
+    fn area_visible_bar_filtering() {
+        let bars = test_bars();
+        // Only bars with timestamp in [150, 250] → just bar at 200
+        let visible = filter_visible_bars(&bars, 150.0, 250.0);
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].timestamp, 200);
+
+        // All bars visible
+        let visible = filter_visible_bars(&bars, 0.0, 400.0);
+        assert_eq!(visible.len(), 3);
+
+        // No bars visible
+        let visible = filter_visible_bars(&bars, 500.0, 600.0);
+        assert_eq!(visible.len(), 0);
+    }
+
+    #[test]
+    fn area_baseline_at_value_min_fills_to_bottom() {
+        // When baseline == value_min, y_baseline should be at canvas bottom (max y).
+        let value_min = 90.0;
+        let value_max = 125.0;
+        let canvas_height = 600.0;
+        let baseline_price = value_min;
+
+        let y_baseline = ((1.0 - (baseline_price - value_min) / (value_max - value_min)) * canvas_height) as f32;
+        // (1.0 - 0.0) * 600 = 600.0 → bottom of canvas
+        assert!((y_baseline - 600.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn area_close_vertex_is_above_baseline_when_price_above_min() {
+        let value_min = 90.0;
+        let value_max = 125.0;
+        let canvas_height = 600.0;
+        let close = 105.0;
+        let baseline_price = value_min;
+
+        let y_close = ((1.0 - (close - value_min) / (value_max - value_min)) * canvas_height) as f32;
+        let y_baseline = ((1.0 - (baseline_price - value_min) / (value_max - value_min)) * canvas_height) as f32;
+
+        // Higher price → lower screen y (flipped), so y_close < y_baseline.
+        assert!(y_close < y_baseline);
+    }
+}

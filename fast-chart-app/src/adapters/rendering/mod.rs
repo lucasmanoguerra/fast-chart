@@ -1,4 +1,5 @@
 pub mod area_renderer;
+pub mod bar_renderer;
 pub mod baseline_renderer;
 pub mod candle_renderer;
 pub mod crosshair_renderer;

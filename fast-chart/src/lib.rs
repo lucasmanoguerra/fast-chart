@@ -8,6 +8,17 @@
 //!
 //! `fast-chart` is the single gateway to domain types — the app
 //! crate should never import `fast-chart-domain` directly.
+//!
+//! ```rust
+//! use fast_chart::{
+//!     // Render types (top-level re-exports)
+//!     DrawCommand, DrawLayer, LineStyle as RenderLineStyle,
+//!     RendererBackend, RenderContext, CoordinatePipeline,
+//!     ScreenPoint, WorldPoint, Rect, SeriesHit, SeriesRenderer,
+//!     // Domain types (gateway re-exports)
+//!     Bar, Tick, Viewport, TimeSeries, LineStyle,
+//! };
+//! ```
 
 // ---------------------------------------------------------------------------
 // Internal modules
@@ -62,3 +73,12 @@ pub use app::viewport_management::ViewportManager;
 pub use ports::data_provider::{DataEvent, DataProvider};
 pub use ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
 pub use ports::render::ChartRenderer;
+
+// ---------------------------------------------------------------------------
+// Render re-exports — the rendering contract API
+// ---------------------------------------------------------------------------
+pub use render::{
+    CoordinatePipeline, DrawCommand, DrawLayer, RendererBackend, RenderContext,
+    ScreenPoint, SeriesHit, SeriesRenderer, WorldPoint, Rect,
+};
+pub use render::LineStyle as RenderLineStyle;

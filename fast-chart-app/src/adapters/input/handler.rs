@@ -1,4 +1,4 @@
-use fast_chart_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
+use fast_chart::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
 
 /// Stateless adapter mapping winit window events to `InteractionCommand`s.
 pub struct WinitInteractionHandler;

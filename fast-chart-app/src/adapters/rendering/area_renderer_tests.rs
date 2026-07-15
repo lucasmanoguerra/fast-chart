@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod area_renderer_tests {
-    use fast_chart_core::Bar;
+    use fast_chart::Bar;
 
     fn test_bars() -> Vec<Bar> {
         vec![
@@ -84,7 +84,7 @@ mod area_renderer_tests {
 
 #[cfg(test)]
 mod baseline_renderer_tests {
-    use fast_chart_core::Bar;
+    use fast_chart::Bar;
 
     fn test_bars() -> Vec<Bar> {
         vec![
@@ -148,7 +148,7 @@ mod baseline_renderer_tests {
 
 #[cfg(test)]
 mod histogram_renderer_tests {
-    use fast_chart_core::Bar;
+    use fast_chart::Bar;
 
     fn test_bars() -> Vec<Bar> {
         vec![
@@ -256,7 +256,7 @@ mod histogram_renderer_tests {
 
 #[cfg(test)]
 mod area_update_from_state_tests {
-    use fast_chart_core::Bar;
+    use fast_chart::Bar;
 
     /// Simulates the visible-bar filtering that `update_area_from_state` performs.
     fn filter_visible_bars(bars: &[Bar], time_start: f64, time_end: f64) -> Vec<Bar> {
@@ -423,7 +423,7 @@ mod area_update_from_state_tests {
 
 #[cfg(test)]
 mod histogram_update_from_state_tests {
-    use fast_chart_core::Bar;
+    use fast_chart::Bar;
 
     /// Simulates the visible-bar filtering that `update_histogram_from_state` performs.
     fn filter_visible_bars(bars: &[Bar], time_start: f64, time_end: f64) -> Vec<Bar> {
@@ -635,7 +635,7 @@ mod histogram_update_from_state_tests {
 
 #[cfg(test)]
 mod baseline_update_from_state_tests {
-    use fast_chart_core::Bar;
+    use fast_chart::Bar;
 
     /// Simulates the visible-bar filtering that `update_baseline_from_state` performs.
     fn filter_visible_bars(bars: &[Bar], time_start: f64, time_end: f64) -> Vec<Bar> {

@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/lucasmanoguerra/fast-chart"
 
 [dependencies]
-fast-chart-core = { path = "../fast-chart-core" }
+fast-chart = { path = "../fast-chart" }
 winit = "0.30"
 wgpu = "22"
 pollster = "0.4"

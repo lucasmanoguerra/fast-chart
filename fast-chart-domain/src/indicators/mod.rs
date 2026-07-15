@@ -8,6 +8,9 @@ pub mod ichimoku;
 pub mod vwap;
 pub mod atr;
 pub mod adx;
+pub mod cci;
+pub mod williams_r;
+pub mod parabolic_sar;
 
 pub use sma::Sma;
 pub use ema::Ema;
@@ -19,3 +22,6 @@ pub use ichimoku::Ichimoku;
 pub use vwap::Vwap;
 pub use atr::Atr;
 pub use adx::Adx;
+pub use cci::Cci;
+pub use williams_r::WilliamsR;
+pub use parabolic_sar::ParabolicSar;

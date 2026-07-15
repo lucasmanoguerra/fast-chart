@@ -3,10 +3,10 @@
 //! Tests markers, price lines, kinetic scroll, price formatting, and the
 //! ChartController end-to-end using mock ports.
 
-use fast_chart_core::app::chart_controller::ChartController;
-use fast_chart_core::app::layout_manager::LayoutManager;
-use fast_chart_core::ports::data_provider::{DataEvent, DataProvider};
-use fast_chart_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
+use fast_chart::app::chart_controller::ChartController;
+use fast_chart::app::layout_manager::LayoutManager;
+use fast_chart::ports::data_provider::{DataEvent, DataProvider};
+use fast_chart::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
 use fast_chart_domain::bar::Bar;
 use fast_chart_domain::kinetic::KineticScroll;
 use fast_chart_domain::marker::{Marker, MarkerPosition, MarkerSet, MarkerShape};

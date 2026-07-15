@@ -1,5 +1,5 @@
 [package]
-name = "fast-chart-core"
+name = "fast-chart"
 version = "0.1.0"
 edition = "2021"
 description = "Application layer and ports for the fast-chart trading library"

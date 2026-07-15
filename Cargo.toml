@@ -1,5 +1,5 @@
 [workspace]
-members = ["fast-chart-domain", "fast-chart-core", "fast-chart-app"]
+members = ["fast-chart-domain", "fast-chart", "fast-chart-app"]
 resolver = "2"
 
 [profile.release]

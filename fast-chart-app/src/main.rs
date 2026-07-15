@@ -1,8 +1,8 @@
-use fast_chart_core::app::chart_controller::ChartController;
-use fast_chart_core::FrameCounter;
-use fast_chart_core::app::layout_manager::LayoutManager;
-use fast_chart_core::ports::data_provider::DataProvider;
-use fast_chart_core::ports::interaction::InteractionCommand;
+use fast_chart::app::chart_controller::ChartController;
+use fast_chart::FrameCounter;
+use fast_chart::app::layout_manager::LayoutManager;
+use fast_chart::ports::data_provider::DataProvider;
+use fast_chart::ports::interaction::InteractionCommand;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use winit::application::ApplicationHandler;
@@ -70,7 +70,7 @@ impl App {
 
     /// Convert a screen x-position to a timestamp using the given viewport.
     fn screen_x_to_timestamp(
-        viewport: &fast_chart_core::Viewport,
+        viewport: &fast_chart::Viewport,
         screen_x: f64,
         canvas_width: f64,
     ) -> f64 {

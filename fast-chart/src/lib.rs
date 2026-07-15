@@ -1,4 +1,4 @@
-//! # fast-chart-core
+//! # fast-chart
 //!
 //! Application layer for the fast-chart trading library.
 //! Contains the ChartController, ports, and layout management.
@@ -6,7 +6,7 @@
 //! This crate bridges domain types with rendering and data-provider
 //! adapters through well-defined port traits.
 //!
-//! `fast-chart-core` is the single gateway to domain types — the app
+//! `fast-chart` is the single gateway to domain types — the app
 //! crate should never import `fast-chart-domain` directly.
 
 // ---------------------------------------------------------------------------

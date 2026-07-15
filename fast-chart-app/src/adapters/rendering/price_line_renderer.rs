@@ -1,4 +1,4 @@
-use fast_chart_core::{PriceLine, Viewport};
+use fast_chart::{PriceLine, Viewport};
 
 use super::types::{Uniforms, Vertex};
 

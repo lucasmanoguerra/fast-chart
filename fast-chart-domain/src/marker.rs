@@ -34,6 +34,21 @@ impl Default for MarkerShape {
 }
 
 /// A point annotation at a specific timestamp.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::{Marker, MarkerShape, MarkerPosition};
+///
+/// let marker = Marker::new("buy-1", 1000, 105.0)
+///     .with_shape(MarkerShape::ArrowUp)
+///     .with_position(MarkerPosition::BelowBar)
+///     .with_color([0.0, 1.0, 0.0, 1.0]);
+///
+/// assert_eq!(marker.timestamp, 1000);
+/// assert_eq!(marker.price, 105.0);
+/// assert_eq!(marker.shape, MarkerShape::ArrowUp);
+/// ```
 #[derive(Debug, Clone)]
 pub struct Marker {
     /// Unique identifier.

@@ -1,4 +1,22 @@
 /// Kinetic scroll state for smooth momentum-based scrolling.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::KineticScroll;
+///
+/// let mut ks = KineticScroll::new(0.95);
+/// assert!(!ks.is_active());
+///
+/// // Start scrolling with initial velocity
+/// ks.start(10.0);
+/// assert!(ks.is_active());
+///
+/// // Update decelerates over time
+/// let displacement = ks.update();
+/// assert!(displacement > 0.0);
+/// assert!(ks.velocity() < 10.0); // velocity decreased
+/// ```
 #[derive(Debug, Clone)]
 pub struct KineticScroll {
     /// Current velocity (pixels per frame).

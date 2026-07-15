@@ -1,6 +1,21 @@
 use crate::price_scale::PriceScaleId;
 
 /// A horizontal price line at a specific price level.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::{PriceLine, LineStyle};
+/// use fast_chart_domain::price_scale::PriceScaleId;
+///
+/// let line = PriceLine::new("entry", 150.0)
+///     .with_color([1.0, 0.0, 0.0, 1.0])
+///     .with_style(LineStyle::Dashed)
+///     .with_label("Entry");
+///
+/// assert_eq!(line.price, 150.0);
+/// assert_eq!(line.style, LineStyle::Dashed);
+/// ```
 #[derive(Debug, Clone)]
 pub struct PriceLine {
     /// Unique identifier for this price line.

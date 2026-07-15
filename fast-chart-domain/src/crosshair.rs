@@ -79,6 +79,25 @@ pub fn snap_to_ohlc(price: f64, bar: &Bar, mode: MagnetMode) -> f64 {
     }
 }
 
+/// Crosshair position tracking with optional OHLC magnet snapping.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::Crosshair;
+/// use fast_chart_domain::scale::{TimeScale, LinearScale};
+///
+/// let ts = TimeScale { start: 0, end: 2000, width: 800.0 };
+/// let vs = LinearScale { min: 90.0, max: 120.0, height: 300.0 };
+///
+/// let mut ch = Crosshair::default();
+/// assert!(!ch.active);
+///
+/// // Update position from screen coordinates
+/// ch.update(400.0, 150.0, &ts, &vs);
+/// assert!(ch.active);
+/// assert_eq!(ch.time, 1000);
+/// ```
 #[derive(Debug, Clone)]
 pub struct Crosshair {
     pub screen_x: f64,

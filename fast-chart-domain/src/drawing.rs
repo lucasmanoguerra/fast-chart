@@ -562,6 +562,207 @@ impl Pitchfork {
 }
 
 // ---------------------------------------------------------------------------
+// Ellipse
+// ---------------------------------------------------------------------------
+
+/// An ellipse defined by center point and horizontal/vertical radii.
+#[derive(Debug, Clone)]
+pub struct Ellipse {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Center point of the ellipse.
+    pub center: ChartPoint,
+    /// Horizontal radius in timestamp units.
+    pub radius_x: f64,
+    /// Vertical radius in price units.
+    pub radius_y: f64,
+    /// Border color [r, g, b, a].
+    pub color: [f32; 4],
+    /// Border width in pixels.
+    pub width: f32,
+    /// Border line style.
+    pub style: LineStyle,
+    /// Optional fill color [r, g, b, a].
+    pub fill_color: Option<[f32; 4]>,
+}
+
+impl Ellipse {
+    /// Create a new ellipse with default styling and no fill.
+    pub fn new(id: impl Into<String>, center: ChartPoint, radius_x: f64, radius_y: f64) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            center,
+            radius_x,
+            radius_y,
+            color: [1.0, 1.0, 1.0, 1.0],
+            width: 1.0,
+            style: LineStyle::Solid,
+            fill_color: None,
+        }
+    }
+
+    /// Set the border color.
+    pub fn with_color(mut self, color: [f32; 4]) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set the border width.
+    pub fn with_width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    /// Set the border line style.
+    pub fn with_style(mut self, style: LineStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Set the fill color.
+    pub fn with_fill(mut self, fill_color: [f32; 4]) -> Self {
+        self.fill_color = Some(fill_color);
+        self
+    }
+
+    /// Check if a point is inside the ellipse.
+    ///
+    /// Uses the standard ellipse equation: `((x-cx)/rx)^2 + ((y-cy)/ry)^2 <= 1`.
+    /// Returns `true` when the point is inside or exactly on the boundary.
+    pub fn contains(&self, point: ChartPoint) -> bool {
+        let dx = (point.timestamp as f64 - self.center.timestamp as f64) / self.radius_x;
+        let dy = (point.price - self.center.price) / self.radius_y;
+        dx * dx + dy * dy <= 1.0
+    }
+
+    /// Get the bounding box as `(min_point, max_point)`.
+    ///
+    /// Returns the bottom-left and top-right corners of the axis-aligned
+    /// bounding rectangle that fully encloses the ellipse.
+    pub fn bounding_box(&self) -> (ChartPoint, ChartPoint) {
+        let min = ChartPoint::new(
+            self.center.timestamp.saturating_sub(self.radius_x as u64),
+            self.center.price - self.radius_y,
+        );
+        let max = ChartPoint::new(
+            self.center.timestamp + self.radius_x as u64,
+            self.center.price + self.radius_y,
+        );
+        (min, max)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Path
+// ---------------------------------------------------------------------------
+
+/// A series of connected line segments (polyline).
+#[derive(Debug, Clone)]
+pub struct Path {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Ordered list of points forming the path.
+    pub points: Vec<ChartPoint>,
+    /// Line color [r, g, b, a].
+    pub color: [f32; 4],
+    /// Line width in pixels.
+    pub width: f32,
+    /// Line style.
+    pub style: LineStyle,
+    /// If `true`, the last point connects back to the first.
+    pub closed: bool,
+}
+
+impl Path {
+    /// Create a new path with default styling, not closed.
+    pub fn new(id: impl Into<String>, points: Vec<ChartPoint>) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            points,
+            color: [1.0, 1.0, 1.0, 1.0],
+            width: 1.0,
+            style: LineStyle::Solid,
+            closed: false,
+        }
+    }
+
+    /// Set the line color.
+    pub fn with_color(mut self, color: [f32; 4]) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set the line width.
+    pub fn with_width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    /// Set the line style.
+    pub fn with_style(mut self, style: LineStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Set whether the path is closed.
+    pub fn with_closed(mut self, closed: bool) -> Self {
+        self.closed = closed;
+        self
+    }
+
+    /// Append a point to the end of the path.
+    pub fn push(&mut self, point: ChartPoint) {
+        self.points.push(point);
+    }
+
+    /// Get the number of line segments.
+    ///
+    /// Returns `0` for fewer than 2 points. For an open path with `n` points
+    /// returns `n - 1`; for a closed path returns `n`.
+    pub fn segment_count(&self) -> usize {
+        if self.points.len() < 2 {
+            0
+        } else if self.closed {
+            self.points.len()
+        } else {
+            self.points.len() - 1
+        }
+    }
+
+    /// Calculate total length of the path (sum of Euclidean segment lengths).
+    ///
+    /// Distance is computed in `(timestamp, price)` space. For a closed path
+    /// the closing segment (last point to first) is included.
+    pub fn total_length(&self) -> f64 {
+        if self.points.len() < 2 {
+            return 0.0;
+        }
+
+        let mut total = 0.0;
+        for window in self.points.windows(2) {
+            let dx = window[1].timestamp as f64 - window[0].timestamp as f64;
+            let dy = window[1].price - window[0].price;
+            total += (dx * dx + dy * dy).sqrt();
+        }
+
+        if self.closed {
+            let first = &self.points[0];
+            let last = &self.points[self.points.len() - 1];
+            let dx = last.timestamp as f64 - first.timestamp as f64;
+            let dy = last.price - first.price;
+            total += (dx * dx + dy * dy).sqrt();
+        }
+
+        total
+    }
+
+    /// Get a reference to the point at the given index.
+    pub fn point(&self, index: usize) -> Option<&ChartPoint> {
+        self.points.get(index)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // DrawingSet
 // ---------------------------------------------------------------------------
 
@@ -575,6 +776,8 @@ pub struct DrawingSet {
     fibonacci_retracements: Vec<FibonacciRetracement>,
     fibonacci_extensions: Vec<FibonacciExtension>,
     pitchforks: Vec<Pitchfork>,
+    ellipses: Vec<Ellipse>,
+    paths: Vec<Path>,
 }
 
 impl DrawingSet {
@@ -618,6 +821,16 @@ impl DrawingSet {
         self.pitchforks.push(pf);
     }
 
+    /// Add an ellipse.
+    pub fn add_ellipse(&mut self, ellipse: Ellipse) {
+        self.ellipses.push(ellipse);
+    }
+
+    /// Add a path.
+    pub fn add_path(&mut self, path: Path) {
+        self.paths.push(path);
+    }
+
     /// Remove a drawing by ID. Returns `true` if found and removed.
     pub fn remove(&mut self, id: &DrawingId) -> bool {
         if let Some(pos) = self.trend_lines.iter().position(|l| l.id == *id) {
@@ -646,6 +859,14 @@ impl DrawingSet {
         }
         if let Some(pos) = self.pitchforks.iter().position(|p| p.id == *id) {
             self.pitchforks.remove(pos);
+            return true;
+        }
+        if let Some(pos) = self.ellipses.iter().position(|e| e.id == *id) {
+            self.ellipses.remove(pos);
+            return true;
+        }
+        if let Some(pos) = self.paths.iter().position(|p| p.id == *id) {
+            self.paths.remove(pos);
             return true;
         }
         false
@@ -721,6 +942,26 @@ impl DrawingSet {
         &self.pitchforks
     }
 
+    /// Get an ellipse by ID.
+    pub fn get_ellipse(&self, id: &DrawingId) -> Option<&Ellipse> {
+        self.ellipses.iter().find(|e| e.id == *id)
+    }
+
+    /// Get all ellipses.
+    pub fn all_ellipses(&self) -> &[Ellipse] {
+        &self.ellipses
+    }
+
+    /// Get a path by ID.
+    pub fn get_path(&self, id: &DrawingId) -> Option<&Path> {
+        self.paths.iter().find(|p| p.id == *id)
+    }
+
+    /// Get all paths.
+    pub fn all_paths(&self) -> &[Path] {
+        &self.paths
+    }
+
     /// Total number of drawings across all types.
     pub fn len(&self) -> usize {
         self.trend_lines.len()
@@ -730,6 +971,8 @@ impl DrawingSet {
             + self.fibonacci_retracements.len()
             + self.fibonacci_extensions.len()
             + self.pitchforks.len()
+            + self.ellipses.len()
+            + self.paths.len()
     }
 
     /// Check if the set contains no drawings.
@@ -1729,5 +1972,365 @@ mod tests {
         assert!(set
             .get_pitchfork(&DrawingId("pf1".to_string()))
             .is_some());
+    }
+
+    // ---- Ellipse ----
+
+    #[test]
+    fn ellipse_new_defaults() {
+        let center = ChartPoint::new(500, 150.0);
+        let e = Ellipse::new("e1", center, 100.0, 50.0);
+
+        assert_eq!(e.id, DrawingId("e1".to_string()));
+        assert_eq!(e.center.timestamp, 500);
+        assert_eq!(e.center.price, 150.0);
+        assert_eq!(e.radius_x, 100.0);
+        assert_eq!(e.radius_y, 50.0);
+        assert_eq!(e.color, [1.0, 1.0, 1.0, 1.0]);
+        assert_eq!(e.width, 1.0);
+        assert_eq!(e.style, LineStyle::Solid);
+        assert!(e.fill_color.is_none());
+    }
+
+    #[test]
+    fn ellipse_builder() {
+        let e = Ellipse::new("e2", ChartPoint::new(100, 200.0), 30.0, 20.0)
+            .with_color([1.0, 0.0, 0.0, 0.8])
+            .with_width(2.5)
+            .with_style(LineStyle::Dashed)
+            .with_fill([0.0, 1.0, 0.0, 0.3]);
+
+        assert_eq!(e.color, [1.0, 0.0, 0.0, 0.8]);
+        assert_eq!(e.width, 2.5);
+        assert_eq!(e.style, LineStyle::Dashed);
+        assert_eq!(e.fill_color, Some([0.0, 1.0, 0.0, 0.3]));
+    }
+
+    #[test]
+    fn ellipse_contains_center() {
+        let e = Ellipse::new("e3", ChartPoint::new(100, 100.0), 50.0, 30.0);
+        assert!(e.contains(ChartPoint::new(100, 100.0)));
+    }
+
+    #[test]
+    fn ellipse_contains_inside() {
+        let e = Ellipse::new("e4", ChartPoint::new(100, 100.0), 50.0, 30.0);
+        // well inside
+        assert!(e.contains(ChartPoint::new(110, 105.0)));
+    }
+
+    #[test]
+    fn ellipse_contains_outside() {
+        let e = Ellipse::new("e5", ChartPoint::new(100, 100.0), 50.0, 30.0);
+        // far outside
+        assert!(!e.contains(ChartPoint::new(200, 200.0)));
+    }
+
+    #[test]
+    fn ellipse_contains_on_boundary() {
+        // point exactly on the boundary: (dx/rx)^2 + (dy/ry)^2 == 1
+        let e = Ellipse::new("e6", ChartPoint::new(100, 100.0), 50.0, 30.0);
+        // rightmost point: (150, 100.0)
+        assert!(e.contains(ChartPoint::new(150, 100.0)));
+        // topmost point: (100, 130.0)
+        assert!(e.contains(ChartPoint::new(100, 130.0)));
+    }
+
+    #[test]
+    fn ellipse_contains_beyond_boundary() {
+        let e = Ellipse::new("e7", ChartPoint::new(100, 100.0), 50.0, 30.0);
+        // just outside rightmost
+        assert!(!e.contains(ChartPoint::new(151, 100.0)));
+        // just outside topmost
+        assert!(!e.contains(ChartPoint::new(100, 131.0)));
+    }
+
+    #[test]
+    fn ellipse_bounding_box() {
+        let e = Ellipse::new("e8", ChartPoint::new(500, 100.0), 200.0, 50.0);
+        let (min, max) = e.bounding_box();
+
+        assert_eq!(min.timestamp, 300);
+        assert!((min.price - 50.0).abs() < f64::EPSILON);
+        assert_eq!(max.timestamp, 700);
+        assert!((max.price - 150.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn ellipse_bounding_box_center_at_zero() {
+        // saturating_sub prevents underflow
+        let e = Ellipse::new("e9", ChartPoint::new(10, 50.0), 100.0, 20.0);
+        let (min, _max) = e.bounding_box();
+        assert_eq!(min.timestamp, 0); // saturating_sub: 10 - 100 -> 0
+    }
+
+    #[test]
+    fn ellipse_zero_radii() {
+        let e = Ellipse::new("e10", ChartPoint::new(100, 100.0), 0.0, 0.0);
+        // center on boundary: (0/0)^2 + (0/0)^2 = NaN, which is not <= 1.0
+        assert!(!e.contains(ChartPoint::new(100, 100.0)));
+        // bounding box collapses to a point
+        let (min, max) = e.bounding_box();
+        assert_eq!(min, max);
+    }
+
+    #[test]
+    fn ellipse_clone() {
+        let e = Ellipse::new("ec", ChartPoint::new(100, 100.0), 50.0, 30.0);
+        let cloned = e.clone();
+        assert_eq!(cloned.id, e.id);
+        assert_eq!(cloned.center, e.center);
+        assert_eq!(cloned.radius_x, e.radius_x);
+    }
+
+    // ---- Path ----
+
+    #[test]
+    fn path_new_defaults() {
+        let points = vec![ChartPoint::new(0, 0.0), ChartPoint::new(10, 20.0)];
+        let p = Path::new("p1", points);
+
+        assert_eq!(p.id, DrawingId("p1".to_string()));
+        assert_eq!(p.points.len(), 2);
+        assert_eq!(p.color, [1.0, 1.0, 1.0, 1.0]);
+        assert_eq!(p.width, 1.0);
+        assert_eq!(p.style, LineStyle::Solid);
+        assert!(!p.closed);
+    }
+
+    #[test]
+    fn path_builder() {
+        let p = Path::new("p2", vec![ChartPoint::new(0, 0.0), ChartPoint::new(1, 1.0)])
+            .with_color([0.0, 0.0, 1.0, 1.0])
+            .with_width(3.0)
+            .with_style(LineStyle::Dotted)
+            .with_closed(true);
+
+        assert_eq!(p.color, [0.0, 0.0, 1.0, 1.0]);
+        assert_eq!(p.width, 3.0);
+        assert_eq!(p.style, LineStyle::Dotted);
+        assert!(p.closed);
+    }
+
+    #[test]
+    fn path_push() {
+        let mut p = Path::new("p3", vec![ChartPoint::new(0, 0.0)]);
+        p.push(ChartPoint::new(10, 20.0));
+        p.push(ChartPoint::new(20, 10.0));
+        assert_eq!(p.points.len(), 3);
+    }
+
+    #[test]
+    fn path_segment_count_open() {
+        let p = Path::new(
+            "p4",
+            vec![
+                ChartPoint::new(0, 0.0),
+                ChartPoint::new(1, 1.0),
+                ChartPoint::new(2, 2.0),
+            ],
+        );
+        assert_eq!(p.segment_count(), 2); // n - 1
+    }
+
+    #[test]
+    fn path_segment_count_closed() {
+        let p = Path::new(
+            "p5",
+            vec![
+                ChartPoint::new(0, 0.0),
+                ChartPoint::new(1, 1.0),
+                ChartPoint::new(2, 2.0),
+            ],
+        )
+        .with_closed(true);
+        assert_eq!(p.segment_count(), 3); // n
+    }
+
+    #[test]
+    fn path_segment_count_empty() {
+        let p = Path::new("p6", vec![]);
+        assert_eq!(p.segment_count(), 0);
+    }
+
+    #[test]
+    fn path_segment_count_single() {
+        let p = Path::new("p7", vec![ChartPoint::new(0, 0.0)]);
+        assert_eq!(p.segment_count(), 0);
+    }
+
+    #[test]
+    fn path_total_length_open() {
+        // horizontal segment: length = 3
+        let p = Path::new(
+            "p8",
+            vec![
+                ChartPoint::new(0, 0.0),
+                ChartPoint::new(3, 0.0),
+                ChartPoint::new(3, 4.0),
+            ],
+        );
+        // segment 0-3: sqrt(9+0)=3, segment 3-4: sqrt(0+16)=4 → total = 7
+        assert!((p.total_length() - 7.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn path_total_length_closed() {
+        // triangle: (0,0) -> (3,0) -> (3,4) -> close to (0,0)
+        let p = Path::new(
+            "p9",
+            vec![
+                ChartPoint::new(0, 0.0),
+                ChartPoint::new(3, 0.0),
+                ChartPoint::new(3, 4.0),
+            ],
+        )
+        .with_closed(true);
+        // 3 + 4 + 5 = 12
+        assert!((p.total_length() - 12.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn path_total_length_empty() {
+        let p = Path::new("p10", vec![]);
+        assert!((p.total_length()).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn path_total_length_single_point() {
+        let p = Path::new("p11", vec![ChartPoint::new(0, 0.0)]);
+        assert!((p.total_length()).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn path_point_access() {
+        let points = vec![
+            ChartPoint::new(10, 50.0),
+            ChartPoint::new(20, 60.0),
+            ChartPoint::new(30, 70.0),
+        ];
+        let p = Path::new("p12", points);
+
+        assert_eq!(p.point(0).unwrap().timestamp, 10);
+        assert_eq!(p.point(2).unwrap().price, 70.0);
+        assert!(p.point(5).is_none());
+    }
+
+    #[test]
+    fn path_clone() {
+        let p = Path::new("pc", vec![ChartPoint::new(0, 0.0), ChartPoint::new(1, 1.0)]);
+        let cloned = p.clone();
+        assert_eq!(cloned.id, p.id);
+        assert_eq!(cloned.points.len(), p.points.len());
+    }
+
+    // ---- DrawingSet: Ellipse ----
+
+    #[test]
+    fn drawing_set_add_ellipse() {
+        let mut set = DrawingSet::new();
+        set.add_ellipse(Ellipse::new(
+            "e1",
+            ChartPoint::new(100, 100.0),
+            50.0,
+            30.0,
+        ));
+        assert_eq!(set.len(), 1);
+        assert!(set.get_ellipse(&DrawingId("e1".to_string())).is_some());
+    }
+
+    #[test]
+    fn drawing_set_remove_ellipse() {
+        let mut set = DrawingSet::new();
+        set.add_ellipse(Ellipse::new(
+            "e1",
+            ChartPoint::new(100, 100.0),
+            50.0,
+            30.0,
+        ));
+        assert!(set.remove(&DrawingId("e1".to_string())));
+        assert_eq!(set.len(), 0);
+    }
+
+    #[test]
+    fn drawing_set_all_ellipses() {
+        let mut set = DrawingSet::new();
+        set.add_ellipse(Ellipse::new(
+            "e1",
+            ChartPoint::new(100, 100.0),
+            50.0,
+            30.0,
+        ));
+        set.add_ellipse(Ellipse::new(
+            "e2",
+            ChartPoint::new(200, 200.0),
+            60.0,
+            40.0,
+        ));
+        assert_eq!(set.all_ellipses().len(), 2);
+    }
+
+    // ---- DrawingSet: Path ----
+
+    #[test]
+    fn drawing_set_add_path() {
+        let mut set = DrawingSet::new();
+        set.add_path(Path::new(
+            "p1",
+            vec![ChartPoint::new(0, 0.0), ChartPoint::new(10, 20.0)],
+        ));
+        assert_eq!(set.len(), 1);
+        assert!(set.get_path(&DrawingId("p1".to_string())).is_some());
+    }
+
+    #[test]
+    fn drawing_set_remove_path() {
+        let mut set = DrawingSet::new();
+        set.add_path(Path::new(
+            "p1",
+            vec![ChartPoint::new(0, 0.0), ChartPoint::new(10, 20.0)],
+        ));
+        assert!(set.remove(&DrawingId("p1".to_string())));
+        assert_eq!(set.len(), 0);
+    }
+
+    #[test]
+    fn drawing_set_all_paths() {
+        let mut set = DrawingSet::new();
+        set.add_path(Path::new(
+            "p1",
+            vec![ChartPoint::new(0, 0.0), ChartPoint::new(10, 20.0)],
+        ));
+        set.add_path(Path::new(
+            "p2",
+            vec![ChartPoint::new(0, 0.0), ChartPoint::new(5, 10.0)],
+        ));
+        assert_eq!(set.all_paths().len(), 2);
+    }
+
+    #[test]
+    fn drawing_set_mixed_with_ellipse_and_path() {
+        let mut set = DrawingSet::new();
+        set.add_trend_line(TrendLine::new(
+            "t1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(1, 1.0),
+        ));
+        set.add_ellipse(Ellipse::new(
+            "e1",
+            ChartPoint::new(100, 100.0),
+            50.0,
+            30.0,
+        ));
+        set.add_path(Path::new(
+            "p1",
+            vec![ChartPoint::new(0, 0.0), ChartPoint::new(10, 20.0)],
+        ));
+        assert_eq!(set.len(), 3);
+
+        assert!(set.remove(&DrawingId("e1".to_string())));
+        assert_eq!(set.len(), 2);
+        assert!(set.get_trend_line(&DrawingId("t1".to_string())).is_some());
+        assert!(set.get_path(&DrawingId("p1".to_string())).is_some());
     }
 }

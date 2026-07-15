@@ -5,6 +5,17 @@ use crate::error::ChartError;
 /// Represents a single time period in a financial time series.
 /// All prices must be non-negative, `high >= low`, and both `open` and
 /// `close` must lie within `[low, high]`.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::Bar;
+///
+/// let bar = Bar::new(1000, 100.0, 105.0, 99.0, 102.0, 5000).unwrap();
+/// assert_eq!(bar.open, 100.0);
+/// assert_eq!(bar.close, 102.0);
+/// assert!(bar.is_bullish());  // close > open
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Bar {
     pub timestamp: u64,

@@ -5,6 +5,28 @@ use crate::price_scale::PriceScale;
 /// A `Viewport` tracks the time range (`time_start`..`time_end`), the value
 /// range (`value_min`..`value_max`), and the current zoom level. All rendering
 /// maps this window to pixel coordinates.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::Viewport;
+///
+/// let mut vp = Viewport {
+///     time_start: 0,
+///     time_end: 1000,
+///     value_min: 0.0,
+///     value_max: 100.0,
+///     zoom_level: 1.0,
+/// };
+///
+/// // Zoom in 2x centered at the midpoint
+/// vp.zoom(2.0, 500.0);
+/// assert_eq!((vp.time_start + vp.time_end) / 2, 500); // center preserved
+///
+/// // Pan forward
+/// vp.pan(100);
+/// assert!(vp.time_start > 0);
+/// ```
 #[derive(Debug, Clone)]
 pub struct Viewport {
     pub time_start: u64,

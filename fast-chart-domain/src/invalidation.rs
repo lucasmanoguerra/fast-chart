@@ -85,6 +85,24 @@ impl Iterator for PaneBitmaskIter {
 }
 
 /// Combined invalidation state: level + which panes.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::{InvalidationMask, InvalidationLevel, PaneBitmask};
+///
+/// // No invalidation
+/// let none = InvalidationMask::NONE;
+/// assert_eq!(none.level(), InvalidationLevel::Nothing);
+///
+/// // Full invalidation on pane 0 and pane 2
+/// let mask = InvalidationMask::new(
+///     InvalidationLevel::Full,
+///     PaneBitmask::single(0).union(PaneBitmask::single(2)),
+/// );
+/// assert_eq!(mask.level(), InvalidationLevel::Full);
+/// assert_eq!(mask.panes().count(), 2);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InvalidationMask {
     level: InvalidationLevel,

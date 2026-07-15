@@ -1,3 +1,23 @@
+/// Maps a value range to pixel y-coordinates (Y-axis, inverted).
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::scale::LinearScale;
+///
+/// let scale = LinearScale { min: 90.0, max: 120.0, height: 300.0 };
+///
+/// // Value at min maps to bottom (y = height)
+/// assert_eq!(scale.map_to_y(90.0), 300.0);
+///
+/// // Value at max maps to top (y = 0)
+/// assert_eq!(scale.map_to_y(120.0), 0.0);
+///
+/// // Roundtrip: map_to_y -> map_from_y preserves value
+/// let y = scale.map_to_y(105.0);
+/// let value = scale.map_from_y(y);
+/// assert!((value - 105.0).abs() < f64::EPSILON);
+/// ```
 #[derive(Debug, Clone)]
 pub struct LinearScale {
     pub min: f64,
@@ -23,6 +43,26 @@ impl LinearScale {
     }
 }
 
+/// Maps a time range to pixel x-coordinates.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart_domain::scale::TimeScale;
+///
+/// let ts = TimeScale { start: 0, end: 2000, width: 800.0 };
+///
+/// // Time at start maps to x = 0
+/// assert_eq!(ts.map_to_x(0), 0.0);
+///
+/// // Time at end maps to x = width
+/// assert_eq!(ts.map_to_x(2000), 800.0);
+///
+/// // Roundtrip: map_to_x -> map_from_x preserves time
+/// let x = ts.map_to_x(1000);
+/// let time = ts.map_from_x(x);
+/// assert_eq!(time, 1000);
+/// ```
 #[derive(Debug, Clone)]
 pub struct TimeScale {
     pub start: u64,

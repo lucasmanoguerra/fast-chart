@@ -47,7 +47,7 @@ pub use fast_chart_domain::{
     ChartError,
 };
 
-pub use fast_chart_domain::indicators::{Adx, Atr, Bollinger, Ema, Ichimoku, Macd, Rsi, Sma, Stochastic, Vwap};
+pub use fast_chart_domain::indicators::{Adx, Atr, Bollinger, Cci, Ema, Ichimoku, Macd, ParabolicSar, Rsi, Sma, Stochastic, Vwap, WilliamsR};
 
 // ---------------------------------------------------------------------------
 // Primary re-exports — the ergonomic public API

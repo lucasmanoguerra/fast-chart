@@ -5,6 +5,8 @@
 
 pub mod commands;
 pub mod layers;
+pub mod series_renderer;
 
 pub use commands::{DrawCommand, LineStyle};
 pub use layers::DrawLayer;
+pub use series_renderer::{Rect, SeriesHit, SeriesRenderer};

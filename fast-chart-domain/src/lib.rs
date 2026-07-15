@@ -60,7 +60,8 @@ pub use marker::{Marker, MarkerId, MarkerPosition, MarkerSet, MarkerShape};
 
 // Drawing tools
 pub use drawing::{
-    ChartPoint, DrawingId, DrawingSet, HorizontalLine, TrendLine, VerticalLine,
+    ChartPoint, DrawingId, DrawingSet, FibonacciRetracement, HorizontalLine, Rectangle,
+    TrendLine, VerticalLine,
 };
 
 // Invalidation

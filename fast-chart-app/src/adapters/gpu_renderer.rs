@@ -7,6 +7,7 @@ use winit::window::CursorIcon;
 
 use super::rendering::area_renderer::AreaRenderer;
 use super::rendering::bar_renderer::BarRenderer;
+use super::rendering::baseline_renderer::BaselineRenderer;
 use super::rendering::candle_renderer::CandleRenderer;
 use super::rendering::crosshair_renderer::CrosshairRenderer;
 use super::rendering::grid_renderer::GridRenderer;
@@ -32,6 +33,7 @@ pub struct GpuRenderer {
     line_renderer: LineRenderer,
     area_renderer: AreaRenderer,
     histogram_renderer: HistogramRenderer,
+    baseline_renderer: BaselineRenderer,
     candle_renderer: CandleRenderer,
     bar_renderer: BarRenderer,
     crosshair_renderer: CrosshairRenderer,
@@ -128,6 +130,7 @@ impl GpuRenderer {
         let line_renderer = LineRenderer::new(&device, surface_format, &shader);
         let area_renderer = AreaRenderer::new(&device, surface_format);
         let histogram_renderer = HistogramRenderer::new(&device, surface_format);
+        let baseline_renderer = BaselineRenderer::new(&device, surface_format);
         let candle_renderer = CandleRenderer::new(&device, surface_format);
         let bar_renderer = BarRenderer::new(&device, surface_format);
         let crosshair_renderer = CrosshairRenderer::new(&device, surface_format, &shader);
@@ -236,6 +239,7 @@ impl GpuRenderer {
             line_renderer,
             area_renderer,
             histogram_renderer,
+            baseline_renderer,
             candle_renderer,
             bar_renderer,
             crosshair_renderer,
@@ -291,6 +295,7 @@ impl GpuRenderer {
             self.update_line_from_state(w, h, state);
             self.update_area_from_state(w, h, state);
             self.update_histogram_from_state(w, h, state);
+            self.update_baseline_from_state(w, h, state);
         }
 
         // Update candle vertex/index buffers if data changed (Full level).
@@ -400,6 +405,9 @@ impl GpuRenderer {
 
             // Layer 3.7: Histogram bars (volume/oscillator)
             self.histogram_renderer.render(&mut render_pass);
+
+            // Layer 3.9: Baseline fill (above/below midpoint)
+            self.baseline_renderer.render(&mut render_pass);
 
             // Layer 4: Pane divider lines
             self.render_dividers(&mut render_pass);
@@ -632,6 +640,82 @@ impl GpuRenderer {
         );
 
         self.histogram_renderer.update_histogram(
+            &self.queue,
+            &visible,
+            canvas_width,
+            canvas_height,
+            viewport.time_start as f64,
+            viewport.time_end as f64,
+            viewport.value_min,
+            viewport.value_max,
+        );
+    }
+
+    /// Generate baseline fill vertices from ChartState and upload to GPU.
+    ///
+    /// The baseline is set to the midpoint of the visible price range.
+    /// Bars above the baseline are filled with bullish color, bars below
+    /// with bearish color. Each bar pair forms a quad via index buffers.
+    fn update_baseline_from_state(
+        &mut self,
+        canvas_width: f32,
+        canvas_height: f32,
+        state: &ChartState,
+    ) {
+        if state.time_series.len() < 2 {
+            self.baseline_renderer.update_baseline(
+                &self.queue,
+                &[],
+                canvas_width,
+                canvas_height,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            );
+            return;
+        }
+
+        let viewport = &state.viewport;
+        let time_range = viewport.time_end as f64 - viewport.time_start as f64;
+        let value_range = viewport.value_max - viewport.value_min;
+
+        if time_range < f64::EPSILON || value_range < f64::EPSILON {
+            self.baseline_renderer.update_baseline(
+                &self.queue,
+                &[],
+                canvas_width,
+                canvas_height,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            );
+            return;
+        }
+
+        // Collect visible bars (same filter as other renderers).
+        let visible: Vec<_> = state
+            .time_series
+            .iter()
+            .filter(|b| {
+                b.timestamp >= viewport.time_start as u64
+                    && b.timestamp <= viewport.time_end as u64
+            })
+            .copied()
+            .collect();
+
+        // Baseline at midpoint of the visible price range.
+        let baseline_price = (viewport.value_min + viewport.value_max) / 2.0;
+        self.baseline_renderer.set_baseline(baseline_price);
+
+        // Bullish above baseline, bearish below.
+        self.baseline_renderer.set_colors(
+            colors::BULLISH,
+            colors::BEARISH,
+        );
+
+        self.baseline_renderer.update_baseline(
             &self.queue,
             &visible,
             canvas_width,

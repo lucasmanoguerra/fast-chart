@@ -13,6 +13,7 @@
 // ---------------------------------------------------------------------------
 pub mod bar;
 pub mod crosshair;
+pub mod drawing;
 pub mod error;
 pub mod indicator;
 pub mod indicators;
@@ -56,6 +57,11 @@ pub use crosshair::{Crosshair, MagnetMode};
 
 // Markers
 pub use marker::{Marker, MarkerId, MarkerPosition, MarkerSet, MarkerShape};
+
+// Drawing tools
+pub use drawing::{
+    ChartPoint, DrawingId, DrawingSet, HorizontalLine, TrendLine, VerticalLine,
+};
 
 // Invalidation
 pub use invalidation::{InvalidationLevel, InvalidationMask, PaneBitmask};

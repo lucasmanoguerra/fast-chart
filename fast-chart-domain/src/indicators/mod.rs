@@ -11,6 +11,8 @@ pub mod adx;
 pub mod cci;
 pub mod williams_r;
 pub mod parabolic_sar;
+pub mod supertrend;
+pub mod heikin_ashi;
 
 pub use sma::Sma;
 pub use ema::Ema;
@@ -25,3 +27,5 @@ pub use adx::Adx;
 pub use cci::Cci;
 pub use williams_r::WilliamsR;
 pub use parabolic_sar::ParabolicSar;
+pub use supertrend::Supertrend;
+pub use heikin_ashi::HeikinAshi;

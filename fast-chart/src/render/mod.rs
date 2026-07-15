@@ -4,5 +4,7 @@
 //! coordinate pipeline, and renderer backend trait.
 
 pub mod commands;
+pub mod layers;
 
 pub use commands::{DrawCommand, LineStyle};
+pub use layers::DrawLayer;

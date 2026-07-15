@@ -1,8 +1,8 @@
 [package]
-name = "fast-chart-app"
+name = "fast-chart-examples"
 version = "0.1.0"
 edition = "2021"
-description = "GPU-accelerated trading chart application"
+description = "Example applications for the fast-chart trading library"
 license = "MIT"
 repository = "https://github.com/lucasmanoguerra/fast-chart"
 

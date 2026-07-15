@@ -66,7 +66,6 @@ pub trait RendererBackend: Send + Sync {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::cell::RefCell;
 
     /// A mock backend for testing.
     struct MockBackend {

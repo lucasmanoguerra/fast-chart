@@ -5,6 +5,9 @@ pub mod macd;
 pub mod bollinger;
 pub mod stochastic;
 pub mod ichimoku;
+pub mod vwap;
+pub mod atr;
+pub mod adx;
 
 pub use sma::Sma;
 pub use ema::Ema;
@@ -13,3 +16,6 @@ pub use macd::Macd;
 pub use bollinger::Bollinger;
 pub use stochastic::Stochastic;
 pub use ichimoku::Ichimoku;
+pub use vwap::Vwap;
+pub use atr::Atr;
+pub use adx::Adx;

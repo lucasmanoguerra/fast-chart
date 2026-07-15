@@ -395,4 +395,191 @@ mod tests {
         assert_eq!(cloned.price_range, p.price_range);
         assert_eq!(cloned.area_width, p.area_width);
     }
+
+    // ---- Non-zero offsets ----
+
+    #[test]
+    fn offset_area_timestamp() {
+        let p = CoordinatePipeline::new(
+            (0.0, 1000.0),
+            (50.0, 150.0),
+            50.0,  // area_x offset (e.g. y-axis labels)
+            10.0,
+            700.0,
+            580.0,
+            1.0,
+        );
+        let x = p.timestamp_to_x(0.0);
+        assert!((x - 50.5).abs() < 1.0, "x = {x}");
+
+        let x = p.timestamp_to_x(1000.0);
+        assert!((x - 749.5).abs() < 1.0, "x = {x}");
+    }
+
+    #[test]
+    fn offset_area_price() {
+        let p = CoordinatePipeline::new(
+            (0.0, 1000.0),
+            (50.0, 150.0),
+            50.0,
+            10.0,
+            700.0,
+            580.0,
+            1.0,
+        );
+        // High price = near top of area (area_y + 0.5)
+        let y = p.price_to_y(150.0);
+        assert!((y - 10.5).abs() < 1.0, "y = {y}");
+
+        // Low price = near bottom of area (area_y + height - 0.5)
+        let y = p.price_to_y(50.0);
+        assert!((y - 589.5).abs() < 1.0, "y = {y}");
+    }
+
+    // ---- Asymmetric areas ----
+
+    #[test]
+    fn narrow_area() {
+        let p = CoordinatePipeline::new(
+            (0.0, 100.0),
+            (0.0, 10.0),
+            0.0,
+            0.0,
+            100.0, // square area
+            100.0,
+            1.0,
+        );
+        let x = p.timestamp_to_x(50.0);
+        assert!((x - 50.0).abs() < 1.5, "x = {x}");
+
+        let y = p.price_to_y(5.0);
+        assert!((y - 50.0).abs() < 1.5, "y = {y}");
+    }
+
+    // ---- DPI 3x ----
+
+    #[test]
+    fn scale_factor_3x() {
+        let p = CoordinatePipeline::new(
+            (0.0, 1000.0),
+            (50.0, 150.0),
+            0.0,
+            0.0,
+            300.0,
+            300.0,
+            3.0,
+        );
+        // At min timestamp, x should be at pixel center (0.5)
+        let x = p.timestamp_to_x(0.0);
+        assert!((x - 0.5).abs() < 1.0, "x = {x}");
+
+        // Midpoint
+        let x = p.timestamp_to_x(500.0);
+        assert!((x - 150.0).abs() < 1.5, "x = {x}");
+    }
+
+    // ---- Out-of-range values (clamped) ----
+
+    #[test]
+    fn timestamp_before_range() {
+        let p = default_pipeline();
+        let x = p.timestamp_to_x(-100.0);
+        // Clamped to min → near area_x + 0.5
+        assert!((x - 0.5).abs() < 1.0, "x = {x}");
+    }
+
+    #[test]
+    fn timestamp_after_range() {
+        let p = default_pipeline();
+        let x = p.timestamp_to_x(2000.0);
+        // Clamped to max → near area_x + width - 0.5
+        assert!((x - 799.5).abs() < 1.0, "x = {x}");
+    }
+
+    #[test]
+    fn price_above_range() {
+        let p = default_pipeline();
+        let y = p.price_to_y(200.0);
+        // Clamped to max price → near top (0.5)
+        assert!((y - 0.5).abs() < 1.0, "y = {y}");
+    }
+
+    #[test]
+    fn price_below_range() {
+        let p = default_pipeline();
+        let y = p.price_to_y(0.0);
+        // Clamped to min price → near bottom (599.5)
+        assert!((y - 599.5).abs() < 1.0, "y = {y}");
+    }
+
+    // ---- Screen to World at boundaries ----
+
+    #[test]
+    fn x_to_timestamp_left() {
+        let p = default_pipeline();
+        let ts = p.x_to_timestamp(0.5);
+        assert!((ts - 0.0).abs() < 1.0, "ts = {ts}");
+    }
+
+    #[test]
+    fn x_to_timestamp_right() {
+        let p = default_pipeline();
+        let ts = p.x_to_timestamp(799.5);
+        assert!((ts - 1000.0).abs() < 1.0, "ts = {ts}");
+    }
+
+    #[test]
+    fn y_to_price_top() {
+        let p = default_pipeline();
+        let price = p.y_to_price(0.5);
+        assert!((price - 150.0).abs() < 1.0, "price = {price}");
+    }
+
+    #[test]
+    fn y_to_price_bottom() {
+        let p = default_pipeline();
+        let price = p.y_to_price(599.5);
+        assert!((price - 50.0).abs() < 1.0, "price = {price}");
+    }
+
+    // ---- Multiple roundtrips stability ----
+
+    #[test]
+    fn multiple_roundtrips_stable() {
+        let p = default_pipeline();
+        let mut point = WorldPoint::new(333.0, 77.7);
+        for _ in 0..5 {
+            point = p.roundtrip(point);
+        }
+        assert!(
+            (point.timestamp - 333.0).abs() < 3.0,
+            "timestamp drifted: {}",
+            point.timestamp
+        );
+        assert!(
+            (point.price - 77.7).abs() < 2.0,
+            "price drifted: {}",
+            point.price
+        );
+    }
+
+    // ---- ScreenPoint / WorldPoint Debug ----
+
+    #[test]
+    fn screen_point_debug() {
+        let sp = ScreenPoint::new(1.0, 2.0);
+        let debug = format!("{:?}", sp);
+        assert!(debug.contains("ScreenPoint"));
+        assert!(debug.contains("1.0"));
+        assert!(debug.contains("2.0"));
+    }
+
+    #[test]
+    fn world_point_debug() {
+        let wp = WorldPoint::new(1000.0, 50.5);
+        let debug = format!("{:?}", wp);
+        assert!(debug.contains("WorldPoint"));
+        assert!(debug.contains("1000.0"));
+        assert!(debug.contains("50.5"));
+    }
 }

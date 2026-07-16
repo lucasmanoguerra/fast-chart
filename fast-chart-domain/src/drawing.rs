@@ -72,6 +72,64 @@ impl TrendLine {
 }
 
 // ---------------------------------------------------------------------------
+// Ray
+// ---------------------------------------------------------------------------
+
+/// A ray (half-line) starting at `start` and extending infinitely through `direction`.
+///
+/// Used for support/resistance lines that extend into the future.
+#[derive(Debug, Clone)]
+pub struct Ray {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Origin point.
+    pub start: ChartPoint,
+    /// A second point defining the direction (the ray extends from `start` through and beyond `direction`).
+    pub direction: ChartPoint,
+    /// Line color [r, g, b, a].
+    pub color: [f32; 4],
+    /// Line width in pixels.
+    pub width: f32,
+    /// Line style.
+    pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
+}
+
+impl Ray {
+    /// Create a new ray starting at `start` and extending through `direction`.
+    pub fn new(id: impl Into<String>, start: ChartPoint, direction: ChartPoint) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            start,
+            direction,
+            color: [1.0, 1.0, 1.0, 1.0],
+            width: 1.0,
+            style: LineStyle::Solid,
+            selected: false,
+        }
+    }
+
+    /// Set the line color.
+    pub fn with_color(mut self, color: [f32; 4]) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set the line width.
+    pub fn with_width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    /// Set the line style.
+    pub fn with_style(mut self, style: LineStyle) -> Self {
+        self.style = style;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Arrow
 // ---------------------------------------------------------------------------
 
@@ -836,6 +894,7 @@ impl Path {
 pub struct DrawingSet {
     trend_lines: Vec<TrendLine>,
     arrows: Vec<Arrow>,
+    rays: Vec<Ray>,
     horizontal_lines: Vec<HorizontalLine>,
     vertical_lines: Vec<VerticalLine>,
     rectangles: Vec<Rectangle>,
@@ -860,6 +919,11 @@ impl DrawingSet {
     /// Add an arrow.
     pub fn add_arrow(&mut self, arrow: Arrow) {
         self.arrows.push(arrow);
+    }
+
+    /// Add a ray.
+    pub fn add_ray(&mut self, ray: Ray) {
+        self.rays.push(ray);
     }
 
     /// Add a horizontal line.
@@ -912,6 +976,10 @@ impl DrawingSet {
             self.arrows.remove(pos);
             return true;
         }
+        if let Some(pos) = self.rays.iter().position(|r| r.id == *id) {
+            self.rays.remove(pos);
+            return true;
+        }
         if let Some(pos) = self.horizontal_lines.iter().position(|l| l.id == *id) {
             self.horizontal_lines.remove(pos);
             return true;
@@ -957,6 +1025,11 @@ impl DrawingSet {
         self.arrows.iter().find(|a| a.id == *id)
     }
 
+    /// Get a ray by ID.
+    pub fn get_ray(&self, id: &DrawingId) -> Option<&Ray> {
+        self.rays.iter().find(|r| r.id == *id)
+    }
+
     /// Get a horizontal line by ID.
     pub fn get_horizontal_line(&self, id: &DrawingId) -> Option<&HorizontalLine> {
         self.horizontal_lines.iter().find(|l| l.id == *id)
@@ -985,6 +1058,11 @@ impl DrawingSet {
     /// Get all arrows.
     pub fn all_arrows(&self) -> &[Arrow] {
         &self.arrows
+    }
+
+    /// Get all rays.
+    pub fn all_rays(&self) -> &[Ray] {
+        &self.rays
     }
 
     /// Get all horizontal lines.
@@ -1051,6 +1129,7 @@ impl DrawingSet {
     pub fn len(&self) -> usize {
         self.trend_lines.len()
             + self.arrows.len()
+            + self.rays.len()
             + self.horizontal_lines.len()
             + self.vertical_lines.len()
             + self.rectangles.len()
@@ -2471,5 +2550,48 @@ mod tests {
         assert_eq!(arrow.width, 2.0);
         assert_eq!(arrow.style, LineStyle::Dashed);
         assert_eq!(arrow.arrowhead_size, 16.0);
+    }
+
+    #[test]
+    fn drawing_set_add_ray() {
+        let mut set = DrawingSet::new();
+        set.add_ray(Ray::new(
+            "r1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        assert_eq!(set.len(), 1);
+        assert!(set.get_ray(&DrawingId("r1".to_string())).is_some());
+    }
+
+    #[test]
+    fn drawing_set_remove_ray() {
+        let mut set = DrawingSet::new();
+        set.add_ray(Ray::new(
+            "r1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        assert!(set.remove(&DrawingId("r1".to_string())));
+        assert_eq!(set.len(), 0);
+    }
+
+    #[test]
+    fn drawing_set_all_rays() {
+        let mut set = DrawingSet::new();
+        set.add_ray(Ray::new("r1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0)));
+        set.add_ray(Ray::new("r2", ChartPoint::new(200, 60.0), ChartPoint::new(300, 80.0)));
+        assert_eq!(set.all_rays().len(), 2);
+    }
+
+    #[test]
+    fn ray_builder_methods() {
+        let ray = Ray::new("r1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
+            .with_color([0.0, 1.0, 0.0, 1.0])
+            .with_width(2.0)
+            .with_style(LineStyle::Dotted);
+        assert_eq!(ray.color, [0.0, 1.0, 0.0, 1.0]);
+        assert_eq!(ray.width, 2.0);
+        assert_eq!(ray.style, LineStyle::Dotted);
     }
 }

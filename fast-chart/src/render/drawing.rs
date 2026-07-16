@@ -97,6 +97,128 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for Ray
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Ray {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        // Ray extends from start through direction (infinite in that direction)
+        let dx = self.direction.timestamp as f64 - self.start.timestamp as f64;
+        let dy = self.direction.price - self.start.price;
+        let len_sq = dx * dx + dy * dy;
+
+        if len_sq == 0.0 {
+            let px = point.timestamp as f64 - self.start.timestamp as f64;
+            let py = point.price - self.start.price;
+            let tol = tolerance as f64;
+            return if px * px + py * py <= tol * tol {
+                HitResult::Body
+            } else {
+                HitResult::Miss
+            };
+        }
+
+        // Project point onto the ray direction (t >= 0 for ray)
+        let t = ((point.timestamp as f64 - self.start.timestamp as f64) * dx
+            + (point.price - self.start.price) * dy)
+            / len_sq;
+
+        if t < 0.0 {
+            // Behind the start point
+            return HitResult::Miss;
+        }
+
+        // Projected point on the ray
+        let proj_x = self.start.timestamp as f64 + t * dx;
+        let proj_y = self.start.price + t * dy;
+
+        let dist_x = point.timestamp as f64 - proj_x;
+        let dist_y = point.price - proj_y;
+        let dist = (dist_x * dist_x + dist_y * dist_y).sqrt();
+
+        let tol = tolerance as f64;
+        if dist <= tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.start.timestamp = self.start.timestamp.saturating_add(delta.timestamp);
+        self.start.price += delta.price;
+        self.direction.timestamp = self.direction.timestamp.saturating_add(delta.timestamp);
+        self.direction.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        // Ray bounds use start as min; max is open-ended (use start + direction vector * large factor)
+        let dx = self.direction.timestamp as f64 - self.start.timestamp as f64;
+        let dy = self.direction.price - self.start.price;
+        // Extend to a large timestamp for the bounding box
+        let large_factor = 1000.0;
+        let far_time = self.start.timestamp as f64 + dx * large_factor;
+        let far_price = self.start.price + dy * large_factor;
+        DrawingBounds::new(
+            self.start.timestamp.min(far_time as u64),
+            self.start.timestamp.max(far_time as u64),
+            self.start.price.min(far_price),
+            self.start.price.max(far_price),
+        )
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let start_screen = pipeline.world_to_screen(WorldPoint::new(self.start.timestamp as f64, self.start.price));
+        let dir_screen = pipeline.world_to_screen(WorldPoint::new(self.direction.timestamp as f64, self.direction.price));
+
+        // Compute the direction vector in screen space and extend to pane edge
+        let dx = dir_screen.x - start_screen.x;
+        let dy = dir_screen.y - start_screen.y;
+        let len = (dx * dx + dy * dy).sqrt();
+
+        let (end_x, end_y) = if len > 0.01 {
+            let ux = dx / len;
+            let uy = dy / len;
+            // Extend to cover the full pane width
+            let extent = ctx.clip_rect.width + ctx.clip_rect.height;
+            (start_screen.x + ux * extent, start_screen.y + uy * extent)
+        } else {
+            (start_screen.x, start_screen.y)
+        };
+
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+
+        vec![DrawCommand::DrawLine {
+            x0: start_screen.x,
+            y0: start_screen.y,
+            x1: end_x,
+            y1: end_y,
+            color: self.color,
+            width: self.width,
+            style,
+            z_index: 10,
+        }]
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for Arrow
 // ---------------------------------------------------------------------------
 
@@ -402,5 +524,107 @@ mod tests {
         );
         assert_eq!(arrow.hit_test(ChartPoint::new(1000, 100.0), 5.0), HitResult::Body);
         assert_eq!(arrow.hit_test(ChartPoint::new(2000, 200.0), 5.0), HitResult::Miss);
+    }
+
+    // ---- Ray Drawing impl ----
+
+    fn test_ray() -> fast_chart_domain::drawing::Ray {
+        fast_chart_domain::drawing::Ray::new(
+            "test-ray",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        )
+    }
+
+    #[test]
+    fn ray_id() {
+        let ray = test_ray();
+        assert_eq!(ray.id().0, "test-ray");
+    }
+
+    #[test]
+    fn ray_hit_test_body() {
+        let ray = test_ray();
+        // Point on the ray direction
+        let hit = ray.hit_test(ChartPoint::new(1500, 125.0), 50.0);
+        assert_eq!(hit, HitResult::Body);
+    }
+
+    #[test]
+    fn ray_hit_test_miss_behind() {
+        let ray = test_ray();
+        // Point behind the start (negative t)
+        let hit = ray.hit_test(ChartPoint::new(500, 75.0), 50.0);
+        assert_eq!(hit, HitResult::Miss);
+    }
+
+    #[test]
+    fn ray_hit_test_miss_far() {
+        let ray = test_ray();
+        // Point far perpendicular
+        let hit = ray.hit_test(ChartPoint::new(1500, 500.0), 5.0);
+        assert_eq!(hit, HitResult::Miss);
+    }
+
+    #[test]
+    fn ray_move_by() {
+        let mut ray = test_ray();
+        ray.move_by(ChartPoint::new(500, 10.0));
+        assert_eq!(ray.start.timestamp, 1500);
+        assert!((ray.start.price - 110.0).abs() < f64::EPSILON);
+        assert_eq!(ray.direction.timestamp, 2500);
+        assert!((ray.direction.price - 160.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn ray_bounds() {
+        let ray = test_ray();
+        let bounds = ray.bounds();
+        // Bounds should include start
+        assert!(bounds.contains(ChartPoint::new(1000, 100.0)));
+    }
+
+    #[test]
+    fn ray_selection_state() {
+        let mut ray = test_ray();
+        assert!(!ray.is_selected());
+        ray.set_selected(true);
+        assert!(ray.is_selected());
+        ray.set_selected(false);
+        assert!(!ray.is_selected());
+    }
+
+    #[test]
+    fn ray_to_commands_produces_line() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let ray = fast_chart_domain::drawing::Ray::new(
+            "cmd-ray",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = ray.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1, "ray should produce exactly 1 DrawLine");
+
+        match &cmds[0] {
+            DrawCommand::DrawLine { x0, y0, x1, y1, z_index, .. } => {
+                // Start should be in screen bounds
+                assert!(*x0 >= 0.0 && *x0 <= 800.0);
+                assert!(*y0 >= 0.0 && *y0 <= 400.0);
+                // End should extend far
+                assert!(*x1 > *x0 || *y1 > *y0, "ray should extend beyond start");
+                assert_eq!(*z_index, 10);
+            }
+            other => panic!("expected DrawLine, got {:?}", other),
+        }
     }
 }

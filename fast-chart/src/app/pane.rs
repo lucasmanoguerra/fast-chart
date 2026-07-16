@@ -1,14 +1,17 @@
+use fast_chart_domain::drawing::DrawingSet;
 use fast_chart_domain::marker::MarkerSet;
 use fast_chart_domain::price_line::PriceLineSet;
 use fast_chart_domain::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScale, PriceScaleId};
 use fast_chart_domain::series_type::SeriesType;
 use fast_chart_domain::viewport::Viewport;
 
+use crate::render::series_renderer::SeriesRenderer;
+
 /// A single pane in the vertical chart stack.
 ///
 /// Each pane has its own viewport (shared x-axis, independent y-axis), a list of
-/// series references, and optional indicator overlays. Panes are stacked vertically
-/// and separated by draggable dividers.
+/// series references, indicator overlays, layer renderers, and drawing tools.
+/// Panes are stacked vertically and separated by draggable dividers.
 pub struct Pane {
     /// Unique identifier (index in the layout's pane list).
     pub id: usize,
@@ -27,6 +30,10 @@ pub struct Pane {
     price_scales: Vec<PriceScale>,
     /// The default (primary) price scale used by new series.
     primary_scale_id: PriceScaleId,
+    /// Series renderers (layers) for this pane, ordered by z-index.
+    layers: Vec<Box<dyn SeriesRenderer>>,
+    /// Drawing tools attached to this pane.
+    drawings: DrawingSet,
     /// Markers (annotations) attached to this pane.
     markers: MarkerSet,
     /// Horizontal price lines drawn across this pane.
@@ -83,6 +90,8 @@ impl Pane {
             visible: true,
             price_scales,
             primary_scale_id: PriceScaleId::Left,
+            layers: Vec::new(),
+            drawings: DrawingSet::new(),
             markers: MarkerSet::new(),
             price_lines: PriceLineSet::new(),
             formatter: Box::new(DefaultPriceFormatter::new(None)),
@@ -127,6 +136,42 @@ impl Pane {
     pub fn set_visible(&mut self, v: bool) {
         self.visible = v;
     }
+
+    // --- Layers (SeriesRenderers) ---
+
+    /// Add a series renderer (layer) to this pane.
+    pub fn add_layer(&mut self, renderer: Box<dyn SeriesRenderer>) {
+        self.layers.push(renderer);
+    }
+
+    /// Get a slice of all layer renderers in this pane.
+    pub fn layers(&self) -> &[Box<dyn SeriesRenderer>] {
+        &self.layers
+    }
+
+    /// Get a mutable slice of all layer renderers in this pane.
+    pub fn layers_mut(&mut self) -> &mut [Box<dyn SeriesRenderer>] {
+        &mut self.layers
+    }
+
+    /// Remove all layers from this pane.
+    pub fn clear_layers(&mut self) {
+        self.layers.clear();
+    }
+
+    // --- Drawings ---
+
+    /// Get a reference to the drawing set for this pane.
+    pub fn drawings(&self) -> &DrawingSet {
+        &self.drawings
+    }
+
+    /// Get a mutable reference to the drawing set for this pane.
+    pub fn drawings_mut(&mut self) -> &mut DrawingSet {
+        &mut self.drawings
+    }
+
+    // --- Price scale accessors ---
 
     /// Get a slice of all price scales owned by this pane.
     pub fn price_scales(&self) -> &[PriceScale] {
@@ -389,5 +434,27 @@ mod tests {
         let pane = Pane::new(0, 0.7);
         let formatted = pane.formatter().format(105.2);
         assert_eq!(formatted, "105.20");
+    }
+
+    // --- New tests for layers and drawings ---
+
+    #[test]
+    fn pane_layers_empty_by_default() {
+        let pane = Pane::new(0, 0.7);
+        assert!(pane.layers().is_empty());
+    }
+
+    #[test]
+    fn pane_drawings_empty_by_default() {
+        let pane = Pane::new(0, 0.7);
+        assert!(pane.drawings().all_trend_lines().is_empty());
+        assert!(pane.drawings().all_horizontal_lines().is_empty());
+    }
+
+    #[test]
+    fn pane_clear_layers() {
+        let mut pane = Pane::new(0, 0.7);
+        pane.clear_layers();
+        assert!(pane.layers().is_empty());
     }
 }

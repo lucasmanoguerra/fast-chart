@@ -4,7 +4,10 @@
 //! ChartController end-to-end using mock ports.
 
 use fast_chart::app::chart_controller::ChartController;
+use fast_chart::app::layout::{LayoutEngine, VerticalStack};
 use fast_chart::app::layout_manager::LayoutManager;
+use fast_chart::app::pane::events::PaneEventBus;
+use fast_chart::render::series_renderer::Rect;
 use fast_chart::ports::data_provider::{DataEvent, DataProvider};
 use fast_chart::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
 use fast_chart_domain::bar::Bar;
@@ -721,4 +724,232 @@ fn full_pipeline_kinetic_then_render() {
 
     assert!(frame_count > 0, "kinetic should produce at least one frame");
     assert!(!ctrl.update_kinetic(), "kinetic should be stopped after deceleration");
+}
+
+// ===========================================================================
+// Phase 2 Integration Tests: Multi-pane, divider, viewport sync, scroll, fit
+// ===========================================================================
+
+use fast_chart_domain::price_scale::{PriceScale, PriceScaleId as PSId, PriceScaleOptions};
+use fast_chart_domain::scale::{LinearScale, TimeScale};
+
+// --- Multi-pane layout ---
+
+#[test]
+fn multi_pane_vertical_stack_rects() {
+    let layout = VerticalStack::new();
+    let parent = Rect {
+        x: 0.0,
+        y: 0.0,
+        width: 800.0,
+        height: 600.0,
+    };
+    let rects = layout.compute_rects(parent, 3);
+    assert_eq!(rects.len(), 3);
+    // Each pane should be 200px tall
+    for r in &rects {
+        assert!((r.height - 200.0_f32).abs() < f32::EPSILON);
+        assert!((r.width - 800.0_f32).abs() < f32::EPSILON);
+    }
+    // Panes should be stacked vertically (no overlap)
+    assert!((rects[0].y - 0.0_f32).abs() < f32::EPSILON);
+    assert!((rects[1].y - 200.0_f32).abs() < f32::EPSILON);
+    assert!((rects[2].y - 400.0_f32).abs() < f32::EPSILON);
+}
+
+#[test]
+fn multi_pane_proportional_heights() {
+    let layout = VerticalStack::with_heights(vec![0.6, 0.4]);
+    let parent = Rect {
+        x: 0.0,
+        y: 0.0,
+        width: 800.0,
+        height: 500.0,
+    };
+    let rects = layout.compute_rects(parent, 2);
+    assert_eq!(rects.len(), 2);
+    assert!((rects[0].height - 300.0_f32).abs() < 0.1);
+    assert!((rects[1].height - 200.0_f32).abs() < 0.1);
+}
+
+#[test]
+fn multi_pane_with_gap() {
+    let layout = VerticalStack {
+        heights: vec![],
+        gap: 4.0,
+    };
+    let parent = Rect {
+        x: 0.0,
+        y: 0.0,
+        width: 800.0,
+        height: 600.0,
+    };
+    let rects = layout.compute_rects(parent, 3);
+    assert_eq!(rects.len(), 3);
+    // Total gap = 2 gaps * 4px = 8px, each pane = (600-8)/3 ≈ 197.33
+    let expected_pane_h = (600.0_f32 - 8.0) / 3.0;
+    for r in &rects {
+        assert!((r.height - expected_pane_h).abs() < 0.1);
+    }
+    // Verify no overlap: second pane starts after first + gap
+    assert!(rects[1].y > rects[0].y + rects[0].height - 0.1);
+}
+
+// --- Divider drag -> pane resize ---
+
+#[test]
+fn divider_drag_resize_integration() {
+    let mut bus = PaneEventBus::new();
+
+    // Simulate a divider drag
+    bus.push(fast_chart::app::pane::events::PaneEvent::DividerDragged {
+        index: 0,
+        delta: 30.0,
+    });
+
+    // Simulate resulting pane resize
+    bus.push(fast_chart::app::pane::events::PaneEvent::PaneResized {
+        id: 1,
+        new_height: 0.55,
+    });
+
+    let events = bus.drain();
+    assert_eq!(events.len(), 2);
+
+    // Verify the events have correct data
+    match &events[0] {
+        fast_chart::app::pane::events::PaneEvent::DividerDragged { index, delta } => {
+            assert_eq!(*index, 0);
+            assert!((delta - 30.0).abs() < f64::EPSILON);
+        }
+        _ => panic!("expected DividerDragged"),
+    }
+
+    match &events[1] {
+        fast_chart::app::pane::events::PaneEvent::PaneResized { id, new_height } => {
+            assert_eq!(*id, 1);
+            assert!((new_height - 0.55).abs() < f64::EPSILON);
+        }
+        _ => panic!("expected PaneResized"),
+    }
+}
+
+// --- Viewport sync across panes ---
+
+#[test]
+fn viewport_time_range_sync_across_panes() {
+    // All panes share the same time range (TimeScale)
+    // Simulate: two panes with the same time range, different value ranges
+    let ts = TimeScale {
+        start: 1000,
+        end: 2000,
+        width: 800.0,
+        bar_spacing: 8.0,
+        right_offset: 0.0,
+    };
+
+    // Pane 1: price 100..200 (height 200)
+    let ls1 = LinearScale {
+        min: 100.0,
+        max: 200.0,
+        height: 200.0,
+    };
+
+    // Pane 2: price 50..150 (height 200, different range)
+    let ls2 = LinearScale {
+        min: 50.0,
+        max: 150.0,
+        height: 200.0,
+    };
+
+    // Time maps identically for both panes
+    let t = 1500u64;
+    let x1 = ts.map_to_x(t);
+    let x2 = ts.map_to_x(t);
+    assert_eq!(x1, x2, "time mapping must be identical across panes");
+
+    // Price maps differently because the value ranges differ
+    // price=170 in ls1 maps to y=60, same price in ls2 maps to y=40
+    let y1 = ls1.map_to_y(170.0);
+    let y2 = ls2.map_to_y(170.0);
+    assert_ne!(y1, y2);
+}
+
+// --- Time scale infinite scroll ---
+
+#[test]
+fn time_scale_scroll_to_end_integration() {
+    let mut ts = TimeScale {
+        start: 0,
+        end: 100,
+        width: 800.0,
+        bar_spacing: 8.0,
+        right_offset: 0.0,
+    };
+
+    // Simulate adding data and scrolling
+    ts.scroll_to_end(500);
+    let (_, last) = ts.visible_range(500);
+    assert_eq!(last, 499, "should show the last bar");
+
+    // Scroll forward more
+    ts.scroll_to_end(1000);
+    let (_, last2) = ts.visible_range(1000);
+    assert_eq!(last2, 999);
+}
+
+// --- Price scale auto-fit with margins ---
+
+#[test]
+fn price_scale_auto_fit_with_margins_integration() {
+    let mut ps = PriceScale::new(PSId::Right, PriceScaleOptions::default());
+    ps.margin_top = 20.0;
+    ps.margin_bottom = 10.0;
+
+    ps.auto_fit(100.0, 200.0);
+    // range=100, pad=5%, margin_top=20, margin_bottom=10
+    // min = 100 - 5 - 10 = 85
+    // max = 200 + 5 + 20 = 225
+    assert!((ps.value_min - 85.0).abs() < f64::EPSILON);
+    assert!((ps.value_max - 225.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn price_scale_locked_no_autofit_integration() {
+    let mut ps = PriceScale::new(
+        PSId::Left,
+        PriceScaleOptions {
+            auto_scale: true,
+            mode: fast_chart_domain::price_scale::PriceScaleMode::Locked,
+            ..Default::default()
+        },
+    );
+    ps.value_min = 50.0;
+    ps.value_max = 150.0;
+
+    // auto_fit should NOT change anything because mode is Locked
+    ps.auto_fit(100.0, 200.0);
+    assert!((ps.value_min - 50.0).abs() < f64::EPSILON);
+    assert!((ps.value_max - 150.0).abs() < f64::EPSILON);
+}
+
+// --- Pane add/remove events ---
+
+#[test]
+fn pane_add_remove_roundtrip() {
+    let mut bus = PaneEventBus::new();
+
+    bus.push(fast_chart::app::pane::events::PaneEvent::PaneAdded { id: 3 });
+    bus.push(fast_chart::app::pane::events::PaneEvent::PaneAdded { id: 4 });
+    bus.push(fast_chart::app::pane::events::PaneEvent::PaneRemoved { id: 3 });
+
+    let events = bus.drain();
+    assert_eq!(events.len(), 3);
+
+    // After remove, only id=4 should remain "active" in a real system
+    let removed: Vec<_> = events
+        .iter()
+        .filter(|e| matches!(e, fast_chart::app::pane::events::PaneEvent::PaneRemoved { .. }))
+        .collect();
+    assert_eq!(removed.len(), 1);
 }

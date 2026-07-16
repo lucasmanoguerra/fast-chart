@@ -72,6 +72,71 @@ impl TrendLine {
 }
 
 // ---------------------------------------------------------------------------
+// Arrow
+// ---------------------------------------------------------------------------
+
+/// An arrow with arrowhead at the end, typically used for directional annotations.
+#[derive(Debug, Clone)]
+pub struct Arrow {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Start point.
+    pub start: ChartPoint,
+    /// End point.
+    pub end: ChartPoint,
+    /// Line color [r, g, b, a].
+    pub color: [f32; 4],
+    /// Line width in pixels.
+    pub width: f32,
+    /// Line style.
+    pub style: LineStyle,
+    /// Arrowhead size in pixels.
+    pub arrowhead_size: f32,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
+}
+
+impl Arrow {
+    /// Create a new arrow between two points with default styling.
+    pub fn new(id: impl Into<String>, start: ChartPoint, end: ChartPoint) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            start,
+            end,
+            color: [1.0, 1.0, 1.0, 1.0],
+            width: 1.0,
+            style: LineStyle::Solid,
+            arrowhead_size: 12.0,
+            selected: false,
+        }
+    }
+
+    /// Set the line color.
+    pub fn with_color(mut self, color: [f32; 4]) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set the line width.
+    pub fn with_width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    /// Set the line style.
+    pub fn with_style(mut self, style: LineStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Set the arrowhead size.
+    pub fn with_arrowhead_size(mut self, size: f32) -> Self {
+        self.arrowhead_size = size;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // HorizontalLine
 // ---------------------------------------------------------------------------
 
@@ -770,6 +835,7 @@ impl Path {
 #[derive(Debug, Default)]
 pub struct DrawingSet {
     trend_lines: Vec<TrendLine>,
+    arrows: Vec<Arrow>,
     horizontal_lines: Vec<HorizontalLine>,
     vertical_lines: Vec<VerticalLine>,
     rectangles: Vec<Rectangle>,
@@ -789,6 +855,11 @@ impl DrawingSet {
     /// Add a trend line.
     pub fn add_trend_line(&mut self, line: TrendLine) {
         self.trend_lines.push(line);
+    }
+
+    /// Add an arrow.
+    pub fn add_arrow(&mut self, arrow: Arrow) {
+        self.arrows.push(arrow);
     }
 
     /// Add a horizontal line.
@@ -837,6 +908,10 @@ impl DrawingSet {
             self.trend_lines.remove(pos);
             return true;
         }
+        if let Some(pos) = self.arrows.iter().position(|a| a.id == *id) {
+            self.arrows.remove(pos);
+            return true;
+        }
         if let Some(pos) = self.horizontal_lines.iter().position(|l| l.id == *id) {
             self.horizontal_lines.remove(pos);
             return true;
@@ -877,6 +952,11 @@ impl DrawingSet {
         self.trend_lines.iter().find(|l| l.id == *id)
     }
 
+    /// Get an arrow by ID.
+    pub fn get_arrow(&self, id: &DrawingId) -> Option<&Arrow> {
+        self.arrows.iter().find(|a| a.id == *id)
+    }
+
     /// Get a horizontal line by ID.
     pub fn get_horizontal_line(&self, id: &DrawingId) -> Option<&HorizontalLine> {
         self.horizontal_lines.iter().find(|l| l.id == *id)
@@ -900,6 +980,11 @@ impl DrawingSet {
     /// Get all trend lines.
     pub fn all_trend_lines(&self) -> &[TrendLine] {
         &self.trend_lines
+    }
+
+    /// Get all arrows.
+    pub fn all_arrows(&self) -> &[Arrow] {
+        &self.arrows
     }
 
     /// Get all horizontal lines.
@@ -965,6 +1050,7 @@ impl DrawingSet {
     /// Total number of drawings across all types.
     pub fn len(&self) -> usize {
         self.trend_lines.len()
+            + self.arrows.len()
             + self.horizontal_lines.len()
             + self.vertical_lines.len()
             + self.rectangles.len()
@@ -2332,5 +2418,58 @@ mod tests {
         assert_eq!(set.len(), 2);
         assert!(set.get_trend_line(&DrawingId("t1".to_string())).is_some());
         assert!(set.get_path(&DrawingId("p1".to_string())).is_some());
+    }
+
+    #[test]
+    fn drawing_set_add_arrow() {
+        let mut set = DrawingSet::new();
+        set.add_arrow(Arrow::new(
+            "a1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        assert_eq!(set.len(), 1);
+        assert!(set.get_arrow(&DrawingId("a1".to_string())).is_some());
+    }
+
+    #[test]
+    fn drawing_set_remove_arrow() {
+        let mut set = DrawingSet::new();
+        set.add_arrow(Arrow::new(
+            "a1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        assert!(set.remove(&DrawingId("a1".to_string())));
+        assert_eq!(set.len(), 0);
+    }
+
+    #[test]
+    fn drawing_set_all_arrows() {
+        let mut set = DrawingSet::new();
+        set.add_arrow(Arrow::new(
+            "a1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        set.add_arrow(Arrow::new(
+            "a2",
+            ChartPoint::new(200, 60.0),
+            ChartPoint::new(300, 80.0),
+        ));
+        assert_eq!(set.all_arrows().len(), 2);
+    }
+
+    #[test]
+    fn arrow_builder_methods() {
+        let arrow = Arrow::new("a1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
+            .with_color([1.0, 0.0, 0.0, 1.0])
+            .with_width(2.0)
+            .with_style(LineStyle::Dashed)
+            .with_arrowhead_size(16.0);
+        assert_eq!(arrow.color, [1.0, 0.0, 0.0, 1.0]);
+        assert_eq!(arrow.width, 2.0);
+        assert_eq!(arrow.style, LineStyle::Dashed);
+        assert_eq!(arrow.arrowhead_size, 16.0);
     }
 }

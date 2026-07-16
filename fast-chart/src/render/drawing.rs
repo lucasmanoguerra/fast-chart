@@ -3,6 +3,8 @@
 // ---------------------------------------------------------------------------
 
 use crate::render::commands::DrawCommand;
+use crate::render::context::RenderContext;
+use crate::render::coordinates::WorldPoint;
 use crate::render::series_renderer::Rect;
 use fast_chart_domain::drawing::{ChartPoint, DrawingId};
 
@@ -42,8 +44,8 @@ pub trait Drawing: Send + Sync {
     /// Set the selection state.
     fn set_selected(&mut self, selected: bool);
 
-    /// Generate render commands for this drawing.
-    fn to_commands(&self) -> Vec<DrawCommand>;
+    /// Generate render commands for this drawing using the given context.
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand>;
 }
 
 /// Bounding box in chart coordinates (timestamp range + price range).
@@ -91,6 +93,138 @@ impl DrawingBounds {
             && p.timestamp <= self.time_end
             && p.price >= self.price_min
             && p.price <= self.price_max
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for Arrow
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Arrow {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        // Distance from point to line segment (start → end)
+        let dx = self.end.timestamp as f64 - self.start.timestamp as f64;
+        let dy = self.end.price - self.start.price;
+        let len_sq = dx * dx + dy * dy;
+
+        if len_sq == 0.0 {
+            // Degenerate: start == end — treat as a point hit
+            let px = point.timestamp as f64 - self.start.timestamp as f64;
+            let py = point.price - self.start.price;
+            let tol = tolerance as f64;
+            return if px * px + py * py <= tol * tol {
+                HitResult::Body
+            } else {
+                HitResult::Miss
+            };
+        }
+
+        let t = ((point.timestamp as f64 - self.start.timestamp as f64) * dx
+            + (point.price - self.start.price) * dy)
+            / len_sq;
+        let t = t.clamp(0.0, 1.0);
+
+        let proj_x = self.start.timestamp as f64 + t * dx;
+        let proj_y = self.start.price + t * dy;
+
+        let dist_x = point.timestamp as f64 - proj_x;
+        let dist_y = point.price - proj_y;
+        let dist = (dist_x * dist_x + dist_y * dist_y).sqrt();
+
+        let tol = tolerance as f64;
+        if dist <= tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.start.timestamp = self.start.timestamp.saturating_add(delta.timestamp);
+        self.start.price += delta.price;
+        self.end.timestamp = self.end.timestamp.saturating_add(delta.timestamp);
+        self.end.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::from_points(self.start, self.end)
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let start_screen = pipeline.world_to_screen(WorldPoint::new(self.start.timestamp as f64, self.start.price));
+        let end_screen = pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
+
+        let mut cmds = Vec::with_capacity(3);
+
+        // 1. Line segment
+        cmds.push(DrawCommand::DrawLine {
+            x0: start_screen.x,
+            y0: start_screen.y,
+            x1: end_screen.x,
+            y1: end_screen.y,
+            color: self.color,
+            width: self.width,
+            style: match self.style {
+                fast_chart_domain::price_line::LineStyle::Solid => {
+                    crate::render::commands::LineStyle::Solid
+                }
+                fast_chart_domain::price_line::LineStyle::Dashed => {
+                    crate::render::commands::LineStyle::Dashed
+                }
+                fast_chart_domain::price_line::LineStyle::Dotted => {
+                    crate::render::commands::LineStyle::Dotted
+                }
+            },
+            z_index: 10,
+        });
+
+        // 2. Arrowhead triangle at end point
+        let dx = end_screen.x - start_screen.x;
+        let dy = end_screen.y - start_screen.y;
+        let len = (dx * dx + dy * dy).sqrt();
+        if len > 0.01 {
+            let ux = dx / len;
+            let uy = dy / len;
+            // Perpendicular
+            let px = -uy;
+            let py = ux;
+
+            let tip = self.arrowhead_size as f32;
+            let half_base = tip * 0.4;
+
+            let p1x = end_screen.x - ux * tip + px * half_base;
+            let p1y = end_screen.y - uy * tip + py * half_base;
+            let p2x = end_screen.x - ux * tip - px * half_base;
+            let p2y = end_screen.y - uy * tip - py * half_base;
+
+            cmds.push(DrawCommand::DrawTriangle {
+                x0: end_screen.x,
+                y0: end_screen.y,
+                x1: p1x,
+                y1: p1y,
+                x2: p2x,
+                y2: p2y,
+                fill: Some(self.color),
+                stroke: None,
+                stroke_width: 0.0,
+                z_index: 11,
+            });
+        }
+
+        cmds
     }
 }
 
@@ -154,5 +288,119 @@ mod tests {
         // We can't instantiate a trait object here, but we can verify
         // that the trait bounds are correct at the type level.
         assert_send_sync::<Box<dyn Drawing>>();
+    }
+
+    // ---- Arrow Drawing impl ----
+
+    fn test_arrow() -> fast_chart_domain::drawing::Arrow {
+        fast_chart_domain::drawing::Arrow::new(
+            "test-arrow",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        )
+    }
+
+    #[test]
+    fn arrow_id() {
+        let arrow = test_arrow();
+        assert_eq!(arrow.id().0, "test-arrow");
+    }
+
+    #[test]
+    fn arrow_hit_test_body() {
+        let arrow = test_arrow();
+        // Point on the line segment
+        let hit = arrow.hit_test(ChartPoint::new(1500, 125.0), 50.0);
+        assert_eq!(hit, HitResult::Body);
+    }
+
+    #[test]
+    fn arrow_hit_test_miss() {
+        let arrow = test_arrow();
+        // Point far from the line
+        let hit = arrow.hit_test(ChartPoint::new(1500, 500.0), 5.0);
+        assert_eq!(hit, HitResult::Miss);
+    }
+
+    #[test]
+    fn arrow_move_by() {
+        let mut arrow = test_arrow();
+        arrow.move_by(ChartPoint::new(500, 10.0));
+        assert_eq!(arrow.start.timestamp, 1500);
+        assert!((arrow.start.price - 110.0).abs() < f64::EPSILON);
+        assert_eq!(arrow.end.timestamp, 2500);
+        assert!((arrow.end.price - 160.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn arrow_bounds() {
+        let arrow = test_arrow();
+        let bounds = arrow.bounds();
+        assert_eq!(bounds.time_start, 1000);
+        assert_eq!(bounds.time_end, 2000);
+        assert!((bounds.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((bounds.price_max - 150.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn arrow_selection_state() {
+        let mut arrow = test_arrow();
+        assert!(!arrow.is_selected());
+        arrow.set_selected(true);
+        assert!(arrow.is_selected());
+        arrow.set_selected(false);
+        assert!(!arrow.is_selected());
+    }
+
+    #[test]
+    fn arrow_to_commands_produces_line_and_triangle() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let arrow = fast_chart_domain::drawing::Arrow::new(
+            "cmd-arrow",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = arrow.to_commands(&ctx);
+        // Should produce: DrawLine + DrawTriangle (arrowhead)
+        assert!(cmds.len() >= 2, "expected at least 2 commands, got {}", cmds.len());
+
+        // First command should be the line
+        match &cmds[0] {
+            DrawCommand::DrawLine { x0, y0, x1, y1, .. } => {
+                assert!(*x0 >= 0.0 && *x0 <= 800.0);
+                assert!(*x1 >= 0.0 && *x1 <= 800.0);
+            }
+            other => panic!("expected DrawLine, got {:?}", other),
+        }
+
+        // Second command should be the arrowhead triangle
+        match &cmds[1] {
+            DrawCommand::DrawTriangle { fill, .. } => {
+                assert!(fill.is_some(), "arrowhead should be filled");
+            }
+            other => panic!("expected DrawTriangle, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn arrow_degenerate_hit_test() {
+        // Arrow with zero length
+        let arrow = fast_chart_domain::drawing::Arrow::new(
+            "degen",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(1000, 100.0),
+        );
+        assert_eq!(arrow.hit_test(ChartPoint::new(1000, 100.0), 5.0), HitResult::Body);
+        assert_eq!(arrow.hit_test(ChartPoint::new(2000, 200.0), 5.0), HitResult::Miss);
     }
 }

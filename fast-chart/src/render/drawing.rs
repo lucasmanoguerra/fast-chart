@@ -97,6 +97,136 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for Path (Polygon / Polyline)
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Path {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        if self.points.is_empty() {
+            return HitResult::Miss;
+        }
+
+        // Check each segment for proximity
+        let tol = tolerance as f64;
+        for window in self.points.windows(2) {
+            let a = window[0];
+            let b = window[1];
+            let dx = b.timestamp as f64 - a.timestamp as f64;
+            let dy = b.price - a.price;
+            let len_sq = dx * dx + dy * dy;
+            if len_sq == 0.0 {
+                let px = point.timestamp as f64 - a.timestamp as f64;
+                let py = point.price - a.price;
+                if px * px + py * py <= tol * tol {
+                    return HitResult::Body;
+                }
+                continue;
+            }
+            let t = ((point.timestamp as f64 - a.timestamp as f64) * dx
+                + (point.price - a.price) * dy)
+                / len_sq;
+            let t = t.clamp(0.0, 1.0);
+            let proj_x = a.timestamp as f64 + t * dx;
+            let proj_y = a.price + t * dy;
+            let dist_x = point.timestamp as f64 - proj_x;
+            let dist_y = point.price - proj_y;
+            if dist_x * dist_x + dist_y * dist_y <= tol * tol {
+                return HitResult::Body;
+            }
+        }
+
+        HitResult::Miss
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        for p in &mut self.points {
+            p.timestamp = p.timestamp.saturating_add(delta.timestamp);
+            p.price += delta.price;
+        }
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        if self.points.is_empty() {
+            return DrawingBounds::new(0, 0, 0.0, 0.0);
+        }
+        let mut min_t = u64::MAX;
+        let mut max_t = 0u64;
+        let mut min_p = f64::MAX;
+        let mut max_p = f64::MIN;
+        for p in &self.points {
+            min_t = min_t.min(p.timestamp);
+            max_t = max_t.max(p.timestamp);
+            min_p = min_p.min(p.price);
+            max_p = max_p.max(p.price);
+        }
+        DrawingBounds::new(min_t, max_t, min_p, max_p)
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        if self.points.is_empty() {
+            return Vec::new();
+        }
+
+        let pipeline = &ctx.pipeline;
+        let screen_points: Vec<[f32; 2]> = self
+            .points
+            .iter()
+            .map(|p| {
+                let sp = pipeline.world_to_screen(WorldPoint::new(p.timestamp as f64, p.price));
+                [sp.x, sp.y]
+            })
+            .collect();
+
+        let mut cmds = Vec::with_capacity(2);
+
+        // Fill for closed paths
+        if self.closed {
+            if let Some(fill) = self.fill_color {
+                cmds.push(DrawCommand::DrawPath {
+                    points: screen_points.clone(),
+                    color: [0.0; 4],
+                    width: 0.0,
+                    style: crate::render::commands::LineStyle::Solid,
+                    closed: true,
+                    fill: Some(fill),
+                    z_index: 5,
+                });
+            }
+        }
+
+        // Stroke
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        cmds.push(DrawCommand::DrawPath {
+            points: screen_points,
+            color: self.color,
+            width: self.width,
+            style,
+            closed: self.closed,
+            fill: None,
+            z_index: 10,
+        });
+
+        cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for Ellipse (Circle)
 // ---------------------------------------------------------------------------
 
@@ -1165,6 +1295,102 @@ mod tests {
                 assert!(*radius > 0.0);
             }
             other => panic!("expected DrawCircle, got {:?}", other),
+        }
+    }
+
+    // ---- Path (Polygon) Drawing impl ----
+
+    #[test]
+    fn path_hit_test_on_segment() {
+        let path = fast_chart_domain::drawing::Path::new(
+            "poly1",
+            vec![
+                ChartPoint::new(1000, 100.0),
+                ChartPoint::new(2000, 200.0),
+                ChartPoint::new(3000, 100.0),
+            ],
+        );
+        // Near the middle segment
+        assert_eq!(path.hit_test(ChartPoint::new(1500, 150.0), 50.0), HitResult::Body);
+    }
+
+    #[test]
+    fn path_hit_test_miss() {
+        let path = fast_chart_domain::drawing::Path::new(
+            "poly1",
+            vec![
+                ChartPoint::new(1000, 100.0),
+                ChartPoint::new(2000, 200.0),
+            ],
+        );
+        assert_eq!(path.hit_test(ChartPoint::new(1500, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn path_move_by() {
+        let mut path = fast_chart_domain::drawing::Path::new(
+            "poly1",
+            vec![
+                ChartPoint::new(1000, 100.0),
+                ChartPoint::new(2000, 200.0),
+            ],
+        );
+        path.move_by(ChartPoint::new(100, 10.0));
+        assert_eq!(path.points[0].timestamp, 1100);
+        assert_eq!(path.points[1].timestamp, 2100);
+    }
+
+    #[test]
+    fn path_bounds() {
+        let path = fast_chart_domain::drawing::Path::new(
+            "poly1",
+            vec![
+                ChartPoint::new(3000, 200.0),
+                ChartPoint::new(1000, 100.0),
+                ChartPoint::new(2000, 300.0),
+            ],
+        );
+        let b = path.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 3000);
+        assert!((b.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 300.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn path_to_commands_closed_polygon() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let path = fast_chart_domain::drawing::Path::new(
+            "cmd-poly",
+            vec![
+                ChartPoint::new(1000, 100.0),
+                ChartPoint::new(2000, 200.0),
+                ChartPoint::new(3000, 100.0),
+            ],
+        )
+        .with_closed(true)
+        .with_fill([0.5, 0.5, 0.5, 0.3]);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 4000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = path.to_commands(&ctx);
+        // Fill + Stroke = 2
+        assert_eq!(cmds.len(), 2);
+
+        match &cmds[0] {
+            DrawCommand::DrawPath { closed, fill, z_index, .. } => {
+                assert!(*closed);
+                assert!(fill.is_some());
+                assert_eq!(*z_index, 5);
+            }
+            other => panic!("expected DrawPath fill, got {:?}", other),
         }
     }
 }

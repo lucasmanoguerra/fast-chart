@@ -858,6 +858,10 @@ pub struct Path {
     pub style: LineStyle,
     /// If `true`, the last point connects back to the first.
     pub closed: bool,
+    /// Optional fill color for closed paths.
+    pub fill_color: Option<[f32; 4]>,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl Path {
@@ -870,6 +874,8 @@ impl Path {
             width: 1.0,
             style: LineStyle::Solid,
             closed: false,
+            fill_color: None,
+            selected: false,
         }
     }
 
@@ -894,6 +900,12 @@ impl Path {
     /// Set whether the path is closed.
     pub fn with_closed(mut self, closed: bool) -> Self {
         self.closed = closed;
+        self
+    }
+
+    /// Set the fill color.
+    pub fn with_fill(mut self, fill_color: [f32; 4]) -> Self {
+        self.fill_color = Some(fill_color);
         self
     }
 

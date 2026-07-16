@@ -97,6 +97,95 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for Segment
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Segment {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        // Same distance-to-segment as Arrow (finite line)
+        let dx = self.end.timestamp as f64 - self.start.timestamp as f64;
+        let dy = self.end.price - self.start.price;
+        let len_sq = dx * dx + dy * dy;
+
+        if len_sq == 0.0 {
+            let px = point.timestamp as f64 - self.start.timestamp as f64;
+            let py = point.price - self.start.price;
+            let tol = tolerance as f64;
+            return if px * px + py * py <= tol * tol {
+                HitResult::Body
+            } else {
+                HitResult::Miss
+            };
+        }
+
+        let t = ((point.timestamp as f64 - self.start.timestamp as f64) * dx
+            + (point.price - self.start.price) * dy)
+            / len_sq;
+        let t = t.clamp(0.0, 1.0);
+
+        let proj_x = self.start.timestamp as f64 + t * dx;
+        let proj_y = self.start.price + t * dy;
+
+        let dist_x = point.timestamp as f64 - proj_x;
+        let dist_y = point.price - proj_y;
+        let dist = (dist_x * dist_x + dist_y * dist_y).sqrt();
+
+        let tol = tolerance as f64;
+        if dist <= tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.start.timestamp = self.start.timestamp.saturating_add(delta.timestamp);
+        self.start.price += delta.price;
+        self.end.timestamp = self.end.timestamp.saturating_add(delta.timestamp);
+        self.end.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::from_points(self.start, self.end)
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let start_screen = pipeline.world_to_screen(WorldPoint::new(self.start.timestamp as f64, self.start.price));
+        let end_screen = pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
+
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+
+        vec![DrawCommand::DrawLine {
+            x0: start_screen.x,
+            y0: start_screen.y,
+            x1: end_screen.x,
+            y1: end_screen.y,
+            color: self.color,
+            width: self.width,
+            style,
+            z_index: 10,
+        }]
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for Ray
 // ---------------------------------------------------------------------------
 
@@ -624,6 +713,78 @@ mod tests {
                 assert!(*x1 > *x0 || *y1 > *y0, "ray should extend beyond start");
                 assert_eq!(*z_index, 10);
             }
+            other => panic!("expected DrawLine, got {:?}", other),
+        }
+    }
+
+    // ---- Segment Drawing impl ----
+
+    #[test]
+    fn segment_hit_test_body() {
+        let seg = fast_chart_domain::drawing::Segment::new(
+            "seg1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        );
+        assert_eq!(seg.hit_test(ChartPoint::new(1500, 125.0), 50.0), HitResult::Body);
+    }
+
+    #[test]
+    fn segment_hit_test_miss() {
+        let seg = fast_chart_domain::drawing::Segment::new(
+            "seg1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        );
+        assert_eq!(seg.hit_test(ChartPoint::new(1500, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn segment_move_by() {
+        let mut seg = fast_chart_domain::drawing::Segment::new(
+            "seg1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        );
+        seg.move_by(ChartPoint::new(100, 10.0));
+        assert_eq!(seg.start.timestamp, 1100);
+        assert_eq!(seg.end.timestamp, 2100);
+    }
+
+    #[test]
+    fn segment_bounds() {
+        let seg = fast_chart_domain::drawing::Segment::new(
+            "seg1",
+            ChartPoint::new(2000, 150.0),
+            ChartPoint::new(1000, 100.0),
+        );
+        let b = seg.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+    }
+
+    #[test]
+    fn segment_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let seg = fast_chart_domain::drawing::Segment::new(
+            "cmd-seg",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 150.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = seg.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1);
+        match &cmds[0] {
+            DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 10),
             other => panic!("expected DrawLine, got {:?}", other),
         }
     }

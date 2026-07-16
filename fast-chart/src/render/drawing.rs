@@ -97,6 +97,101 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for Rectangle (Box)
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Rectangle {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let min_t = self.top_left.timestamp.min(self.bottom_right.timestamp);
+        let max_t = self.top_left.timestamp.max(self.bottom_right.timestamp);
+        let min_p = self.top_left.price.min(self.bottom_right.price);
+        let max_p = self.top_left.price.max(self.bottom_right.price);
+
+        let tol = tolerance as f64;
+
+        // Check if point is inside the rectangle (with tolerance padding)
+        if point.timestamp as f64 >= min_t as f64 - tol
+            && point.timestamp as f64 <= max_t as f64 + tol
+            && point.price >= min_p - tol
+            && point.price <= max_p + tol
+        {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.top_left.timestamp = self.top_left.timestamp.saturating_add(delta.timestamp);
+        self.top_left.price += delta.price;
+        self.bottom_right.timestamp = self.bottom_right.timestamp.saturating_add(delta.timestamp);
+        self.bottom_right.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::from_points(self.top_left, self.bottom_right)
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let tl = pipeline.world_to_screen(WorldPoint::new(self.top_left.timestamp as f64, self.top_left.price));
+        let br = pipeline.world_to_screen(WorldPoint::new(self.bottom_right.timestamp as f64, self.bottom_right.price));
+
+        let x = tl.x.min(br.x);
+        let y = tl.y.min(br.y);
+        let w = (br.x - tl.x).abs();
+        let h = (br.y - tl.y).abs();
+
+        let mut cmds = Vec::with_capacity(2);
+
+        // Fill
+        if let Some(fill) = self.fill_color {
+            cmds.push(DrawCommand::DrawRect {
+                x,
+                y,
+                width: w,
+                height: h,
+                fill: Some(fill),
+                stroke: None,
+                stroke_width: 0.0,
+                z_index: 5,
+            });
+        }
+
+        // Stroke
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        cmds.push(DrawCommand::DrawRect {
+            x,
+            y,
+            width: w,
+            height: h,
+            fill: None,
+            stroke: Some(self.color),
+            stroke_width: self.width,
+            z_index: 6,
+        });
+
+        cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for Segment
 // ---------------------------------------------------------------------------
 
@@ -787,5 +882,128 @@ mod tests {
             DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 10),
             other => panic!("expected DrawLine, got {:?}", other),
         }
+    }
+
+    // ---- Rectangle (Box) Drawing impl ----
+
+    #[test]
+    fn rectangle_hit_test_inside() {
+        let rect = fast_chart_domain::drawing::Rectangle::new(
+            "box1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+        assert_eq!(rect.hit_test(ChartPoint::new(1500, 150.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn rectangle_hit_test_outside() {
+        let rect = fast_chart_domain::drawing::Rectangle::new(
+            "box1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+        assert_eq!(rect.hit_test(ChartPoint::new(3000, 300.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn rectangle_hit_test_edge_tolerance() {
+        let rect = fast_chart_domain::drawing::Rectangle::new(
+            "box1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+        // Just outside the rectangle but within tolerance
+        assert_eq!(rect.hit_test(ChartPoint::new(2001, 150.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn rectangle_move_by() {
+        let mut rect = fast_chart_domain::drawing::Rectangle::new(
+            "box1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+        rect.move_by(ChartPoint::new(100, 10.0));
+        assert_eq!(rect.top_left.timestamp, 1100);
+        assert_eq!(rect.bottom_right.timestamp, 2100);
+    }
+
+    #[test]
+    fn rectangle_bounds() {
+        let rect = fast_chart_domain::drawing::Rectangle::new(
+            "box1",
+            ChartPoint::new(2000, 200.0),
+            ChartPoint::new(1000, 100.0),
+        );
+        let b = rect.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+    }
+
+    #[test]
+    fn rectangle_to_commands_with_fill() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let rect = fast_chart_domain::drawing::Rectangle::new(
+            "box-fill",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ).with_fill([0.5, 0.5, 0.5, 0.3]);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = rect.to_commands(&ctx);
+        // Fill + Stroke = 2 commands
+        assert_eq!(cmds.len(), 2);
+
+        // First should be fill
+        match &cmds[0] {
+            DrawCommand::DrawRect { fill, stroke, z_index, .. } => {
+                assert!(fill.is_some());
+                assert!(stroke.is_none());
+                assert_eq!(*z_index, 5);
+            }
+            other => panic!("expected DrawRect for fill, got {:?}", other),
+        }
+
+        // Second should be stroke
+        match &cmds[1] {
+            DrawCommand::DrawRect { fill, stroke, z_index, .. } => {
+                assert!(fill.is_none());
+                assert!(stroke.is_some());
+                assert_eq!(*z_index, 6);
+            }
+            other => panic!("expected DrawRect for stroke, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn rectangle_to_commands_no_fill() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let rect = fast_chart_domain::drawing::Rectangle::new(
+            "box-stroke",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = rect.to_commands(&ctx);
+        // No fill = only stroke
+        assert_eq!(cmds.len(), 1);
     }
 }

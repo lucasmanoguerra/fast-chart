@@ -97,6 +97,89 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for Ellipse (Circle)
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Ellipse {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        // Check if point is inside the ellipse (normalized distance)
+        let dx = (point.timestamp as f64 - self.center.timestamp as f64) / self.radius_x;
+        let dy = (point.price - self.center.price) / self.radius_y;
+        let dist = dx * dx + dy * dy;
+        let tol = 1.0 + tolerance as f64 / self.radius_x.max(self.radius_y).max(1.0);
+        if dist <= tol * tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.center.timestamp = self.center.timestamp.saturating_add(delta.timestamp);
+        self.center.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::new(
+            self.center.timestamp.saturating_sub(self.radius_x as u64),
+            self.center.timestamp + self.radius_x as u64,
+            self.center.price - self.radius_y,
+            self.center.price + self.radius_y,
+        )
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let center_screen = pipeline.world_to_screen(WorldPoint::new(self.center.timestamp as f64, self.center.price));
+
+        // Approximate radius in screen space (average of x and y)
+        let right = pipeline.world_to_screen(WorldPoint::new(self.center.timestamp as f64 + self.radius_x, self.center.price));
+        let bottom = pipeline.world_to_screen(WorldPoint::new(self.center.timestamp as f64, self.center.price + self.radius_y));
+        let rx = (right.x - center_screen.x).abs();
+        let ry = (bottom.y - center_screen.y).abs();
+        let radius = (rx + ry) / 2.0;
+
+        let mut cmds = Vec::with_capacity(2);
+
+        if let Some(fill) = self.fill_color {
+            cmds.push(DrawCommand::DrawCircle {
+                cx: center_screen.x,
+                cy: center_screen.y,
+                radius,
+                fill: Some(fill),
+                stroke: None,
+                stroke_width: 0.0,
+                z_index: 5,
+            });
+        }
+
+        cmds.push(DrawCommand::DrawCircle {
+            cx: center_screen.x,
+            cy: center_screen.y,
+            radius,
+            fill: None,
+            stroke: Some(self.color),
+            stroke_width: self.width,
+            z_index: 6,
+        });
+
+        cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for Rectangle (Box)
 // ---------------------------------------------------------------------------
 
@@ -1005,5 +1088,83 @@ mod tests {
         let cmds = rect.to_commands(&ctx);
         // No fill = only stroke
         assert_eq!(cmds.len(), 1);
+    }
+
+    // ---- Ellipse (Circle) Drawing impl ----
+
+    #[test]
+    fn ellipse_hit_test_inside() {
+        let ell = fast_chart_domain::drawing::Ellipse::new(
+            "e1",
+            ChartPoint::new(1000, 100.0),
+            500.0, 50.0,
+        );
+        assert_eq!(ell.hit_test(ChartPoint::new(1000, 100.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn ellipse_hit_test_outside() {
+        let ell = fast_chart_domain::drawing::Ellipse::new(
+            "e1",
+            ChartPoint::new(1000, 100.0),
+            100.0, 10.0,
+        );
+        assert_eq!(ell.hit_test(ChartPoint::new(5000, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn ellipse_move_by() {
+        let mut ell = fast_chart_domain::drawing::Ellipse::new(
+            "e1",
+            ChartPoint::new(1000, 100.0),
+            500.0, 50.0,
+        );
+        ell.move_by(ChartPoint::new(100, 10.0));
+        assert_eq!(ell.center.timestamp, 1100);
+        assert!((ell.center.price - 110.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn ellipse_bounds() {
+        let ell = fast_chart_domain::drawing::Ellipse::new(
+            "e1",
+            ChartPoint::new(1000, 100.0),
+            500.0, 50.0,
+        );
+        let b = ell.bounds();
+        assert_eq!(b.time_start, 500);
+        assert_eq!(b.time_end, 1500);
+        assert!((b.price_min - 50.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 150.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn ellipse_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let ell = fast_chart_domain::drawing::Ellipse::new(
+            "cmd-e",
+            ChartPoint::new(1000, 100.0),
+            500.0, 50.0,
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = ell.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1, "no fill = only stroke");
+        match &cmds[0] {
+            DrawCommand::DrawCircle { fill, stroke, radius, .. } => {
+                assert!(fill.is_none());
+                assert!(stroke.is_some());
+                assert!(*radius > 0.0);
+            }
+            other => panic!("expected DrawCircle, got {:?}", other),
+        }
     }
 }

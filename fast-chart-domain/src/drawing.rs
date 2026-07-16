@@ -72,6 +72,64 @@ impl TrendLine {
 }
 
 // ---------------------------------------------------------------------------
+// Segment
+// ---------------------------------------------------------------------------
+
+/// A finite line segment between two points.
+///
+/// Simpler than TrendLine — purely geometric with no drawing-tool semantics.
+#[derive(Debug, Clone)]
+pub struct Segment {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Start point.
+    pub start: ChartPoint,
+    /// End point.
+    pub end: ChartPoint,
+    /// Line color [r, g, b, a].
+    pub color: [f32; 4],
+    /// Line width in pixels.
+    pub width: f32,
+    /// Line style.
+    pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
+}
+
+impl Segment {
+    /// Create a new segment between two points with default styling.
+    pub fn new(id: impl Into<String>, start: ChartPoint, end: ChartPoint) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            start,
+            end,
+            color: [1.0, 1.0, 1.0, 1.0],
+            width: 1.0,
+            style: LineStyle::Solid,
+            selected: false,
+        }
+    }
+
+    /// Set the line color.
+    pub fn with_color(mut self, color: [f32; 4]) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set the line width.
+    pub fn with_width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    /// Set the line style.
+    pub fn with_style(mut self, style: LineStyle) -> Self {
+        self.style = style;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Ray
 // ---------------------------------------------------------------------------
 
@@ -895,6 +953,7 @@ pub struct DrawingSet {
     trend_lines: Vec<TrendLine>,
     arrows: Vec<Arrow>,
     rays: Vec<Ray>,
+    segments: Vec<Segment>,
     horizontal_lines: Vec<HorizontalLine>,
     vertical_lines: Vec<VerticalLine>,
     rectangles: Vec<Rectangle>,
@@ -924,6 +983,11 @@ impl DrawingSet {
     /// Add a ray.
     pub fn add_ray(&mut self, ray: Ray) {
         self.rays.push(ray);
+    }
+
+    /// Add a segment.
+    pub fn add_segment(&mut self, segment: Segment) {
+        self.segments.push(segment);
     }
 
     /// Add a horizontal line.
@@ -980,6 +1044,10 @@ impl DrawingSet {
             self.rays.remove(pos);
             return true;
         }
+        if let Some(pos) = self.segments.iter().position(|s| s.id == *id) {
+            self.segments.remove(pos);
+            return true;
+        }
         if let Some(pos) = self.horizontal_lines.iter().position(|l| l.id == *id) {
             self.horizontal_lines.remove(pos);
             return true;
@@ -1030,6 +1098,11 @@ impl DrawingSet {
         self.rays.iter().find(|r| r.id == *id)
     }
 
+    /// Get a segment by ID.
+    pub fn get_segment(&self, id: &DrawingId) -> Option<&Segment> {
+        self.segments.iter().find(|s| s.id == *id)
+    }
+
     /// Get a horizontal line by ID.
     pub fn get_horizontal_line(&self, id: &DrawingId) -> Option<&HorizontalLine> {
         self.horizontal_lines.iter().find(|l| l.id == *id)
@@ -1063,6 +1136,11 @@ impl DrawingSet {
     /// Get all rays.
     pub fn all_rays(&self) -> &[Ray] {
         &self.rays
+    }
+
+    /// Get all segments.
+    pub fn all_segments(&self) -> &[Segment] {
+        &self.segments
     }
 
     /// Get all horizontal lines.
@@ -1130,6 +1208,7 @@ impl DrawingSet {
         self.trend_lines.len()
             + self.arrows.len()
             + self.rays.len()
+            + self.segments.len()
             + self.horizontal_lines.len()
             + self.vertical_lines.len()
             + self.rectangles.len()
@@ -2593,5 +2672,48 @@ mod tests {
         assert_eq!(ray.color, [0.0, 1.0, 0.0, 1.0]);
         assert_eq!(ray.width, 2.0);
         assert_eq!(ray.style, LineStyle::Dotted);
+    }
+
+    #[test]
+    fn drawing_set_add_segment() {
+        let mut set = DrawingSet::new();
+        set.add_segment(Segment::new(
+            "s1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        assert_eq!(set.len(), 1);
+        assert!(set.get_segment(&DrawingId("s1".to_string())).is_some());
+    }
+
+    #[test]
+    fn drawing_set_remove_segment() {
+        let mut set = DrawingSet::new();
+        set.add_segment(Segment::new(
+            "s1",
+            ChartPoint::new(0, 0.0),
+            ChartPoint::new(100, 50.0),
+        ));
+        assert!(set.remove(&DrawingId("s1".to_string())));
+        assert_eq!(set.len(), 0);
+    }
+
+    #[test]
+    fn drawing_set_all_segments() {
+        let mut set = DrawingSet::new();
+        set.add_segment(Segment::new("s1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0)));
+        set.add_segment(Segment::new("s2", ChartPoint::new(200, 60.0), ChartPoint::new(300, 80.0)));
+        assert_eq!(set.all_segments().len(), 2);
+    }
+
+    #[test]
+    fn segment_builder_methods() {
+        let seg = Segment::new("s1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
+            .with_color([0.0, 0.0, 1.0, 1.0])
+            .with_width(3.0)
+            .with_style(LineStyle::Dotted);
+        assert_eq!(seg.color, [0.0, 0.0, 1.0, 1.0]);
+        assert_eq!(seg.width, 3.0);
+        assert_eq!(seg.style, LineStyle::Dotted);
     }
 }

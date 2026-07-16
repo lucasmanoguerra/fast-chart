@@ -30,12 +30,22 @@ impl PriceScaleId {
 /// Price scale mode — controls how price values map to pixel coordinates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PriceScaleMode {
+    /// Auto mode — scale adjusts automatically to visible data.
+    Auto,
+    /// Manual mode — user controls the visible range.
+    Manual,
+    /// Locked mode — range is fixed and cannot be changed by user or auto-fit.
+    Locked,
     /// Linear scale (default). Equal price increments → equal pixel distances.
     Normal,
     /// Logarithmic scale. Useful for crypto and wide-range assets.
     Logarithmic,
     /// Percentage change from the first visible bar.
     Percentage,
+    /// Indexed mode — prices shown as percentage change from index 0.
+    Indexed,
+    /// Inverted mode — higher prices at the bottom.
+    Inverted,
 }
 
 impl Default for PriceScaleMode {
@@ -88,6 +98,10 @@ pub struct PriceScale {
     pub options: PriceScaleOptions,
     pub value_min: f64,
     pub value_max: f64,
+    /// Extra margin above the top of the range (in price units).
+    pub margin_top: f64,
+    /// Extra margin below the bottom of the range (in price units).
+    pub margin_bottom: f64,
 }
 
 impl PriceScale {
@@ -98,30 +112,42 @@ impl PriceScale {
             options,
             value_min: 0.0,
             value_max: 100.0,
+            margin_top: 0.0,
+            margin_bottom: 0.0,
         }
     }
 
-    /// Apply auto-fit with `scale_offset` padding.
+    /// Apply auto-fit with `scale_offset` padding plus explicit margins.
     ///
-    /// No-op when `auto_scale` is `false`.
+    /// No-op when `auto_scale` is `false` or mode is `Locked`.
     pub fn auto_fit(&mut self, visible_data_min: f64, visible_data_max: f64) {
-        if !self.options.auto_scale {
+        if !self.options.auto_scale || self.options.mode == PriceScaleMode::Locked {
             return;
         }
         let range = visible_data_max - visible_data_min;
         if range.abs() < f64::EPSILON {
-            self.value_min = visible_data_min - 1.0;
-            self.value_max = visible_data_max + 1.0;
+            self.value_min = visible_data_min - 1.0 - self.margin_bottom;
+            self.value_max = visible_data_max + 1.0 + self.margin_top;
             return;
         }
         let pad = range * self.options.scale_offset;
-        self.value_min = visible_data_min - pad;
-        self.value_max = visible_data_max + pad;
+        self.value_min = visible_data_min - pad - self.margin_bottom;
+        self.value_max = visible_data_max + pad + self.margin_top;
     }
 
     /// Returns `true` when `price` falls within the current range.
     pub fn contains(&self, price: f64) -> bool {
         price >= self.value_min && price <= self.value_max
+    }
+
+    /// Change the scale mode.
+    pub fn set_mode(&mut self, mode: PriceScaleMode) {
+        self.options.mode = mode;
+    }
+
+    /// Returns `true` when the range can be modified (not Locked).
+    pub fn is_editable(&self) -> bool {
+        self.options.mode != PriceScaleMode::Locked
     }
 }
 
@@ -263,6 +289,80 @@ mod tests {
         assert!((scale.value_max - 51.0).abs() < f64::EPSILON);
     }
 
+    #[test]
+    fn auto_fit_locked_noop() {
+        let mut scale = PriceScale::new(
+            PriceScaleId::Right,
+            PriceScaleOptions {
+                mode: PriceScaleMode::Locked,
+                ..Default::default()
+            },
+        );
+        scale.value_min = 10.0;
+        scale.value_max = 90.0;
+        scale.auto_fit(100.0, 200.0);
+        assert!((scale.value_min - 10.0).abs() < f64::EPSILON);
+        assert!((scale.value_max - 90.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn auto_fit_with_margins() {
+        let mut scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
+        scale.margin_top = 10.0;
+        scale.margin_bottom = 5.0;
+        scale.auto_fit(100.0, 200.0);
+        // range = 100, pad = 5, margin_top = 10, margin_bottom = 5
+        assert!((scale.value_min - 90.0).abs() < f64::EPSILON);
+        assert!((scale.value_max - 215.0).abs() < f64::EPSILON);
+    }
+
+    // --- set_mode / is_editable ---
+
+    #[test]
+    fn set_mode_changes_mode() {
+        let mut scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
+        assert_eq!(scale.options.mode, PriceScaleMode::Normal);
+        scale.set_mode(PriceScaleMode::Logarithmic);
+        assert_eq!(scale.options.mode, PriceScaleMode::Logarithmic);
+    }
+
+    #[test]
+    fn is_editable_normal() {
+        let scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
+        assert!(scale.is_editable());
+    }
+
+    #[test]
+    fn is_editable_locked() {
+        let scale = PriceScale::new(
+            PriceScaleId::Right,
+            PriceScaleOptions {
+                mode: PriceScaleMode::Locked,
+                ..Default::default()
+            },
+        );
+        assert!(!scale.is_editable());
+    }
+
+    // --- PriceScaleMode variants ---
+
+    #[test]
+    fn all_modes_exist() {
+        let _ = PriceScaleMode::Auto;
+        let _ = PriceScaleMode::Manual;
+        let _ = PriceScaleMode::Locked;
+        let _ = PriceScaleMode::Normal;
+        let _ = PriceScaleMode::Logarithmic;
+        let _ = PriceScaleMode::Percentage;
+        let _ = PriceScaleMode::Indexed;
+        let _ = PriceScaleMode::Inverted;
+    }
+
+    #[test]
+    fn default_mode_is_normal() {
+        assert_eq!(PriceScaleMode::default(), PriceScaleMode::Normal);
+    }
+
     // --- contains ---
 
     #[test]
@@ -272,6 +372,8 @@ mod tests {
             options: PriceScaleOptions::default(),
             value_min: 10.0,
             value_max: 20.0,
+            margin_top: 0.0,
+            margin_bottom: 0.0,
         };
         assert!(scale.contains(15.0));
         assert!(scale.contains(10.0));

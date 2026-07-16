@@ -67,6 +67,7 @@ pub use fast_chart_domain::indicators::{Adx, Atr, Bollinger, Cci, Ema, HeikinAsh
 
 pub use app::chart_controller::{ChartController, ChartState};
 pub use app::frame_counter::FrameCounter;
+pub use app::layout::{GridLayout, HorizontalSplit, LayoutEngine, VerticalStack};
 pub use app::layout_manager::LayoutManager;
 pub use app::pane::Pane;
 pub use app::viewport_management::ViewportManager;

@@ -1,4 +1,5 @@
 pub mod divider;
+pub mod events;
 
 use fast_chart_domain::drawing::DrawingSet;
 use fast_chart_domain::marker::MarkerSet;

@@ -89,6 +89,17 @@ pub enum DrawCommand {
         align_y: f32,
         z_index: i32,
     },
+
+    /// An image placed at screen-space (x, y) with given dimensions.
+    DrawImage {
+        x: f32,
+        y: f32,
+        src: String,
+        width: f32,
+        height: f32,
+        opacity: f32,
+        z_index: i32,
+    },
 }
 
 /// Line drawing style.
@@ -286,7 +297,8 @@ impl DrawCommand {
             | Self::DrawCircle { z_index, .. }
             | Self::DrawTriangle { z_index, .. }
             | Self::DrawPath { z_index, .. }
-            | Self::DrawText { z_index, .. } => *z_index,
+            | Self::DrawText { z_index, .. }
+            | Self::DrawImage { z_index, .. } => *z_index,
         }
     }
 }
@@ -300,6 +312,7 @@ impl fmt::Display for DrawCommand {
             Self::DrawTriangle { .. } => write!(f, "Triangle"),
             Self::DrawPath { points, .. } => write!(f, "Path({} pts)", points.len()),
             Self::DrawText { text, .. } => write!(f, "Text(\"{}\")", text),
+            Self::DrawImage { src, .. } => write!(f, "Image(\"{}\")", src),
         }
     }
 }

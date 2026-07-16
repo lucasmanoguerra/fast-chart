@@ -137,6 +137,62 @@ impl TextDrawing {
 }
 
 // ---------------------------------------------------------------------------
+// ImageDrawing
+// ---------------------------------------------------------------------------
+
+/// An image annotation anchored to a chart point, with width and height in pixels.
+#[derive(Debug, Clone)]
+pub struct ImageDrawing {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Anchor position in chart coordinates.
+    pub position: ChartPoint,
+    /// Image data URI or file path.
+    pub src: String,
+    /// Width in screen pixels.
+    pub width: f32,
+    /// Height in screen pixels.
+    pub height: f32,
+    /// Opacity 0.0..1.0.
+    pub opacity: f32,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
+}
+
+impl ImageDrawing {
+    /// Create a new image annotation at the given position.
+    pub fn new(id: impl Into<String>, position: ChartPoint, src: impl Into<String>) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            position,
+            src: src.into(),
+            width: 100.0,
+            height: 100.0,
+            opacity: 1.0,
+            selected: false,
+        }
+    }
+
+    /// Set width in pixels.
+    pub fn with_width(mut self, w: f32) -> Self {
+        self.width = w;
+        self
+    }
+
+    /// Set height in pixels.
+    pub fn with_height(mut self, h: f32) -> Self {
+        self.height = h;
+        self
+    }
+
+    /// Set opacity.
+    pub fn with_opacity(mut self, o: f32) -> Self {
+        self.opacity = o;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Segment
 // ---------------------------------------------------------------------------
 
@@ -1038,6 +1094,7 @@ pub struct DrawingSet {
     rays: Vec<Ray>,
     segments: Vec<Segment>,
     text_drawings: Vec<TextDrawing>,
+    image_drawings: Vec<ImageDrawing>,
     horizontal_lines: Vec<HorizontalLine>,
     vertical_lines: Vec<VerticalLine>,
     rectangles: Vec<Rectangle>,
@@ -1077,6 +1134,11 @@ impl DrawingSet {
     /// Add a text drawing.
     pub fn add_text_drawing(&mut self, text: TextDrawing) {
         self.text_drawings.push(text);
+    }
+
+    /// Add an image drawing.
+    pub fn add_image_drawing(&mut self, img: ImageDrawing) {
+        self.image_drawings.push(img);
     }
 
     /// Add a horizontal line.
@@ -1141,6 +1203,10 @@ impl DrawingSet {
             self.text_drawings.remove(pos);
             return true;
         }
+        if let Some(pos) = self.image_drawings.iter().position(|i| i.id == *id) {
+            self.image_drawings.remove(pos);
+            return true;
+        }
         if let Some(pos) = self.horizontal_lines.iter().position(|l| l.id == *id) {
             self.horizontal_lines.remove(pos);
             return true;
@@ -1201,6 +1267,11 @@ impl DrawingSet {
         self.text_drawings.iter().find(|t| t.id == *id)
     }
 
+    /// Get an image drawing by ID.
+    pub fn get_image_drawing(&self, id: &DrawingId) -> Option<&ImageDrawing> {
+        self.image_drawings.iter().find(|i| i.id == *id)
+    }
+
     /// Get a horizontal line by ID.
     pub fn get_horizontal_line(&self, id: &DrawingId) -> Option<&HorizontalLine> {
         self.horizontal_lines.iter().find(|l| l.id == *id)
@@ -1244,6 +1315,11 @@ impl DrawingSet {
     /// Get all text drawings.
     pub fn all_text_drawings(&self) -> &[TextDrawing] {
         &self.text_drawings
+    }
+
+    /// Get all image drawings.
+    pub fn all_image_drawings(&self) -> &[ImageDrawing] {
+        &self.image_drawings
     }
 
     /// Get all horizontal lines.
@@ -1313,6 +1389,7 @@ impl DrawingSet {
             + self.rays.len()
             + self.segments.len()
             + self.text_drawings.len()
+            + self.image_drawings.len()
             + self.horizontal_lines.len()
             + self.vertical_lines.len()
             + self.rectangles.len()

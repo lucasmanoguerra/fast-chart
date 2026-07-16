@@ -97,6 +97,67 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for ImageDrawing
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::ImageDrawing {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let dx = (point.timestamp as f64 - self.position.timestamp as f64).abs();
+        let dy = (point.price - self.position.price).abs();
+        let tol = tolerance as f64;
+
+        if dx <= self.width as f64 / 2.0 + tol && dy <= self.height as f64 / 2.0 + tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.position.timestamp = self.position.timestamp.saturating_add(delta.timestamp);
+        self.position.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        let half_w = self.width as f64 / 2.0;
+        let half_h = self.height as f64 / 2.0;
+        DrawingBounds::new(
+            self.position.timestamp.saturating_sub(half_w as u64),
+            self.position.timestamp + half_w as u64,
+            self.position.price - half_h,
+            self.position.price + half_h,
+        )
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let screen = pipeline.world_to_screen(WorldPoint::new(self.position.timestamp as f64, self.position.price));
+
+        vec![DrawCommand::DrawImage {
+            x: screen.x - self.width / 2.0,
+            y: screen.y - self.height / 2.0,
+            src: self.src.clone(),
+            width: self.width,
+            height: self.height,
+            opacity: self.opacity,
+            z_index: 15,
+        }]
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for TextDrawing
 // ---------------------------------------------------------------------------
 
@@ -1549,5 +1610,83 @@ mod tests {
         assert!(td.is_selected());
         td.set_selected(false);
         assert!(!td.is_selected());
+    }
+
+    // ---- ImageDrawing Drawing impl tests ----
+
+    #[test]
+    fn image_hit_test() {
+        let img = fast_chart_domain::drawing::ImageDrawing::new(
+            "img1",
+            ChartPoint::new(2000, 150.0),
+            "logo.png",
+        );
+        // At anchor
+        assert_eq!(img.hit_test(ChartPoint::new(2000, 150.0), 5.0), HitResult::Body);
+        // Inside bounds
+        assert_eq!(img.hit_test(ChartPoint::new(2020, 160.0), 5.0), HitResult::Body);
+        // Far away
+        assert_eq!(img.hit_test(ChartPoint::new(5000, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn image_move_by() {
+        let mut img = fast_chart_domain::drawing::ImageDrawing::new(
+            "img1",
+            ChartPoint::new(1000, 100.0),
+            "pic.png",
+        );
+        img.move_by(ChartPoint::new(500, 25.0));
+        assert_eq!(img.position.timestamp, 1500);
+        assert!((img.position.price - 125.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn image_bounds() {
+        let img = fast_chart_domain::drawing::ImageDrawing::new(
+            "img1",
+            ChartPoint::new(2000, 150.0),
+            "pic.png",
+        ).with_width(200.0).with_height(100.0);
+        let b = img.bounds();
+        assert_eq!(b.time_start, 1900);
+        assert_eq!(b.time_end, 2100);
+        assert!((b.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 200.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn image_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let img = fast_chart_domain::drawing::ImageDrawing::new(
+            "cmd-img",
+            ChartPoint::new(1000, 100.0),
+            "chart-bg.png",
+        )
+        .with_width(150.0)
+        .with_height(80.0)
+        .with_opacity(0.7);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = img.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1);
+        match &cmds[0] {
+            DrawCommand::DrawImage { src, width, height, opacity, z_index, .. } => {
+                assert_eq!(src, "chart-bg.png");
+                assert_eq!(*width, 150.0);
+                assert_eq!(*height, 80.0);
+                assert!((opacity - 0.7).abs() < f32::EPSILON);
+                assert_eq!(*z_index, 15);
+            }
+            other => panic!("expected DrawImage, got {:?}", other),
+        }
     }
 }

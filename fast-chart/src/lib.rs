@@ -69,6 +69,7 @@ pub use app::chart_controller::{ChartController, ChartState};
 pub use app::frame_counter::FrameCounter;
 pub use app::layout::{GridLayout, HorizontalSplit, LayoutEngine, VerticalStack};
 pub use app::layout_manager::LayoutManager;
+pub use app::pane::divider::{DividerCursor, PaneDivider};
 pub use app::pane::Pane;
 pub use app::viewport_management::ViewportManager;
 pub use ports::data_provider::{DataEvent, DataProvider};

@@ -9,4 +9,5 @@ pub mod viewport_management;
 
 pub use layout::{GridLayout, HorizontalSplit, LayoutEngine, VerticalStack};
 pub use layout_manager::LayoutManager;
+pub use pane::divider::{DividerCursor, PaneDivider};
 pub use pane::Pane;

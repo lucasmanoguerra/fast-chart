@@ -193,6 +193,77 @@ impl ImageDrawing {
 }
 
 // ---------------------------------------------------------------------------
+// LabelDrawing
+// ---------------------------------------------------------------------------
+
+/// A label with a background rectangle anchored to a chart point.
+///
+/// This is a higher-level convenience over TextDrawing + Rectangle: it renders
+/// a text string inside a filled/stroked background box.
+#[derive(Debug, Clone)]
+pub struct LabelDrawing {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Anchor position in chart coordinates.
+    pub position: ChartPoint,
+    /// Label text.
+    pub text: String,
+    /// Text color [r, g, b, a].
+    pub text_color: [f32; 4],
+    /// Background fill color [r, g, b, a].
+    pub bg_color: [f32; 4],
+    /// Border color [r, g, b, a].
+    pub border_color: [f32; 4],
+    /// Font size in pixels.
+    pub font_size: f32,
+    /// Padding in pixels.
+    pub padding: f32,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
+}
+
+impl LabelDrawing {
+    /// Create a new label at the given position.
+    pub fn new(id: impl Into<String>, position: ChartPoint, text: impl Into<String>) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            position,
+            text: text.into(),
+            text_color: [1.0, 1.0, 1.0, 1.0],
+            bg_color: [0.15, 0.15, 0.15, 0.9],
+            border_color: [0.4, 0.4, 0.4, 1.0],
+            font_size: 12.0,
+            padding: 4.0,
+            selected: false,
+        }
+    }
+
+    /// Set text color.
+    pub fn with_text_color(mut self, c: [f32; 4]) -> Self {
+        self.text_color = c;
+        self
+    }
+
+    /// Set background color.
+    pub fn with_bg_color(mut self, c: [f32; 4]) -> Self {
+        self.bg_color = c;
+        self
+    }
+
+    /// Set border color.
+    pub fn with_border_color(mut self, c: [f32; 4]) -> Self {
+        self.border_color = c;
+        self
+    }
+
+    /// Set font size.
+    pub fn with_font_size(mut self, s: f32) -> Self {
+        self.font_size = s;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Segment
 // ---------------------------------------------------------------------------
 
@@ -1095,6 +1166,7 @@ pub struct DrawingSet {
     segments: Vec<Segment>,
     text_drawings: Vec<TextDrawing>,
     image_drawings: Vec<ImageDrawing>,
+    label_drawings: Vec<LabelDrawing>,
     horizontal_lines: Vec<HorizontalLine>,
     vertical_lines: Vec<VerticalLine>,
     rectangles: Vec<Rectangle>,
@@ -1139,6 +1211,11 @@ impl DrawingSet {
     /// Add an image drawing.
     pub fn add_image_drawing(&mut self, img: ImageDrawing) {
         self.image_drawings.push(img);
+    }
+
+    /// Add a label drawing.
+    pub fn add_label_drawing(&mut self, label: LabelDrawing) {
+        self.label_drawings.push(label);
     }
 
     /// Add a horizontal line.
@@ -1207,6 +1284,10 @@ impl DrawingSet {
             self.image_drawings.remove(pos);
             return true;
         }
+        if let Some(pos) = self.label_drawings.iter().position(|l| l.id == *id) {
+            self.label_drawings.remove(pos);
+            return true;
+        }
         if let Some(pos) = self.horizontal_lines.iter().position(|l| l.id == *id) {
             self.horizontal_lines.remove(pos);
             return true;
@@ -1272,6 +1353,11 @@ impl DrawingSet {
         self.image_drawings.iter().find(|i| i.id == *id)
     }
 
+    /// Get a label drawing by ID.
+    pub fn get_label_drawing(&self, id: &DrawingId) -> Option<&LabelDrawing> {
+        self.label_drawings.iter().find(|l| l.id == *id)
+    }
+
     /// Get a horizontal line by ID.
     pub fn get_horizontal_line(&self, id: &DrawingId) -> Option<&HorizontalLine> {
         self.horizontal_lines.iter().find(|l| l.id == *id)
@@ -1320,6 +1406,11 @@ impl DrawingSet {
     /// Get all image drawings.
     pub fn all_image_drawings(&self) -> &[ImageDrawing] {
         &self.image_drawings
+    }
+
+    /// Get all label drawings.
+    pub fn all_label_drawings(&self) -> &[LabelDrawing] {
+        &self.label_drawings
     }
 
     /// Get all horizontal lines.
@@ -1390,6 +1481,7 @@ impl DrawingSet {
             + self.segments.len()
             + self.text_drawings.len()
             + self.image_drawings.len()
+            + self.label_drawings.len()
             + self.horizontal_lines.len()
             + self.vertical_lines.len()
             + self.rectangles.len()

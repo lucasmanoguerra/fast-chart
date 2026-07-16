@@ -768,6 +768,8 @@ pub struct Ellipse {
     pub style: LineStyle,
     /// Optional fill color [r, g, b, a].
     pub fill_color: Option<[f32; 4]>,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl Ellipse {
@@ -782,6 +784,7 @@ impl Ellipse {
             width: 1.0,
             style: LineStyle::Solid,
             fill_color: None,
+            selected: false,
         }
     }
 

@@ -114,6 +114,8 @@ mod integration_tests {
             start: 0,
             end: 2000,
             width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
         };
         let vs = scale::LinearScale {
             min: 90.0,

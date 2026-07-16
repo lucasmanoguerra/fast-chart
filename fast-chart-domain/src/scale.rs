@@ -50,7 +50,7 @@ impl LinearScale {
 /// ```
 /// use fast_chart_domain::scale::TimeScale;
 ///
-/// let ts = TimeScale { start: 0, end: 2000, width: 800.0 };
+/// let ts = TimeScale { start: 0, end: 2000, width: 800.0, bar_spacing: 8.0, right_offset: 0.0 };
 ///
 /// // Time at start maps to x = 0
 /// assert_eq!(ts.map_to_x(0), 0.0);
@@ -68,6 +68,10 @@ pub struct TimeScale {
     pub start: u64,
     pub end: u64,
     pub width: f64,
+    /// Pixels per bar. Determines how many bars fit in the visible area.
+    pub bar_spacing: f64,
+    /// Offset from the right edge in pixels. Positive = bars don't reach the edge.
+    pub right_offset: f64,
 }
 
 impl TimeScale {
@@ -87,6 +91,53 @@ impl TimeScale {
         }
         let ratio = x / self.width;
         (self.start as f64 + ratio * range) as u64
+    }
+
+    /// Number of bars that fit in the visible area.
+    pub fn visible_bars(&self) -> usize {
+        if self.bar_spacing <= 0.0 {
+            return 0;
+        }
+        ((self.width - self.right_offset) / self.bar_spacing).floor() as usize
+    }
+
+    /// Scroll so the last bar is at the right edge (with right_offset).
+    pub fn scroll_to_end(&mut self, data_len: usize) {
+        if data_len == 0 || self.bar_spacing <= 0.0 {
+            return;
+        }
+        let visible = self.visible_bars();
+        let visible = visible.max(1);
+        let last_bar_index = data_len.saturating_sub(1);
+        let first_visible = last_bar_index.saturating_sub(visible - 1);
+
+        self.start = first_visible as u64;
+        self.end = last_bar_index as u64;
+    }
+
+    /// Which data indices are currently visible.
+    ///
+    /// Returns `(first_visible, last_visible)` inclusive. Clamps to valid range.
+    pub fn visible_range(&self, data_len: usize) -> (usize, usize) {
+        if data_len == 0 {
+            return (0, 0);
+        }
+        let first = self.start as usize;
+        let last = self.end as usize;
+        let first = first.min(data_len.saturating_sub(1));
+        let last = last.min(data_len.saturating_sub(1));
+        (first, last)
+    }
+
+    /// Set bar spacing and recompute start/end to keep the same right edge.
+    pub fn set_bar_spacing(&mut self, new_spacing: f64) {
+        if new_spacing <= 0.0 {
+            return;
+        }
+        let visible = ((self.width - self.right_offset) / new_spacing).floor() as u64;
+        let visible = visible.max(1);
+        self.bar_spacing = new_spacing;
+        self.start = self.end.saturating_sub(visible.saturating_sub(1));
     }
 }
 
@@ -153,6 +204,8 @@ mod tests {
             start: 0,
             end: 1000,
             width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
         };
         assert_eq!(scale.map_to_x(500), 400.0);
     }
@@ -163,6 +216,8 @@ mod tests {
             start: 0,
             end: 1000,
             width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
         };
         assert_eq!(scale.map_to_x(0), 0.0);
     }
@@ -173,6 +228,8 @@ mod tests {
             start: 0,
             end: 1000,
             width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
         };
         assert_eq!(scale.map_to_x(1000), 800.0);
     }
@@ -183,6 +240,8 @@ mod tests {
             start: 1000,
             end: 2000,
             width: 600.0,
+            bar_spacing: 6.0,
+            right_offset: 0.0,
         };
         let time = 1500u64;
         let x = scale.map_to_x(time);
@@ -196,7 +255,166 @@ mod tests {
             start: 1000,
             end: 1000,
             width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
         };
         assert_eq!(scale.map_to_x(1000), 400.0);
+    }
+
+    // ---- New tests for bar_spacing, right_offset, scroll, visible_range ----
+
+    #[test]
+    fn visible_bars() {
+        let scale = TimeScale {
+            start: 0,
+            end: 99,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        assert_eq!(scale.visible_bars(), 100);
+    }
+
+    #[test]
+    fn visible_bars_with_offset() {
+        let scale = TimeScale {
+            start: 0,
+            end: 99,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 40.0,
+        };
+        // (800 - 40) / 8 = 95
+        assert_eq!(scale.visible_bars(), 95);
+    }
+
+    #[test]
+    fn visible_bars_zero_spacing() {
+        let scale = TimeScale {
+            start: 0,
+            end: 100,
+            width: 800.0,
+            bar_spacing: 0.0,
+            right_offset: 0.0,
+        };
+        assert_eq!(scale.visible_bars(), 0);
+    }
+
+    #[test]
+    fn scroll_to_end() {
+        let mut scale = TimeScale {
+            start: 0,
+            end: 200,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        scale.scroll_to_end(500);
+        // visible_bars = 100, last = 499, first = 400
+        assert_eq!(scale.start, 400);
+        assert_eq!(scale.end, 499);
+    }
+
+    #[test]
+    fn scroll_to_end_short_data() {
+        let mut scale = TimeScale {
+            start: 0,
+            end: 200,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        scale.scroll_to_end(10);
+        // Only 10 bars, all visible
+        assert_eq!(scale.start, 0);
+        assert_eq!(scale.end, 9);
+    }
+
+    #[test]
+    fn scroll_to_end_empty() {
+        let mut scale = TimeScale {
+            start: 0,
+            end: 0,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        scale.scroll_to_end(0);
+        // No change
+        assert_eq!(scale.start, 0);
+        assert_eq!(scale.end, 0);
+    }
+
+    #[test]
+    fn visible_range() {
+        let scale = TimeScale {
+            start: 100,
+            end: 200,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        let (first, last) = scale.visible_range(500);
+        assert_eq!(first, 100);
+        assert_eq!(last, 200);
+    }
+
+    #[test]
+    fn visible_range_clamped() {
+        let scale = TimeScale {
+            start: 100,
+            end: 600,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        let (first, last) = scale.visible_range(150);
+        assert_eq!(first, 100);
+        assert_eq!(last, 149); // clamped to data_len - 1
+    }
+
+    #[test]
+    fn visible_range_empty() {
+        let scale = TimeScale {
+            start: 0,
+            end: 100,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        let (first, last) = scale.visible_range(0);
+        assert_eq!(first, 0);
+        assert_eq!(last, 0);
+    }
+
+    #[test]
+    fn set_bar_spacing() {
+        let mut scale = TimeScale {
+            start: 0,
+            end: 200,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
+        };
+        scale.set_bar_spacing(4.0);
+        // visible = 800/4 = 200, end = 200, start = 200 - 199 = 1
+        assert_eq!(scale.bar_spacing, 4.0);
+        assert_eq!(scale.end, 200);
+        assert_eq!(scale.start, 1);
+    }
+
+    #[test]
+    fn set_bar_spacing_with_offset() {
+        let mut scale = TimeScale {
+            start: 0,
+            end: 200,
+            width: 800.0,
+            bar_spacing: 8.0,
+            right_offset: 40.0,
+        };
+        scale.set_bar_spacing(10.0);
+        // visible = (800-40)/10 = 76, end = 200, start = 200 - 75 = 125
+        assert_eq!(scale.start, 125);
+        assert_eq!(scale.end, 200);
     }
 }

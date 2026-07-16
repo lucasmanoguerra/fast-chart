@@ -72,6 +72,71 @@ impl TrendLine {
 }
 
 // ---------------------------------------------------------------------------
+// TextDrawing
+// ---------------------------------------------------------------------------
+
+/// A text label anchored to a chart point.
+#[derive(Debug, Clone)]
+pub struct TextDrawing {
+    /// Unique identifier.
+    pub id: DrawingId,
+    /// Anchor point in chart coordinates.
+    pub position: ChartPoint,
+    /// Text content.
+    pub text: String,
+    /// Text color [r, g, b, a].
+    pub color: [f32; 4],
+    /// Font size in pixels.
+    pub font_size: f32,
+    /// Horizontal alignment: 0.0 = left, 0.5 = center, 1.0 = right.
+    pub align_x: f32,
+    /// Vertical alignment: 0.0 = top, 0.5 = center, 1.0 = bottom.
+    pub align_y: f32,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
+}
+
+impl TextDrawing {
+    /// Create a new text label at the given position.
+    pub fn new(id: impl Into<String>, position: ChartPoint, text: impl Into<String>) -> Self {
+        Self {
+            id: DrawingId(id.into()),
+            position,
+            text: text.into(),
+            color: [1.0, 1.0, 1.0, 1.0],
+            font_size: 14.0,
+            align_x: 0.0,
+            align_y: 0.5,
+            selected: false,
+        }
+    }
+
+    /// Set the text color.
+    pub fn with_color(mut self, color: [f32; 4]) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set the font size.
+    pub fn with_font_size(mut self, size: f32) -> Self {
+        self.font_size = size;
+        self
+    }
+
+    /// Set horizontal alignment.
+    pub fn with_align_x(mut self, align: f32) -> Self {
+        self.align_x = align;
+        self
+    }
+
+    /// Set vertical alignment.
+    pub fn with_align_y(mut self, align: f32) -> Self {
+        self.align_y = align;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Segment
 // ---------------------------------------------------------------------------
 
@@ -972,6 +1037,7 @@ pub struct DrawingSet {
     arrows: Vec<Arrow>,
     rays: Vec<Ray>,
     segments: Vec<Segment>,
+    text_drawings: Vec<TextDrawing>,
     horizontal_lines: Vec<HorizontalLine>,
     vertical_lines: Vec<VerticalLine>,
     rectangles: Vec<Rectangle>,
@@ -1006,6 +1072,11 @@ impl DrawingSet {
     /// Add a segment.
     pub fn add_segment(&mut self, segment: Segment) {
         self.segments.push(segment);
+    }
+
+    /// Add a text drawing.
+    pub fn add_text_drawing(&mut self, text: TextDrawing) {
+        self.text_drawings.push(text);
     }
 
     /// Add a horizontal line.
@@ -1066,6 +1137,10 @@ impl DrawingSet {
             self.segments.remove(pos);
             return true;
         }
+        if let Some(pos) = self.text_drawings.iter().position(|t| t.id == *id) {
+            self.text_drawings.remove(pos);
+            return true;
+        }
         if let Some(pos) = self.horizontal_lines.iter().position(|l| l.id == *id) {
             self.horizontal_lines.remove(pos);
             return true;
@@ -1121,6 +1196,11 @@ impl DrawingSet {
         self.segments.iter().find(|s| s.id == *id)
     }
 
+    /// Get a text drawing by ID.
+    pub fn get_text_drawing(&self, id: &DrawingId) -> Option<&TextDrawing> {
+        self.text_drawings.iter().find(|t| t.id == *id)
+    }
+
     /// Get a horizontal line by ID.
     pub fn get_horizontal_line(&self, id: &DrawingId) -> Option<&HorizontalLine> {
         self.horizontal_lines.iter().find(|l| l.id == *id)
@@ -1159,6 +1239,11 @@ impl DrawingSet {
     /// Get all segments.
     pub fn all_segments(&self) -> &[Segment] {
         &self.segments
+    }
+
+    /// Get all text drawings.
+    pub fn all_text_drawings(&self) -> &[TextDrawing] {
+        &self.text_drawings
     }
 
     /// Get all horizontal lines.
@@ -1227,6 +1312,7 @@ impl DrawingSet {
             + self.arrows.len()
             + self.rays.len()
             + self.segments.len()
+            + self.text_drawings.len()
             + self.horizontal_lines.len()
             + self.vertical_lines.len()
             + self.rectangles.len()

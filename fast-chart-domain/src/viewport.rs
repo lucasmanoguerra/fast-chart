@@ -198,6 +198,8 @@ mod tests {
             options: PriceScaleOptions::default(),
             value_min: min,
             value_max: max,
+            margin_top: 0.0,
+            margin_bottom: 0.0,
         }
     }
 

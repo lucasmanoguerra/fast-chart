@@ -953,3 +953,316 @@ fn pane_add_remove_roundtrip() {
         .collect();
     assert_eq!(removed.len(), 1);
 }
+
+// ===========================================================================
+// Phase 3 Integration Tests: All series types
+// ===========================================================================
+
+use fast_chart::series::{
+    line_break::LineBreakBlock, point_figure::PfColumn, range::RangeBar,
+    step_line::StepPoint, volume::VolumeBar, LineBreakSeries, PointFigureSeries,
+    RangeSeries, StepLineSeries, VolumeSeries,
+};
+use fast_chart::render::series_renderer::SeriesRenderer as _;
+use fast_chart_domain::Indicator as _;
+
+// --- StepLineSeries ---
+
+#[test]
+fn stepline_set_data_and_update() {
+    let mut s = StepLineSeries::new();
+    s.set_data(vec![
+        StepPoint::new(1000, 100.0),
+        StepPoint::new(2000, 110.0),
+        StepPoint::new(3000, 105.0),
+    ]);
+    let cmds = s.update(&[], Rect::new(0.0, 0.0, 800.0, 400.0));
+    // 3 points -> 2 horizontal + 2 vertical segments = 4 commands
+    assert_eq!(cmds.len(), 4);
+}
+
+#[test]
+fn stepline_hit_test_bounds() {
+    let mut s = StepLineSeries::new();
+    s.set_data(vec![
+        StepPoint::new(1000, 100.0),
+        StepPoint::new(2000, 110.0),
+    ]);
+    let _ = s.update(&[], Rect::new(0.0, 0.0, 800.0, 400.0));
+    let hit = s.hit_test(100.0, 100.0);
+    assert!(hit.is_some());
+    assert_eq!(hit.unwrap().index, 0);
+}
+
+#[test]
+fn stepline_empty_data() {
+    let s = StepLineSeries::new();
+    let hit = s.hit_test(100.0, 100.0);
+    assert!(hit.is_none());
+}
+
+// --- VolumeSeries ---
+
+#[test]
+fn volume_set_data_and_update() {
+    let mut v = VolumeSeries::new();
+    v.set_data(vec![
+        VolumeBar::new(1000, 5000.0, true),
+        VolumeBar::new(2000, 3000.0, false),
+    ]);
+    let cmds = v.update(&[], Rect::new(0.0, 200.0, 800.0, 200.0));
+    assert_eq!(cmds.len(), 2);
+}
+
+#[test]
+fn volume_z_index_is_500() {
+    let mut v = VolumeSeries::new();
+    v.set_data(vec![VolumeBar::new(1000, 1000.0, true)]);
+    let cmds = v.update(&[], Rect::new(0.0, 200.0, 800.0, 200.0));
+    for cmd in &cmds {
+        if let fast_chart::render::commands::DrawCommand::DrawRect { z_index, .. } = cmd {
+            assert_eq!(*z_index, 500, "volume bars should be z-index 500");
+        }
+    }
+}
+
+#[test]
+fn volume_max_volume() {
+    let mut v = VolumeSeries::new();
+    v.set_data(vec![
+        VolumeBar::new(1000, 1000.0, true),
+        VolumeBar::new(2000, 5000.0, false),
+        VolumeBar::new(3000, 2000.0, true),
+    ]);
+    assert!((v.max_volume() - 5000.0).abs() < f64::EPSILON);
+}
+
+// --- PointFigureSeries ---
+
+#[test]
+fn point_figure_set_columns_and_update() {
+    let mut pf = PointFigureSeries::new(5.0, 3);
+    pf.set_columns(vec![
+        PfColumn::Rise { boxes: 3 },
+        PfColumn::Fall { boxes: 2 },
+        PfColumn::Rise { boxes: 4 },
+    ]);
+    let cmds = pf.update(&[], Rect::new(0.0, 0.0, 800.0, 400.0));
+    assert!(!cmds.is_empty());
+}
+
+#[test]
+fn point_figure_build_from_prices() {
+    let prices: Vec<(f64, f64)> = vec![
+        (100.0, 105.0),
+        (103.0, 110.0),
+        (106.0, 115.0),
+    ];
+    let columns = PointFigureSeries::build_from_prices(&prices, 5.0, 3);
+    assert!(!columns.is_empty());
+    for col in &columns {
+        assert!(col.boxes() > 0);
+    }
+}
+
+#[test]
+fn point_figure_column_types() {
+    let rise = PfColumn::Rise { boxes: 3 };
+    let fall = PfColumn::Fall { boxes: 2 };
+    assert!(rise.is_rise());
+    assert!(!rise.is_fall());
+    assert!(fall.is_fall());
+    assert!(!fall.is_rise());
+    assert_eq!(rise.boxes(), 3);
+    assert_eq!(fall.boxes(), 2);
+}
+
+// --- LineBreakSeries ---
+
+#[test]
+fn linebreak_set_blocks_and_update() {
+    let mut lb = LineBreakSeries::new(3);
+    lb.set_blocks(vec![
+        LineBreakBlock::new(true, 100.0, 110.0),
+        LineBreakBlock::new(false, 110.0, 105.0),
+        LineBreakBlock::new(true, 105.0, 115.0),
+    ]);
+    let cmds = lb.update(&[], Rect::new(0.0, 0.0, 800.0, 400.0));
+    assert!(!cmds.is_empty());
+}
+
+#[test]
+fn linebreak_build_from_bars() {
+    let bars: Vec<(f64, f64, f64)> = vec![
+        (100.0, 105.0, 99.0),
+        (103.0, 110.0, 101.0),
+        (106.0, 115.0, 104.0),
+    ];
+    let blocks = LineBreakSeries::build_from_bars(&bars, 3);
+    assert!(!blocks.is_empty());
+    for block in &blocks {
+        let range = (block.close - block.open).abs();
+        assert!(range > 0.0, "block range must be positive");
+    }
+}
+
+#[test]
+fn linebreak_block_methods() {
+    let up = LineBreakBlock::new(true, 100.0, 110.0);
+    let down = LineBreakBlock::new(false, 110.0, 105.0);
+    assert!(up.is_up);
+    assert!(!down.is_up);
+    assert!(((up.close - up.open) - 10.0).abs() < f64::EPSILON);
+    assert!(((down.open - down.close) - 5.0).abs() < f64::EPSILON);
+}
+
+// --- RangeSeries ---
+
+#[test]
+fn range_set_data_and_update() {
+    let mut r = RangeSeries::new(5.0);
+    r.set_data(vec![
+        RangeBar::new(1000, 105.0, 100.0, true),
+        RangeBar::new(2000, 103.0, 98.0, false),
+        RangeBar::new(3000, 108.0, 103.0, true),
+    ]);
+    let cmds = r.update(&[], Rect::new(0.0, 0.0, 800.0, 400.0));
+    assert_eq!(cmds.len(), 3);
+}
+
+#[test]
+fn range_build_from_bars() {
+    let bars: Vec<(f64, f64, f64)> = vec![
+        (100.0, 105.0, 99.0),
+        (103.0, 110.0, 101.0),
+        (106.0, 115.0, 104.0),
+    ];
+    let range_bars = RangeSeries::build_from_bars(&bars, 5.0);
+    assert!(!range_bars.is_empty());
+    for rb in &range_bars {
+        assert!((rb.high - rb.low - 5.0).abs() < f64::EPSILON);
+    }
+}
+
+#[test]
+fn range_custom_colors() {
+    let mut r = RangeSeries::new(5.0);
+    r.bullish_color = [0.0, 0.5, 0.0, 1.0];
+    r.bearish_color = [0.5, 0.0, 0.0, 1.0];
+    r.set_data(vec![
+        RangeBar::new(1000, 105.0, 100.0, true),
+        RangeBar::new(2000, 103.0, 98.0, false),
+    ]);
+    let cmds = r.update(&[], Rect::new(0.0, 0.0, 800.0, 400.0));
+    assert_eq!(cmds.len(), 2);
+}
+
+// --- SeriesType enum integration ---
+
+#[test]
+fn seriestype_all_count_matches_impl_count() {
+    assert_eq!(fast_chart_domain::SeriesType::ALL.len(), 10);
+}
+
+#[test]
+fn seriestype_all_display_names_are_unique() {
+    let names: Vec<_> = fast_chart_domain::SeriesType::ALL
+        .iter()
+        .map(|s| s.display_name())
+        .collect();
+    let mut unique = names.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(names.len(), unique.len(), "all display names must be unique");
+}
+
+// --- IndicatorRenderer integration ---
+
+use fast_chart::render::indicator_renderer::IndicatorRenderer;
+use fast_chart::render::commands::DrawCommand as DC;
+
+struct MockIndicator;
+
+impl fast_chart::render::series_renderer::SeriesRenderer for MockIndicator {
+    fn update(&mut self, _data: &[DC], bounds: Rect) -> Vec<DC> {
+        vec![DC::DrawRect {
+            x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
+            fill: Some([0.0, 1.0, 0.0, 1.0]), stroke: None, stroke_width: 0.0, z_index: 700,
+        }]
+    }
+    fn hit_test(&self, _x: f32, _y: f32) -> Option<fast_chart::render::series_renderer::SeriesHit> { None }
+    fn bounds(&self) -> Rect { Rect::new(0.0, 0.0, 0.0, 0.0) }
+}
+
+impl IndicatorRenderer for MockIndicator {
+    fn render_overlay(&self, pane_bounds: Rect) -> Vec<DC> {
+        vec![DC::DrawLine {
+            x0: pane_bounds.x,
+            y0: pane_bounds.y,
+            x1: pane_bounds.x + pane_bounds.width,
+            y1: pane_bounds.y,
+            color: [1.0, 0.0, 0.0, 1.0],
+            width: 2.0,
+            style: fast_chart::render::commands::LineStyle::Solid,
+            z_index: 700,
+        }]
+    }
+    fn render_separate(&self, pane_bounds: Rect) -> Vec<DC> {
+        vec![DC::DrawRect {
+            x: pane_bounds.x, y: pane_bounds.y, width: pane_bounds.width, height: pane_bounds.height * 0.5,
+            fill: Some([0.0, 0.0, 1.0, 0.3]), stroke: None, stroke_width: 0.0, z_index: 700,
+        }]
+    }
+}
+
+#[test]
+fn indicator_renderer_overlay_integration() {
+    let ind = MockIndicator;
+    let cmds = ind.render_overlay(Rect::new(0.0, 0.0, 800.0, 400.0));
+    assert_eq!(cmds.len(), 1);
+    assert_eq!(ind.indicator_z_index(), 700);
+}
+
+#[test]
+fn indicator_renderer_separate_integration() {
+    let ind = MockIndicator;
+    let cmds = ind.render_separate(Rect::new(0.0, 400.0, 800.0, 200.0));
+    assert_eq!(cmds.len(), 1);
+    if let DC::DrawRect { height, .. } = &cmds[0] {
+        assert!((*height - 100.0).abs() < f32::EPSILON);
+    } else {
+        panic!("expected DrawRect");
+    }
+}
+
+// --- OverlayMode integration ---
+
+#[test]
+fn overlay_mode_default_overlay_on_pane_0() {
+    struct SMA;
+    impl fast_chart_domain::Indicator<100> for SMA {
+        fn calculate(&self, _: &fast_chart_domain::series::TimeSeries<fast_chart_domain::Bar, 100>) -> fast_chart_domain::series::TimeSeries<f64, 100> {
+            fast_chart_domain::series::TimeSeries::new()
+        }
+        fn name(&self) -> &str { "SMA" }
+    }
+    let sma = SMA;
+    assert_eq!(sma.overlay_mode(), fast_chart_domain::indicator::OverlayMode::OverlayOnPane(0));
+    assert_eq!(sma.preferred_scale(), fast_chart_domain::price_scale::PriceScaleMode::Normal);
+}
+
+#[test]
+fn overlay_mode_separate_pane_integration() {
+    struct RSI;
+    impl fast_chart_domain::Indicator<100> for RSI {
+        fn calculate(&self, _: &fast_chart_domain::series::TimeSeries<fast_chart_domain::Bar, 100>) -> fast_chart_domain::series::TimeSeries<f64, 100> {
+            fast_chart_domain::series::TimeSeries::new()
+        }
+        fn name(&self) -> &str { "RSI" }
+        fn overlay_mode(&self) -> fast_chart_domain::indicator::OverlayMode {
+            fast_chart_domain::indicator::OverlayMode::SeparatePane
+        }
+    }
+    let rsi = RSI;
+    assert_eq!(rsi.overlay_mode(), fast_chart_domain::indicator::OverlayMode::SeparatePane);
+}

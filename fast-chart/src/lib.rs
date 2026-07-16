@@ -65,7 +65,7 @@ pub use fast_chart_domain::indicators::{Adx, Atr, Bollinger, Cci, Ema, HeikinAsh
 // Drawing types
 pub use fast_chart_domain::drawing::{
     Arrow, ChartPoint, DrawingId, Ellipse, FibonacciExtension, FibonacciRetracement,
-    HorizontalLine, ImageDrawing, Path, Pitchfork, Rectangle, Segment, TextDrawing, TrendLine, VerticalLine,
+    HorizontalLine, ImageDrawing, LabelDrawing, Path, Pitchfork, Rectangle, Segment, TextDrawing, TrendLine, VerticalLine,
 };
 
 // ---------------------------------------------------------------------------

@@ -158,6 +158,109 @@ impl Drawing for fast_chart_domain::drawing::ImageDrawing {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for LabelDrawing
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::LabelDrawing {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let char_width = self.font_size * 0.6;
+        let text_w = self.text.len() as f64 * char_width as f64 + self.padding as f64 * 2.0;
+        let text_h = self.font_size as f64 + self.padding as f64 * 2.0;
+        let dx = (point.timestamp as f64 - self.position.timestamp as f64).abs();
+        let dy = (point.price - self.position.price).abs();
+        let tol = tolerance as f64;
+
+        if dx <= text_w / 2.0 + tol && dy <= text_h / 2.0 + tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.position.timestamp = self.position.timestamp.saturating_add(delta.timestamp);
+        self.position.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        let char_width = self.font_size * 0.6;
+        let half_w = (self.text.len() as f64 * char_width as f64) / 2.0 + self.padding as f64;
+        let half_h = self.font_size as f64 / 2.0 + self.padding as f64;
+        DrawingBounds::new(
+            self.position.timestamp.saturating_sub(half_w as u64),
+            self.position.timestamp + half_w as u64,
+            self.position.price - half_h,
+            self.position.price + half_h,
+        )
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let screen = pipeline.world_to_screen(WorldPoint::new(self.position.timestamp as f64, self.position.price));
+
+        let char_width = self.font_size * 0.6;
+        let text_w = self.text.len() as f32 * char_width + self.padding * 2.0;
+        let text_h = self.font_size + self.padding * 2.0;
+
+        let bg_x = screen.x - text_w / 2.0;
+        let bg_y = screen.y - text_h / 2.0;
+
+        let mut cmds = vec![
+            // Background rect
+            DrawCommand::DrawRect {
+                x: bg_x,
+                y: bg_y,
+                width: text_w,
+                height: text_h,
+                fill: Some(self.bg_color),
+                stroke: Some(self.border_color),
+                stroke_width: 1.0,
+                z_index: 18,
+            },
+            // Text
+            DrawCommand::DrawText {
+                x: bg_x + self.padding,
+                y: bg_y + self.padding,
+                text: self.text.clone(),
+                color: self.text_color,
+                font_size: self.font_size,
+                align_x: 0.0,
+                align_y: 0.0,
+                z_index: 19,
+            },
+        ];
+
+        // Selection indicator
+        if self.selected {
+            cmds.push(DrawCommand::DrawRect {
+                x: bg_x - 2.0,
+                y: bg_y - 2.0,
+                width: text_w + 4.0,
+                height: text_h + 4.0,
+                fill: None,
+                stroke: Some([0.3, 0.6, 1.0, 0.8]),
+                stroke_width: 2.0,
+                z_index: 25,
+            });
+        }
+
+        cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for TextDrawing
 // ---------------------------------------------------------------------------
 
@@ -1687,6 +1790,121 @@ mod tests {
                 assert_eq!(*z_index, 15);
             }
             other => panic!("expected DrawImage, got {:?}", other),
+        }
+    }
+
+    // ---- LabelDrawing Drawing impl tests ----
+
+    #[test]
+    fn label_hit_test() {
+        let label = fast_chart_domain::drawing::LabelDrawing::new(
+            "lbl1",
+            ChartPoint::new(2000, 150.0),
+            "BTC",
+        );
+        assert_eq!(label.hit_test(ChartPoint::new(2000, 150.0), 5.0), HitResult::Body);
+        assert_eq!(label.hit_test(ChartPoint::new(5000, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn label_move_by() {
+        let mut label = fast_chart_domain::drawing::LabelDrawing::new(
+            "lbl1",
+            ChartPoint::new(1000, 100.0),
+            "ETH",
+        );
+        label.move_by(ChartPoint::new(500, 25.0));
+        assert_eq!(label.position.timestamp, 1500);
+        assert!((label.position.price - 125.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn label_bounds() {
+        let label = fast_chart_domain::drawing::LabelDrawing::new(
+            "lbl1",
+            ChartPoint::new(2000, 150.0),
+            "SOL",
+        );
+        let b = label.bounds();
+        assert!(b.time_start < 2000);
+        assert!(b.time_end > 2000);
+        assert!(b.price_min < 150.0);
+        assert!(b.price_max > 150.0);
+    }
+
+    #[test]
+    fn label_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let label = fast_chart_domain::drawing::LabelDrawing::new(
+            "cmd-lbl",
+            ChartPoint::new(1000, 100.0),
+            "Label",
+        )
+        .with_text_color([1.0, 0.0, 0.0, 1.0])
+        .with_bg_color([0.0, 0.0, 0.0, 0.8])
+        .with_font_size(14.0);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = label.to_commands(&ctx);
+        // bg rect + text = 2 (not selected)
+        assert_eq!(cmds.len(), 2);
+
+        match &cmds[0] {
+            DrawCommand::DrawRect { fill, stroke, z_index, .. } => {
+                assert!(fill.is_some());
+                assert!(stroke.is_some());
+                assert_eq!(*z_index, 18);
+            }
+            other => panic!("expected DrawRect bg, got {:?}", other),
+        }
+        match &cmds[1] {
+            DrawCommand::DrawText { text, color, font_size, z_index, .. } => {
+                assert_eq!(text, "Label");
+                assert_eq!(color, &[1.0, 0.0, 0.0, 1.0]);
+                assert_eq!(*font_size, 14.0);
+                assert_eq!(*z_index, 19);
+            }
+            other => panic!("expected DrawText, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn label_selected_adds_outline() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let mut label = fast_chart_domain::drawing::LabelDrawing::new(
+            "cmd-lbl2",
+            ChartPoint::new(1000, 100.0),
+            "Hi",
+        );
+        label.set_selected(true);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = label.to_commands(&ctx);
+        // bg rect + text + selection outline = 3
+        assert_eq!(cmds.len(), 3);
+        match &cmds[2] {
+            DrawCommand::DrawRect { stroke, z_index, fill, .. } => {
+                assert!(fill.is_none());
+                assert!(stroke.is_some());
+                assert_eq!(*z_index, 25);
+            }
+            other => panic!("expected DrawRect selection, got {:?}", other),
         }
     }
 }

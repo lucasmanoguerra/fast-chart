@@ -391,6 +391,8 @@ pub struct Rectangle {
     pub style: LineStyle,
     /// Optional fill color [r, g, b, a].
     pub fill_color: Option<[f32; 4]>,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl Rectangle {
@@ -404,6 +406,7 @@ impl Rectangle {
             width: 1.0,
             style: LineStyle::Solid,
             fill_color: None,
+            selected: false,
         }
     }
 

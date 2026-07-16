@@ -101,6 +101,8 @@ impl ViewportManager {
             start: viewport.time_start,
             end: viewport.time_end,
             width: canvas_width,
+            bar_spacing: 8.0,
+            right_offset: 0.0,
         }
     }
 

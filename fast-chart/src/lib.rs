@@ -62,6 +62,12 @@ pub use fast_chart_domain::{
 
 pub use fast_chart_domain::indicators::{Adx, Atr, Bollinger, Cci, Ema, HeikinAshi, Ichimoku, Kagi, Macd, ParabolicSar, Renko, Rsi, Sma, Stochastic, Supertrend, Vwap, WilliamsR};
 
+// Drawing types
+pub use fast_chart_domain::drawing::{
+    Arrow, ChartPoint, DrawingId, Ellipse, FibonacciExtension, FibonacciRetracement,
+    HorizontalLine, Path, Pitchfork, Rectangle, Segment, TextDrawing, TrendLine, VerticalLine,
+};
+
 // ---------------------------------------------------------------------------
 // Primary re-exports — the ergonomic public API
 // ---------------------------------------------------------------------------

@@ -97,6 +97,75 @@ impl DrawingBounds {
 }
 
 // ---------------------------------------------------------------------------
+// Drawing impl for TextDrawing
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::TextDrawing {
+    fn id(&self) -> &DrawingId {
+        &self.id
+    }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        // Text hit-test: approximate bounding box based on font size and text length
+        let char_width = self.font_size * 0.6; // rough estimate
+        let text_width_chars = self.text.len() as f64;
+        let half_w = (text_width_chars * char_width as f64) / 2.0;
+        let half_h = self.font_size as f64;
+
+        let dx = (point.timestamp as f64 - self.position.timestamp as f64).abs();
+        let dy = (point.price - self.position.price).abs();
+        let tol = tolerance as f64;
+
+        if dx <= half_w + tol && dy <= half_h + tol {
+            HitResult::Body
+        } else {
+            HitResult::Miss
+        }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.position.timestamp = self.position.timestamp.saturating_add(delta.timestamp);
+        self.position.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        let char_width = self.font_size * 0.6;
+        let half_w = (self.text.len() as f64 * char_width as f64) / 2.0;
+        let half_h = self.font_size as f64;
+        DrawingBounds::new(
+            self.position.timestamp.saturating_sub(half_w as u64),
+            self.position.timestamp + half_w as u64,
+            self.position.price - half_h,
+            self.position.price + half_h,
+        )
+    }
+
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+
+    fn set_selected(&mut self, selected: bool) {
+        self.selected = selected;
+    }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let pipeline = &ctx.pipeline;
+        let screen = pipeline.world_to_screen(WorldPoint::new(self.position.timestamp as f64, self.position.price));
+
+        vec![DrawCommand::DrawText {
+            x: screen.x,
+            y: screen.y,
+            text: self.text.clone(),
+            color: self.color,
+            font_size: self.font_size,
+            align_x: self.align_x,
+            align_y: self.align_y,
+            z_index: 20,
+        }]
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Drawing impl for Path (Polygon / Polyline)
 // ---------------------------------------------------------------------------
 
@@ -1392,5 +1461,93 @@ mod tests {
             }
             other => panic!("expected DrawPath fill, got {:?}", other),
         }
+    }
+
+    // ---- TextDrawing Drawing impl tests ----
+
+    #[test]
+    fn text_drawing_hit_test() {
+        let td = fast_chart_domain::drawing::TextDrawing::new(
+            "txt1",
+            ChartPoint::new(2000, 150.0),
+            "hello world",
+        );
+        // At the anchor point
+        assert_eq!(td.hit_test(ChartPoint::new(2000, 150.0), 5.0), HitResult::Body);
+        // Far away
+        assert_eq!(td.hit_test(ChartPoint::new(5000, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn text_drawing_move_by() {
+        let mut td = fast_chart_domain::drawing::TextDrawing::new(
+            "txt1",
+            ChartPoint::new(1000, 100.0),
+            "label",
+        );
+        td.move_by(ChartPoint::new(500, 25.0));
+        assert_eq!(td.position.timestamp, 1500);
+        assert!((td.position.price - 125.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn text_drawing_bounds() {
+        let td = fast_chart_domain::drawing::TextDrawing::new(
+            "txt1",
+            ChartPoint::new(2000, 150.0),
+            "hello",
+        );
+        let b = td.bounds();
+        assert!(b.time_start < 2000);
+        assert!(b.time_end > 2000);
+        assert!(b.price_min < 150.0);
+        assert!(b.price_max > 150.0);
+    }
+
+    #[test]
+    fn text_drawing_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let td = fast_chart_domain::drawing::TextDrawing::new(
+            "cmd-t",
+            ChartPoint::new(1000, 100.0),
+            "Price",
+        )
+        .with_color([1.0, 0.0, 0.0, 1.0])
+        .with_font_size(16.0);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 200.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = td.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1);
+        match &cmds[0] {
+            DrawCommand::DrawText { text, color, font_size, z_index, .. } => {
+                assert_eq!(text, "Price");
+                assert_eq!(color, &[1.0, 0.0, 0.0, 1.0]);
+                assert_eq!(*font_size, 16.0);
+                assert_eq!(*z_index, 20);
+            }
+            other => panic!("expected DrawText, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn text_drawing_selected_toggle() {
+        let mut td = fast_chart_domain::drawing::TextDrawing::new(
+            "txt1",
+            ChartPoint::new(1000, 100.0),
+            "sel",
+        );
+        assert!(!td.is_selected());
+        td.set_selected(true);
+        assert!(td.is_selected());
+        td.set_selected(false);
+        assert!(!td.is_selected());
     }
 }

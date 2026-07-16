@@ -26,6 +26,7 @@
 pub mod app;
 pub mod ports;
 pub mod render;
+pub mod series;
 
 // ---------------------------------------------------------------------------
 // Domain re-exports (gateway pattern)
@@ -80,7 +81,7 @@ pub use ports::render::ChartRenderer;
 // Render re-exports — the rendering contract API
 // ---------------------------------------------------------------------------
 pub use render::{
-    CoordinatePipeline, DrawCommand, DrawLayer, RendererBackend, RenderContext,
-    ScreenPoint, SeriesHit, SeriesRenderer, WorldPoint, Rect,
+    CoordinatePipeline, DrawCommand, DrawLayer, Drawing, DrawingBounds, HitResult,
+    RendererBackend, RenderContext, ScreenPoint, SeriesHit, SeriesRenderer, WorldPoint, Rect,
 };
 pub use render::LineStyle as RenderLineStyle;

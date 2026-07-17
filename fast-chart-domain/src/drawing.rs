@@ -2,10 +2,12 @@ use crate::price_line::LineStyle;
 
 /// Unique identifier for a drawing tool.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DrawingId(pub String);
 
 /// A point on the chart defined by timestamp and price.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ChartPoint {
     pub timestamp: u64,
     pub price: f64,
@@ -24,6 +26,7 @@ impl ChartPoint {
 
 /// A line segment connecting two points on the chart.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TrendLine {
     /// Unique identifier.
     pub id: DrawingId,
@@ -80,6 +83,7 @@ impl TrendLine {
 
 /// A text label anchored to a chart point.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TextDrawing {
     /// Unique identifier.
     pub id: DrawingId,
@@ -145,6 +149,7 @@ impl TextDrawing {
 
 /// An image annotation anchored to a chart point, with width and height in pixels.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ImageDrawing {
     /// Unique identifier.
     pub id: DrawingId,
@@ -204,6 +209,7 @@ impl ImageDrawing {
 /// This is a higher-level convenience over TextDrawing + Rectangle: it renders
 /// a text string inside a filled/stroked background box.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LabelDrawing {
     /// Unique identifier.
     pub id: DrawingId,
@@ -274,6 +280,7 @@ impl LabelDrawing {
 ///
 /// Simpler than TrendLine — purely geometric with no drawing-tool semantics.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Segment {
     /// Unique identifier.
     pub id: DrawingId,
@@ -332,6 +339,7 @@ impl Segment {
 ///
 /// Used for support/resistance lines that extend into the future.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ray {
     /// Unique identifier.
     pub id: DrawingId,
@@ -388,6 +396,7 @@ impl Ray {
 
 /// An arrow with arrowhead at the end, typically used for directional annotations.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Arrow {
     /// Unique identifier.
     pub id: DrawingId,
@@ -453,6 +462,7 @@ impl Arrow {
 
 /// A horizontal line at a specific price level spanning across the chart.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HorizontalLine {
     /// Unique identifier.
     pub id: DrawingId,
@@ -524,6 +534,7 @@ impl HorizontalLine {
 
 /// A vertical line at a specific timestamp spanning across the chart.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VerticalLine {
     /// Unique identifier.
     pub id: DrawingId,
@@ -577,6 +588,7 @@ impl VerticalLine {
 
 /// A rectangle defined by two corner points.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rectangle {
     /// Unique identifier.
     pub id: DrawingId,
@@ -659,6 +671,7 @@ const DEFAULT_FIBONACCI_LEVELS: &[f64] = &[0.0, 0.236, 0.382, 0.5, 0.618, 0.786,
 
 /// Horizontal lines at Fibonacci retracement levels between two anchor points.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FibonacciRetracement {
     /// Unique identifier.
     pub id: DrawingId,
@@ -748,6 +761,7 @@ const DEFAULT_FIBONACCI_EXTENSION_LEVELS: &[f64] =
 ///
 /// The price at a given level is: `C.price + (B.price - A.price) * level`.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FibonacciExtension {
     /// Unique identifier.
     pub id: DrawingId,
@@ -841,6 +855,7 @@ impl FibonacciExtension {
 /// The upper and lower lines are parallel to the median, offset by the
 /// price distance from the midpoint to B and C respectively.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pitchfork {
     /// Unique identifier.
     pub id: DrawingId,
@@ -961,6 +976,7 @@ impl Pitchfork {
 
 /// An ellipse defined by center point and horizontal/vertical radii.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ellipse {
     /// Unique identifier.
     pub id: DrawingId,
@@ -1055,6 +1071,7 @@ impl Ellipse {
 
 /// A series of connected line segments (polyline).
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Path {
     /// Unique identifier.
     pub id: DrawingId,
@@ -3074,5 +3091,209 @@ mod tests {
         assert_eq!(seg.color, [0.0, 0.0, 1.0, 1.0]);
         assert_eq!(seg.width, 3.0);
         assert_eq!(seg.style, LineStyle::Dotted);
+    }
+
+    // ---- Serde roundtrip tests ----
+
+    #[cfg(feature = "serde")]
+    mod serde_tests {
+        use super::*;
+        use serde_json;
+
+        #[test]
+        fn roundtrip_chart_point() {
+            let p = ChartPoint::new(1000, 50.5);
+            let json = serde_json::to_string(&p).unwrap();
+            let back: ChartPoint = serde_json::from_str(&json).unwrap();
+            assert_eq!(p, back);
+        }
+
+        #[test]
+        fn roundtrip_drawing_id() {
+            let id = DrawingId("test-id".to_string());
+            let json = serde_json::to_string(&id).unwrap();
+            let back: DrawingId = serde_json::from_str(&json).unwrap();
+            assert_eq!(id, back);
+        }
+
+        #[test]
+        fn roundtrip_line_style() {
+            for style in [LineStyle::Solid, LineStyle::Dashed, LineStyle::Dotted] {
+                let json = serde_json::to_string(&style).unwrap();
+                let back: LineStyle = serde_json::from_str(&json).unwrap();
+                assert_eq!(style, back);
+            }
+        }
+
+        #[test]
+        fn roundtrip_trend_line() {
+            let tl = TrendLine::new("tl", ChartPoint::new(100, 10.0), ChartPoint::new(200, 20.0))
+                .with_color([1.0, 0.0, 0.0, 1.0])
+                .with_width(2.0);
+            let json = serde_json::to_string(&tl).unwrap();
+            let back: TrendLine = serde_json::from_str(&json).unwrap();
+            assert_eq!(tl.id, back.id);
+            assert_eq!(tl.start, back.start);
+            assert_eq!(tl.end, back.end);
+            assert_eq!(tl.color, back.color);
+            assert_eq!(tl.width, back.width);
+        }
+
+        #[test]
+        fn roundtrip_horizontal_line() {
+            let hl = HorizontalLine::new("hl", 150.0).with_extend_left(false);
+            let json = serde_json::to_string(&hl).unwrap();
+            let back: HorizontalLine = serde_json::from_str(&json).unwrap();
+            assert_eq!(hl.id, back.id);
+            assert_eq!(hl.price, back.price);
+            assert!(!back.extend_left);
+        }
+
+        #[test]
+        fn roundtrip_vertical_line() {
+            let vl = VerticalLine::new("vl", 500).with_color([0.0, 1.0, 0.0, 1.0]);
+            let json = serde_json::to_string(&vl).unwrap();
+            let back: VerticalLine = serde_json::from_str(&json).unwrap();
+            assert_eq!(vl.timestamp, back.timestamp);
+            assert_eq!(vl.color, back.color);
+        }
+
+        #[test]
+        fn roundtrip_rectangle() {
+            let rect = Rectangle::new("r", ChartPoint::new(100, 200.0), ChartPoint::new(300, 100.0))
+                .with_fill([1.0, 0.0, 0.0, 0.5]);
+            let json = serde_json::to_string(&rect).unwrap();
+            let back: Rectangle = serde_json::from_str(&json).unwrap();
+            assert_eq!(rect.top_left, back.top_left);
+            assert_eq!(rect.fill_color, back.fill_color);
+        }
+
+        #[test]
+        fn roundtrip_arrow() {
+            let a = Arrow::new("a", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
+                .with_arrowhead_size(15.0);
+            let json = serde_json::to_string(&a).unwrap();
+            let back: Arrow = serde_json::from_str(&json).unwrap();
+            assert_eq!(a.arrowhead_size, back.arrowhead_size);
+        }
+
+        #[test]
+        fn roundtrip_fibonacci_retracement() {
+            let fib = FibonacciRetracement::new(
+                "fib",
+                ChartPoint::new(100, 100.0),
+                ChartPoint::new(200, 200.0),
+            );
+            let json = serde_json::to_string(&fib).unwrap();
+            let back: FibonacciRetracement = serde_json::from_str(&json).unwrap();
+            assert_eq!(fib.start, back.start);
+            assert_eq!(fib.end, back.end);
+            assert_eq!(fib.levels, back.levels);
+        }
+
+        #[test]
+        fn roundtrip_fibonacci_extension() {
+            let ext = FibonacciExtension::new(
+                "ext",
+                ChartPoint::new(100, 100.0),
+                ChartPoint::new(200, 200.0),
+                ChartPoint::new(150, 150.0),
+            );
+            let json = serde_json::to_string(&ext).unwrap();
+            let back: FibonacciExtension = serde_json::from_str(&json).unwrap();
+            assert_eq!(ext.point_a, back.point_a);
+            assert_eq!(ext.point_b, back.point_b);
+            assert_eq!(ext.point_c, back.point_c);
+            assert_eq!(ext.levels, back.levels);
+        }
+
+        #[test]
+        fn roundtrip_pitchfork() {
+            let pf = Pitchfork::new(
+                "pf",
+                ChartPoint::new(100, 100.0),
+                ChartPoint::new(200, 200.0),
+                ChartPoint::new(200, 50.0),
+            );
+            let json = serde_json::to_string(&pf).unwrap();
+            let back: Pitchfork = serde_json::from_str(&json).unwrap();
+            assert_eq!(pf.point_a, back.point_a);
+        }
+
+        #[test]
+        fn roundtrip_ellipse() {
+            let e = Ellipse::new("e", ChartPoint::new(500, 150.0), 100.0, 50.0)
+                .with_fill([0.0, 1.0, 0.0, 0.3]);
+            let json = serde_json::to_string(&e).unwrap();
+            let back: Ellipse = serde_json::from_str(&json).unwrap();
+            assert_eq!(e.center, back.center);
+            assert_eq!(e.radius_x, back.radius_x);
+            assert_eq!(e.fill_color, back.fill_color);
+        }
+
+        #[test]
+        fn roundtrip_path() {
+            let p = Path::new(
+                "path",
+                vec![ChartPoint::new(0, 0.0), ChartPoint::new(100, 100.0), ChartPoint::new(200, 50.0)],
+            )
+            .with_closed(true)
+            .with_fill([1.0, 0.0, 0.0, 0.5]);
+            let json = serde_json::to_string(&p).unwrap();
+            let back: Path = serde_json::from_str(&json).unwrap();
+            assert_eq!(p.points, back.points);
+            assert!(back.closed);
+            assert!(back.fill_color.is_some());
+        }
+
+        #[test]
+        fn roundtrip_segment() {
+            let seg = Segment::new("seg", ChartPoint::new(0, 0.0), ChartPoint::new(100, 100.0));
+            let json = serde_json::to_string(&seg).unwrap();
+            let back: Segment = serde_json::from_str(&json).unwrap();
+            assert_eq!(seg.start, back.start);
+            assert_eq!(seg.end, back.end);
+        }
+
+        #[test]
+        fn roundtrip_ray() {
+            let ray = Ray::new("ray", ChartPoint::new(0, 0.0), ChartPoint::new(100, 100.0));
+            let json = serde_json::to_string(&ray).unwrap();
+            let back: Ray = serde_json::from_str(&json).unwrap();
+            assert_eq!(ray.start, back.start);
+            assert_eq!(ray.direction, back.direction);
+        }
+
+        #[test]
+        fn roundtrip_text_drawing() {
+            let td = TextDrawing::new("td", ChartPoint::new(100, 50.0), "Hello")
+                .with_font_size(18.0)
+                .with_align_x(0.5);
+            let json = serde_json::to_string(&td).unwrap();
+            let back: TextDrawing = serde_json::from_str(&json).unwrap();
+            assert_eq!(td.text, back.text);
+            assert_eq!(td.font_size, back.font_size);
+        }
+
+        #[test]
+        fn roundtrip_image_drawing() {
+            let img = ImageDrawing::new("img", ChartPoint::new(0, 0.0), "logo.png")
+                .with_width(200.0)
+                .with_opacity(0.8);
+            let json = serde_json::to_string(&img).unwrap();
+            let back: ImageDrawing = serde_json::from_str(&json).unwrap();
+            assert_eq!(img.src, back.src);
+            assert_eq!(img.opacity, back.opacity);
+        }
+
+        #[test]
+        fn roundtrip_label_drawing() {
+            let label = LabelDrawing::new("lbl", ChartPoint::new(100, 100.0), "Buy")
+                .with_bg_color([0.0, 0.5, 0.0, 0.9]);
+            let json = serde_json::to_string(&label).unwrap();
+            let back: LabelDrawing = serde_json::from_str(&json).unwrap();
+            assert_eq!(label.text, back.text);
+            assert_eq!(label.bg_color, back.bg_color);
+        }
     }
 }

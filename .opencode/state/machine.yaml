@@ -1,0 +1,52 @@
+# State machine ejecutable de la fábrica (fuente de verdad de fase/gate)
+# Vista humana: project-state.md — mantener sincronizados.
+# Schema: rules/state-machine.md
+
+factory_version: "2.1.0"
+
+project: candela
+project_type: library # library | app | service | mixed
+stack: rust
+stack_langs:
+  - rust
+
+mode: standard # standard | strict | spike | hotfix | explore
+
+phase: idle
+gate: null # hard_spec | test_plan | review | dod | null
+rework: false
+
+active_hu: null
+hu_type: null # library | feature | api | cli | adapter | chore
+hu_title: null
+
+# Paths de artefactos de la HU activa (null si idle)
+artifacts:
+  story: null
+  contracts: []
+  adr: null
+  hard_spec: null
+  test_plan: null
+  tests: []
+  mutation_report: null
+  quality_score: null
+  review: null
+
+specialists_active: [] # max 3
+specialists_recommended: []
+
+mutation_threshold: 0.90
+quality_score_min_strict: 85
+
+# Spike / hotfix
+spike_id: null
+spike_deadline: null
+debt: [] # strings: cosas omitidas a pagar después
+
+last_transition:
+  at: null
+  from: null
+  to: null
+  trigger: null
+
+last_output_contract: null # STORY_READY | SPEC_READY | …

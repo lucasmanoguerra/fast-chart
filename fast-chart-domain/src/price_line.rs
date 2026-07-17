@@ -42,6 +42,7 @@ pub struct PriceLineId(pub String);
 
 /// Line rendering style.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum LineStyle {
     Solid,
     Dashed,

@@ -1,0 +1,150 @@
+# OpenCode Factory — configuración genérica multi-lenguaje
+# No meter reglas de un producto concreto acá. Eso va a knowledge/ y spec/ del repo.
+version: "2.1.0"
+
+meta:
+  name: opencode-factory
+  purpose: >
+    Orquestación SDD+TDD+SRP para librerías y proyectos de larga vida.
+    Aplicable a Rust, TypeScript/JavaScript/React, Go, Zig, Python y similares.
+  immutability: >
+    Durante trabajo de features NO se edita .opencode/. Solo con pedido
+    explícito de mejorar la fábrica.
+
+# --- Carga de rules ---
+# boot_rules: siempre. El resto se carga vía context packs (agents/context-packs.md).
+# all_rules: catálogo completo (documental / doctor); NO cargar entero en cada turno.
+
+boot_rules:
+  - .opencode/rules/00-index.md
+  - .opencode/rules/team-rules.md
+  - .opencode/rules/modes.md
+  - .opencode/rules/anti-patterns-factory.md
+  - .opencode/rules/state-machine.md
+  - .opencode/rules/output-contracts.md
+  - .opencode/rules/multi-agent.md
+
+# Catálogo (referencia). Packs eligen subconjuntos.
+rules_catalog:
+  architecture: .opencode/rules/architecture.md
+  clean_code: .opencode/rules/clean-code.md
+  specs: .opencode/rules/specs.md
+  testing: .opencode/rules/testing.md
+  libraries: .opencode/rules/libraries.md
+  definition_of_done: .opencode/rules/definition-of-done.md
+  knowledge: .opencode/rules/knowledge.md
+  languages:
+    rust: .opencode/rules/languages/rust.md
+    typescript: .opencode/rules/languages/typescript.md
+    javascript: .opencode/rules/languages/javascript.md
+    react: .opencode/rules/languages/react.md
+    go: .opencode/rules/languages/go.md
+    zig: .opencode/rules/languages/zig.md
+    python: .opencode/rules/languages/python.md
+
+# Compat OpenCode: lista "rules" = boot only (packs suman el resto en runtime)
+rules:
+  - .opencode/rules/00-index.md
+  - .opencode/rules/team-rules.md
+  - .opencode/rules/modes.md
+  - .opencode/rules/anti-patterns-factory.md
+  - .opencode/rules/state-machine.md
+  - .opencode/rules/output-contracts.md
+  - .opencode/rules/multi-agent.md
+
+system_prompt: .opencode/system-prompt.md
+
+context_packs: .opencode/agents/context-packs.md
+
+profiles:
+  po: .opencode/profiles/po.md
+  arqui: .opencode/profiles/arqui.md
+  specwriter: .opencode/profiles/specwriter.md
+  qargento: .opencode/profiles/qargento.md
+  devsenior: .opencode/profiles/devsenior.md
+  revisor: .opencode/profiles/revisor.md
+  manteca: .opencode/profiles/manteca.md
+  security: .opencode/profiles/security.md
+  perf: .opencode/profiles/perf.md
+  concurrency: .opencode/profiles/concurrency.md
+  test-architect: .opencode/profiles/test-architect.md
+  ux-api: .opencode/profiles/ux-api.md
+  tech-writer: .opencode/profiles/tech-writer.md
+  data: .opencode/profiles/data.md
+  cicd: .opencode/profiles/cicd.md
+  packaging: .opencode/profiles/packaging.md
+  sys-integration: .opencode/profiles/sys-integration.md
+  graphics: .opencode/profiles/graphics.md
+  math3d: .opencode/profiles/math3d.md
+  numeric: .opencode/profiles/numeric-precision.md
+  compliance: .opencode/profiles/compliance.md
+  finalgo: .opencode/profiles/financial-algorithms.md
+  finapi: .opencode/profiles/financial-apis.md
+  devrel: .opencode/profiles/devrel.md
+  architect-guard: .opencode/profiles/architect-guard.md
+  benchmark: .opencode/profiles/benchmark.md
+  release: .opencode/profiles/release.md
+
+commands:
+  init: .opencode/commands/init.md
+  start-hu: .opencode/commands/start-hu.md
+  agent: .opencode/commands/agent.md
+  status: .opencode/commands/status.md
+  approve: .opencode/commands/approve.md
+  reject: .opencode/commands/reject.md
+  review: .opencode/commands/review.md
+  help: .opencode/commands/help.md
+  adapt: .opencode/commands/adapt.md
+  adr: .opencode/commands/adr.md
+  spike: .opencode/commands/spike.md
+  backlog: .opencode/commands/backlog.md
+  doctor: .opencode/commands/doctor.md
+  done-hu: .opencode/commands/done-hu.md
+  public-api: .opencode/commands/public-api.md
+  bench: .opencode/commands/bench.md
+  knowledge: .opencode/commands/knowledge.md
+  multi-agent: .opencode/commands/multi-agent.md
+  subagent: .opencode/commands/subagent.md
+  mode: .opencode/commands/mode.md
+
+agents:
+  matrix: .opencode/agents/matrix.md
+  orchestration: .opencode/agents/orchestration.md
+  subagents: .opencode/agents/subagents.md
+  context_packs: .opencode/agents/context-packs.md
+
+state_file: .opencode/state/project-state.md
+machine_file: .opencode/state/machine.yaml
+templates_dir: .opencode/templates/
+version_file: .opencode/VERSION
+changelog_file: .opencode/CHANGELOG.md
+
+default_mode: standard
+mutation_threshold: 0.90
+quality_score_min_strict: 85
+
+tools:
+  engram:
+    enabled: true
+    notes: Memoria de largo plazo de sesiones/decisiones
+  context7:
+    enabled: true
+    notes: Carga selectiva de docs de librerías
+  codegraph:
+    enabled: true
+    notes: Grafo de símbolos/dependencias para review y blast radius
+  gh:
+    enabled: true
+    notes: Repos, issues, PRs vía GitHub CLI
+  cargo-mutants:
+    enabled: true
+    threshold: 0.90
+    notes: Mutation testing (Rust); otros lenguajes usan su equivalente
+
+noise:
+  max_core_agents_per_phase: 1
+  max_specialists_per_hu: 3
+  load_language_rules: only_detected_stack
+  never_load_all_profiles: true
+  never_load_full_rules_catalog: true
+  emit_context_pack_header: true

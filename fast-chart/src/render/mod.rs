@@ -5,6 +5,7 @@
 
 pub mod backend;
 pub mod commands;
+pub mod dirty;
 pub mod passes;
 pub mod pipeline;
 pub mod context;
@@ -18,6 +19,7 @@ pub mod series_renderer;
 
 pub use backend::RendererBackend;
 pub use commands::{DrawCommand, LineStyle};
+pub use dirty::{DirtyRegion, DirtyRegionTracker, ScreenRect};
 pub use passes::{PassTracker, RenderPass};
 pub use pipeline::{FrameStats, PassBatch, RenderPipeline, z_index_to_pass};
 pub use context::RenderContext;

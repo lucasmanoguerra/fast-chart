@@ -8,6 +8,7 @@ pub mod commands;
 pub mod context;
 pub mod coordinates;
 pub mod drawing;
+pub mod drawing_manager;
 pub mod indicator_renderer;
 pub mod layers;
 pub mod series_renderer;

@@ -1,0 +1,15 @@
+[package]
+name = "fast-chart-renderer-wgpu"
+version = "0.1.0"
+edition = "2021"
+description = "WGPU rendering backend for fast-chart"
+
+[dependencies]
+fast-chart = { path = "../fast-chart" }
+fast-chart-domain = { path = "../fast-chart-domain" }
+wgpu = "25.0"
+bytemuck = { version = "1", features = ["derive"] }
+log = "0.4"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

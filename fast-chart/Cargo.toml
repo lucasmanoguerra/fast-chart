@@ -10,3 +10,7 @@ categories = ["finance", "gui", "rendering"]
 
 [dependencies]
 fast-chart-domain = { path = "../fast-chart-domain" }
+
+[features]
+default = []
+serde = ["fast-chart-domain/serde"]

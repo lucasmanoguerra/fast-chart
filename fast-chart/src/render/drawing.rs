@@ -1908,6 +1908,473 @@ mod tests {
         }
     }
 
+    // ---- TrendLine Drawing impl tests ----
+
+    fn test_trend_line() -> fast_chart_domain::drawing::TrendLine {
+        fast_chart_domain::drawing::TrendLine::new(
+            "test-tl",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        )
+    }
+
+    #[test]
+    fn trend_line_hit_test_body() {
+        let tl = test_trend_line();
+        assert_eq!(tl.hit_test(ChartPoint::new(1500, 150.0), 50.0), HitResult::Body);
+    }
+
+    #[test]
+    fn trend_line_hit_test_miss() {
+        let tl = test_trend_line();
+        assert_eq!(tl.hit_test(ChartPoint::new(1500, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn trend_line_move_by() {
+        let mut tl = test_trend_line();
+        tl.move_by(ChartPoint::new(500, 10.0));
+        assert_eq!(tl.start.timestamp, 1500);
+        assert!((tl.start.price - 110.0).abs() < f64::EPSILON);
+        assert_eq!(tl.end.timestamp, 2500);
+        assert!((tl.end.price - 210.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn trend_line_bounds() {
+        let tl = test_trend_line();
+        let b = tl.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+        assert!((b.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 200.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn trend_line_selection_state() {
+        let mut tl = test_trend_line();
+        assert!(!tl.is_selected());
+        tl.set_selected(true);
+        assert!(tl.is_selected());
+        tl.set_selected(false);
+        assert!(!tl.is_selected());
+    }
+
+    #[test]
+    fn trend_line_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let tl = fast_chart_domain::drawing::TrendLine::new(
+            "cmd-tl",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = tl.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1);
+        match &cmds[0] {
+            DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 10),
+            other => panic!("expected DrawLine, got {:?}", other),
+        }
+    }
+
+    // ---- HorizontalLine Drawing impl tests ----
+
+    fn test_horizontal_line() -> fast_chart_domain::drawing::HorizontalLine {
+        fast_chart_domain::drawing::HorizontalLine::new("test-hl", 150.0)
+    }
+
+    #[test]
+    fn horizontal_line_hit_test_body() {
+        let hl = test_horizontal_line();
+        assert_eq!(hl.hit_test(ChartPoint::new(1000, 150.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn horizontal_line_hit_test_miss() {
+        let hl = test_horizontal_line();
+        assert_eq!(hl.hit_test(ChartPoint::new(1000, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn horizontal_line_move_by() {
+        let mut hl = test_horizontal_line();
+        hl.move_by(ChartPoint::new(0, 25.0));
+        assert!((hl.price - 175.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn horizontal_line_bounds() {
+        let hl = test_horizontal_line();
+        let b = hl.bounds();
+        assert_eq!(b.time_start, 0);
+        assert_eq!(b.time_end, u64::MAX);
+        assert!((b.price_min - 150.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 150.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn horizontal_line_selection_state() {
+        let mut hl = test_horizontal_line();
+        assert!(!hl.is_selected());
+        hl.set_selected(true);
+        assert!(hl.is_selected());
+        hl.set_selected(false);
+        assert!(!hl.is_selected());
+    }
+
+    #[test]
+    fn horizontal_line_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let hl = fast_chart_domain::drawing::HorizontalLine::new("cmd-hl", 150.0);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = hl.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1);
+        match &cmds[0] {
+            DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 8),
+            other => panic!("expected DrawLine, got {:?}", other),
+        }
+    }
+
+    // ---- VerticalLine Drawing impl tests ----
+
+    fn test_vertical_line() -> fast_chart_domain::drawing::VerticalLine {
+        fast_chart_domain::drawing::VerticalLine::new("test-vl", 1500)
+    }
+
+    #[test]
+    fn vertical_line_hit_test_body() {
+        let vl = test_vertical_line();
+        assert_eq!(vl.hit_test(ChartPoint::new(1500, 100.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn vertical_line_hit_test_miss() {
+        let vl = test_vertical_line();
+        assert_eq!(vl.hit_test(ChartPoint::new(5000, 100.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn vertical_line_move_by() {
+        let mut vl = test_vertical_line();
+        vl.move_by(ChartPoint::new(500, 0.0));
+        assert_eq!(vl.timestamp, 2000);
+    }
+
+    #[test]
+    fn vertical_line_bounds() {
+        let vl = test_vertical_line();
+        let b = vl.bounds();
+        assert_eq!(b.time_start, 1500);
+        assert_eq!(b.time_end, 1500);
+        assert_eq!(b.price_min, f64::MIN);
+        assert_eq!(b.price_max, f64::MAX);
+    }
+
+    #[test]
+    fn vertical_line_selection_state() {
+        let mut vl = test_vertical_line();
+        assert!(!vl.is_selected());
+        vl.set_selected(true);
+        assert!(vl.is_selected());
+        vl.set_selected(false);
+        assert!(!vl.is_selected());
+    }
+
+    #[test]
+    fn vertical_line_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let vl = fast_chart_domain::drawing::VerticalLine::new("cmd-vl", 1500);
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = vl.to_commands(&ctx);
+        assert_eq!(cmds.len(), 1);
+        match &cmds[0] {
+            DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 8),
+            other => panic!("expected DrawLine, got {:?}", other),
+        }
+    }
+
+    // ---- FibonacciRetracement Drawing impl tests ----
+
+    fn test_fib_retracement() -> fast_chart_domain::drawing::FibonacciRetracement {
+        fast_chart_domain::drawing::FibonacciRetracement::new(
+            "test-fib",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        )
+    }
+
+    #[test]
+    fn fib_retracement_hit_test_body() {
+        let fib = test_fib_retracement();
+        // 50% level price = 100 + 0.5 * 100 = 150
+        assert_eq!(fib.hit_test(ChartPoint::new(1500, 150.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn fib_retracement_hit_test_miss() {
+        let fib = test_fib_retracement();
+        assert_eq!(fib.hit_test(ChartPoint::new(1500, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn fib_retracement_move_by() {
+        let mut fib = test_fib_retracement();
+        fib.move_by(ChartPoint::new(500, 10.0));
+        assert_eq!(fib.start.timestamp, 1500);
+        assert!((fib.start.price - 110.0).abs() < f64::EPSILON);
+        assert_eq!(fib.end.timestamp, 2500);
+        assert!((fib.end.price - 210.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn fib_retracement_bounds() {
+        let fib = test_fib_retracement();
+        let b = fib.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+        assert!((b.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 200.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn fib_retracement_selection_state() {
+        let mut fib = test_fib_retracement();
+        assert!(!fib.is_selected());
+        fib.set_selected(true);
+        assert!(fib.is_selected());
+        fib.set_selected(false);
+        assert!(!fib.is_selected());
+    }
+
+    #[test]
+    fn fib_retracement_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let fib = fast_chart_domain::drawing::FibonacciRetracement::new(
+            "cmd-fib",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = fib.to_commands(&ctx);
+        // 7 default Fibonacci levels
+        assert_eq!(cmds.len(), 7);
+        for cmd in &cmds {
+            match cmd {
+                DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 9),
+                other => panic!("expected DrawLine, got {:?}", other),
+            }
+        }
+    }
+
+    // ---- FibonacciExtension Drawing impl tests ----
+
+    fn test_fib_extension() -> fast_chart_domain::drawing::FibonacciExtension {
+        fast_chart_domain::drawing::FibonacciExtension::new(
+            "test-fibext",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+            ChartPoint::new(1500, 150.0),
+        )
+    }
+
+    #[test]
+    fn fib_extension_hit_test_body() {
+        let fib = test_fib_extension();
+        // 50% level price = 150 + (200 - 100) * 0.5 = 200
+        assert_eq!(fib.hit_test(ChartPoint::new(1500, 200.0), 5.0), HitResult::Body);
+    }
+
+    #[test]
+    fn fib_extension_hit_test_miss() {
+        let fib = test_fib_extension();
+        assert_eq!(fib.hit_test(ChartPoint::new(1500, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn fib_extension_move_by() {
+        let mut fib = test_fib_extension();
+        fib.move_by(ChartPoint::new(500, 10.0));
+        assert_eq!(fib.point_a.timestamp, 1500);
+        assert!((fib.point_a.price - 110.0).abs() < f64::EPSILON);
+        assert_eq!(fib.point_b.timestamp, 2500);
+        assert!((fib.point_b.price - 210.0).abs() < f64::EPSILON);
+        assert_eq!(fib.point_c.timestamp, 2000);
+        assert!((fib.point_c.price - 160.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn fib_extension_bounds() {
+        let fib = test_fib_extension();
+        let b = fib.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+        assert!((b.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 200.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn fib_extension_selection_state() {
+        let mut fib = test_fib_extension();
+        assert!(!fib.is_selected());
+        fib.set_selected(true);
+        assert!(fib.is_selected());
+        fib.set_selected(false);
+        assert!(!fib.is_selected());
+    }
+
+    #[test]
+    fn fib_extension_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let fib = fast_chart_domain::drawing::FibonacciExtension::new(
+            "cmd-fibext",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+            ChartPoint::new(1500, 150.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = fib.to_commands(&ctx);
+        // 9 default extension levels
+        assert_eq!(cmds.len(), 9);
+        for cmd in &cmds {
+            match cmd {
+                DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 9),
+                other => panic!("expected DrawLine, got {:?}", other),
+            }
+        }
+    }
+
+    // ---- Pitchfork Drawing impl tests ----
+
+    fn test_pitchfork() -> fast_chart_domain::drawing::Pitchfork {
+        fast_chart_domain::drawing::Pitchfork::new(
+            "test-pf",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+            ChartPoint::new(2000, 100.0),
+        )
+    }
+
+    #[test]
+    fn pitchfork_hit_test_body() {
+        let pf = test_pitchfork();
+        // Midpoint = (2000,150). Segment A→midpoint: (1000,100)→(2000,150).
+        // Point (1500,125) lies on this line.
+        assert_eq!(pf.hit_test(ChartPoint::new(1500, 125.0), 50.0), HitResult::Body);
+    }
+
+    #[test]
+    fn pitchfork_hit_test_miss() {
+        let pf = test_pitchfork();
+        assert_eq!(pf.hit_test(ChartPoint::new(1500, 500.0), 5.0), HitResult::Miss);
+    }
+
+    #[test]
+    fn pitchfork_move_by() {
+        let mut pf = test_pitchfork();
+        pf.move_by(ChartPoint::new(500, 10.0));
+        assert_eq!(pf.point_a.timestamp, 1500);
+        assert!((pf.point_a.price - 110.0).abs() < f64::EPSILON);
+        assert_eq!(pf.point_b.timestamp, 2500);
+        assert!((pf.point_b.price - 210.0).abs() < f64::EPSILON);
+        assert_eq!(pf.point_c.timestamp, 2500);
+        assert!((pf.point_c.price - 110.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn pitchfork_bounds() {
+        let pf = test_pitchfork();
+        let b = pf.bounds();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+        assert!((b.price_min - 100.0).abs() < f64::EPSILON);
+        assert!((b.price_max - 200.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn pitchfork_selection_state() {
+        let mut pf = test_pitchfork();
+        assert!(!pf.is_selected());
+        pf.set_selected(true);
+        assert!(pf.is_selected());
+        pf.set_selected(false);
+        assert!(!pf.is_selected());
+    }
+
+    #[test]
+    fn pitchfork_to_commands() {
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let pf = fast_chart_domain::drawing::Pitchfork::new(
+            "cmd-pf",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+            ChartPoint::new(2000, 100.0),
+        );
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = pf.to_commands(&ctx);
+        // 2 lines: A→B and A→C
+        assert_eq!(cmds.len(), 2);
+        for cmd in &cmds {
+            match cmd {
+                DrawCommand::DrawLine { z_index, .. } => assert_eq!(*z_index, 10),
+                other => panic!("expected DrawLine, got {:?}", other),
+            }
+        }
+    }
+
     // ---- TextDrawing Drawing impl tests ----
 
     #[test]

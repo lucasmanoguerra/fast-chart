@@ -391,6 +391,7 @@ impl InputEvent {
 
 pub mod crosshair;
 pub mod engine;
+pub mod keyboard;
 pub mod pan;
 pub mod zoom;
 

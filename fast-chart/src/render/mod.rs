@@ -15,6 +15,7 @@ pub mod drawing_interaction;
 pub mod drawing_manager;
 pub mod indicator_renderer;
 pub mod layers;
+pub mod pixel_perfect;
 pub mod series_renderer;
 
 pub use backend::RendererBackend;

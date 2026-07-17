@@ -24,6 +24,7 @@
 // Internal modules
 // ---------------------------------------------------------------------------
 pub mod app;
+pub mod cache;
 pub mod input;
 pub mod ports;
 pub mod render;

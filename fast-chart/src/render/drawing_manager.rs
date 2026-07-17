@@ -335,7 +335,7 @@ impl Default for DrawingManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fast_chart_domain::drawing::{TrendLine, Arrow};
+    use fast_chart_domain::drawing::{TrendLine, HorizontalLine, VerticalLine, FibonacciRetracement, FibonacciExtension, Pitchfork, Arrow};
 
     #[test]
     fn new_manager_is_empty() {
@@ -430,5 +430,78 @@ mod tests {
         let tl = mgr.set().get_trend_line(&DrawingId("tl1".to_string())).unwrap();
         assert_eq!(tl.start.timestamp, 1100);
         assert!((tl.start.price - 110.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn hit_test_miss() {
+        let mgr = DrawingManager::new();
+        // No drawings — hit test should return None
+        assert!(mgr.hit_test(ChartPoint::new(1500, 150.0), 50.0).is_none());
+    }
+
+    #[test]
+    fn select_deselect_cycle() {
+        let mut mgr = DrawingManager::new();
+        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+
+        // Select by hitting
+        let id = mgr.hit_test_and_select(ChartPoint::new(1500, 150.0), 50.0);
+        assert!(id.is_some());
+        assert_eq!(mgr.selected_id(), Some(&id.unwrap()));
+
+        // Deselect
+        mgr.deselect_all();
+        assert!(mgr.selected_id().is_none());
+    }
+
+    #[test]
+    fn move_selected() {
+        let mut mgr = DrawingManager::new();
+        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_arrow(Arrow::new("a1", ChartPoint::new(3000, 300.0), ChartPoint::new(4000, 400.0)));
+
+        // Select only one drawing
+        mgr.hit_test_and_select(ChartPoint::new(1500, 150.0), 50.0);
+        let moved = mgr.move_selected(ChartPoint::new(100, 10.0));
+        assert!(moved);
+
+        // Only the selected one moved
+        let tl = mgr.set().get_trend_line(&DrawingId("tl1".to_string())).unwrap();
+        assert_eq!(tl.start.timestamp, 1100);
+
+        // The other was not moved
+        let ar = mgr.set().get_arrow(&DrawingId("a1".to_string())).unwrap();
+        assert_eq!(ar.start.timestamp, 3000);
+    }
+
+    #[test]
+    fn bounds_single() {
+        let mut mgr = DrawingManager::new();
+        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+
+        let bounds = mgr.bounds();
+        assert!(bounds.is_some());
+        let b = bounds.unwrap();
+        assert_eq!(b.time_start, 1000);
+        assert_eq!(b.time_end, 2000);
+    }
+
+    #[test]
+    fn render_single() {
+        let mut mgr = DrawingManager::new();
+        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+
+        use crate::render::context::RenderContext;
+        use crate::render::coordinates::CoordinatePipeline;
+
+        let pipeline = CoordinatePipeline::new(
+            (0.0, 3000.0),
+            (50.0, 250.0),
+            0.0, 0.0, 800.0, 400.0, 1.0,
+        );
+        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+
+        let cmds = mgr.render(&ctx);
+        assert_eq!(cmds.len(), 1);
     }
 }

@@ -94,6 +94,16 @@ impl DrawingBounds {
             && p.price >= self.price_min
             && p.price <= self.price_max
     }
+
+    /// Combine two bounding boxes into one that contains both.
+    pub fn combine(&self, other: &DrawingBounds) -> DrawingBounds {
+        DrawingBounds {
+            time_start: self.time_start.min(other.time_start),
+            time_end: self.time_end.max(other.time_end),
+            price_min: self.price_min.min(other.price_min),
+            price_max: self.price_max.max(other.price_max),
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -977,6 +987,277 @@ impl Drawing for fast_chart_domain::drawing::Arrow {
         }
 
         cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for TrendLine
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::TrendLine {
+    fn id(&self) -> &DrawingId { &self.id }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let dx = self.end.timestamp as f64 - self.start.timestamp as f64;
+        let dy = self.end.price - self.start.price;
+        let len_sq = dx * dx + dy * dy;
+        if len_sq == 0.0 {
+            let px = point.timestamp as f64 - self.start.timestamp as f64;
+            let py = point.price - self.start.price;
+            return if px * px + py * py <= tolerance as f64 * tolerance as f64 { HitResult::Body } else { HitResult::Miss };
+        }
+        let t = (((point.timestamp as f64 - self.start.timestamp as f64) * dx + (point.price - self.start.price) * dy) / len_sq).clamp(0.0, 1.0);
+        let proj_x = self.start.timestamp as f64 + t * dx;
+        let proj_y = self.start.price + t * dy;
+        let dist = ((point.timestamp as f64 - proj_x).powi(2) + (point.price - proj_y).powi(2)).sqrt();
+        if dist <= tolerance as f64 { HitResult::Body } else { HitResult::Miss }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.start.timestamp = self.start.timestamp.saturating_add(delta.timestamp);
+        self.start.price += delta.price;
+        self.end.timestamp = self.end.timestamp.saturating_add(delta.timestamp);
+        self.end.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds { DrawingBounds::from_points(self.start, self.end) }
+    fn is_selected(&self) -> bool { self.selected }
+    fn set_selected(&mut self, selected: bool) { self.selected = selected; }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let start_screen = ctx.pipeline.world_to_screen(WorldPoint::new(self.start.timestamp as f64, self.start.price));
+        let end_screen = ctx.pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        vec![DrawCommand::DrawLine { x0: start_screen.x, y0: start_screen.y, x1: end_screen.x, y1: end_screen.y, color: self.color, width: self.width, style, z_index: 10 }]
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for HorizontalLine
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::HorizontalLine {
+    fn id(&self) -> &DrawingId { &self.id }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let dist = (point.price - self.price).abs();
+        if dist <= tolerance as f64 { HitResult::Body } else { HitResult::Miss }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::new(0, u64::MAX, self.price, self.price)
+    }
+
+    fn is_selected(&self) -> bool { self.selected }
+    fn set_selected(&mut self, selected: bool) { self.selected = selected; }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let screen = ctx.pipeline.world_to_screen(WorldPoint::new(ctx.time_range.0, self.price));
+        let screen2 = ctx.pipeline.world_to_screen(WorldPoint::new(ctx.time_range.1, self.price));
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        vec![DrawCommand::DrawLine { x0: screen.x, y0: screen.y, x1: screen2.x, y1: screen2.y, color: self.color, width: self.width, style, z_index: 8 }]
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for VerticalLine
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::VerticalLine {
+    fn id(&self) -> &DrawingId { &self.id }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let dist = (point.timestamp as f64 - self.timestamp as f64).abs();
+        if dist <= tolerance as f64 { HitResult::Body } else { HitResult::Miss }
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.timestamp = self.timestamp.saturating_add(delta.timestamp);
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::new(self.timestamp, self.timestamp, f64::MIN, f64::MAX)
+    }
+
+    fn is_selected(&self) -> bool { self.selected }
+    fn set_selected(&mut self, selected: bool) { self.selected = selected; }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let screen1 = ctx.pipeline.world_to_screen(WorldPoint::new(self.timestamp as f64, ctx.price_range.0));
+        let screen2 = ctx.pipeline.world_to_screen(WorldPoint::new(self.timestamp as f64, ctx.price_range.1));
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        vec![DrawCommand::DrawLine { x0: screen1.x, y0: screen1.y, x1: screen2.x, y1: screen2.y, color: self.color, width: self.width, style, z_index: 8 }]
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for FibonacciRetracement
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::FibonacciRetracement {
+    fn id(&self) -> &DrawingId { &self.id }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        // Check if near any level line
+        let tol = tolerance as f64;
+        for &level in &self.levels {
+            let price = self.price_at_level(level);
+            if (point.price - price).abs() <= tol { return HitResult::Body; }
+        }
+        HitResult::Miss
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.start.timestamp = self.start.timestamp.saturating_add(delta.timestamp);
+        self.start.price += delta.price;
+        self.end.timestamp = self.end.timestamp.saturating_add(delta.timestamp);
+        self.end.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds { DrawingBounds::from_points(self.start, self.end) }
+    fn is_selected(&self) -> bool { self.selected }
+    fn set_selected(&mut self, selected: bool) { self.selected = selected; }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let mut cmds = Vec::new();
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        let left = ctx.time_range.0;
+        let right = ctx.time_range.1;
+        for &level in &self.levels {
+            let price = self.price_at_level(level);
+            let s1 = ctx.pipeline.world_to_screen(WorldPoint::new(left as f64, price));
+            let s2 = ctx.pipeline.world_to_screen(WorldPoint::new(right as f64, price));
+            cmds.push(DrawCommand::DrawLine { x0: s1.x, y0: s1.y, x1: s2.x, y1: s2.y, color: self.color, width: self.width, style, z_index: 9 });
+        }
+        cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for FibonacciExtension
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::FibonacciExtension {
+    fn id(&self) -> &DrawingId { &self.id }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let tol = tolerance as f64;
+        for &level in &self.levels {
+            let price = self.price_at_level(level);
+            if (point.price - price).abs() <= tol { return HitResult::Body; }
+        }
+        HitResult::Miss
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.point_a.timestamp = self.point_a.timestamp.saturating_add(delta.timestamp);
+        self.point_a.price += delta.price;
+        self.point_b.timestamp = self.point_b.timestamp.saturating_add(delta.timestamp);
+        self.point_b.price += delta.price;
+        self.point_c.timestamp = self.point_c.timestamp.saturating_add(delta.timestamp);
+        self.point_c.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::from_points(self.point_a, self.point_b).combine(&DrawingBounds::from_point(self.point_c))
+    }
+
+    fn is_selected(&self) -> bool { self.selected }
+    fn set_selected(&mut self, selected: bool) { self.selected = selected; }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let mut cmds = Vec::new();
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        let left = ctx.time_range.0;
+        let right = ctx.time_range.1;
+        for &level in &self.levels {
+            let price = self.price_at_level(level);
+            let s1 = ctx.pipeline.world_to_screen(WorldPoint::new(left as f64, price));
+            let s2 = ctx.pipeline.world_to_screen(WorldPoint::new(right as f64, price));
+            cmds.push(DrawCommand::DrawLine { x0: s1.x, y0: s1.y, x1: s2.x, y1: s2.y, color: self.color, width: self.width, style, z_index: 9 });
+        }
+        cmds
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Drawing impl for Pitchfork
+// ---------------------------------------------------------------------------
+
+impl Drawing for fast_chart_domain::drawing::Pitchfork {
+    fn id(&self) -> &DrawingId { &self.id }
+
+    fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
+        let tol = tolerance as f64;
+        // Check distance to three prongs (A→midpoint, A→B, A→C)
+        let mid = ChartPoint::new((self.point_b.timestamp + self.point_c.timestamp) / 2, (self.point_b.price + self.point_c.price) / 2.0);
+        for &end in &[mid, self.point_b, self.point_c] {
+            let dx = end.timestamp as f64 - self.point_a.timestamp as f64;
+            let dy = end.price - self.point_a.price;
+            let len_sq = dx * dx + dy * dy;
+            if len_sq == 0.0 { continue; }
+            let t = (((point.timestamp as f64 - self.point_a.timestamp as f64) * dx + (point.price - self.point_a.price) * dy) / len_sq).clamp(0.0, 1.0);
+            let proj_x = self.point_a.timestamp as f64 + t * dx;
+            let proj_y = self.point_a.price + t * dy;
+            let dist = ((point.timestamp as f64 - proj_x).powi(2) + (point.price - proj_y).powi(2)).sqrt();
+            if dist <= tol { return HitResult::Body; }
+        }
+        HitResult::Miss
+    }
+
+    fn move_by(&mut self, delta: ChartPoint) {
+        self.point_a.timestamp = self.point_a.timestamp.saturating_add(delta.timestamp);
+        self.point_a.price += delta.price;
+        self.point_b.timestamp = self.point_b.timestamp.saturating_add(delta.timestamp);
+        self.point_b.price += delta.price;
+        self.point_c.timestamp = self.point_c.timestamp.saturating_add(delta.timestamp);
+        self.point_c.price += delta.price;
+    }
+
+    fn bounds(&self) -> DrawingBounds {
+        DrawingBounds::from_points(self.point_a, self.point_b).combine(&DrawingBounds::from_point(self.point_c))
+    }
+
+    fn is_selected(&self) -> bool { self.selected }
+    fn set_selected(&mut self, selected: bool) { self.selected = selected; }
+
+    fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
+        let style = match self.style {
+            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+        };
+        let sa = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_a.timestamp as f64, self.point_a.price));
+        let sb = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_b.timestamp as f64, self.point_b.price));
+        let sc = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_c.timestamp as f64, self.point_c.price));
+        vec![
+            DrawCommand::DrawLine { x0: sa.x, y0: sa.y, x1: sb.x, y1: sb.y, color: self.color, width: self.width, style, z_index: 10 },
+            DrawCommand::DrawLine { x0: sa.x, y0: sa.y, x1: sc.x, y1: sc.y, color: self.color, width: self.width, style, z_index: 10 },
+        ]
     }
 }
 

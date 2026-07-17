@@ -24,3 +24,7 @@ Thumbs.db
 *.log
 .atl/
 opencode.json
+
+## .md
+rendering-engine-specification.md
+AGENTS.md

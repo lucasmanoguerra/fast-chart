@@ -37,6 +37,8 @@ pub struct TrendLine {
     pub width: f32,
     /// Line style.
     pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl TrendLine {
@@ -49,6 +51,7 @@ impl TrendLine {
             color: [1.0, 1.0, 1.0, 1.0],
             width: 1.0,
             style: LineStyle::Solid,
+            selected: false,
         }
     }
 
@@ -465,6 +468,8 @@ pub struct HorizontalLine {
     pub extend_left: bool,
     /// Extend the line to the right edge of the chart.
     pub extend_right: bool,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl HorizontalLine {
@@ -478,6 +483,7 @@ impl HorizontalLine {
             style: LineStyle::Solid,
             extend_left: true,
             extend_right: true,
+            selected: false,
         }
     }
 
@@ -529,6 +535,8 @@ pub struct VerticalLine {
     pub width: f32,
     /// Line style.
     pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl VerticalLine {
@@ -540,6 +548,7 @@ impl VerticalLine {
             color: [0.5, 0.5, 0.5, 0.8],
             width: 1.0,
             style: LineStyle::Solid,
+            selected: false,
         }
     }
 
@@ -665,6 +674,8 @@ pub struct FibonacciRetracement {
     pub width: f32,
     /// Line style.
     pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl FibonacciRetracement {
@@ -678,6 +689,7 @@ impl FibonacciRetracement {
             color: [0.5, 0.5, 0.5, 0.8],
             width: 1.0,
             style: LineStyle::Dashed,
+            selected: false,
         }
     }
 
@@ -753,6 +765,8 @@ pub struct FibonacciExtension {
     pub width: f32,
     /// Line style.
     pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl FibonacciExtension {
@@ -767,6 +781,7 @@ impl FibonacciExtension {
             color: [0.5, 0.5, 0.5, 0.8],
             width: 1.0,
             style: LineStyle::Dashed,
+            selected: false,
         }
     }
 
@@ -841,6 +856,8 @@ pub struct Pitchfork {
     pub width: f32,
     /// Line style.
     pub style: LineStyle,
+    /// Whether this drawing is currently selected.
+    pub selected: bool,
 }
 
 impl Pitchfork {
@@ -854,6 +871,7 @@ impl Pitchfork {
             color: [0.5, 0.5, 0.5, 0.8],
             width: 1.0,
             style: LineStyle::Solid,
+            selected: false,
         }
     }
 
@@ -1318,6 +1336,74 @@ impl DrawingSet {
         }
         if let Some(pos) = self.paths.iter().position(|p| p.id == *id) {
             self.paths.remove(pos);
+            return true;
+        }
+        false
+    }
+
+    /// Move a drawing by delta. Returns true if the drawing was found.
+    pub fn move_drawing(&mut self, id: &DrawingId, delta: ChartPoint) -> bool {
+        if let Some(tl) = self.trend_lines.iter_mut().find(|t| t.id == *id) {
+            tl.start.timestamp = tl.start.timestamp.saturating_add(delta.timestamp);
+            tl.start.price += delta.price;
+            tl.end.timestamp = tl.end.timestamp.saturating_add(delta.timestamp);
+            tl.end.price += delta.price;
+            return true;
+        }
+        if let Some(a) = self.arrows.iter_mut().find(|a| a.id == *id) {
+            a.start.timestamp = a.start.timestamp.saturating_add(delta.timestamp);
+            a.start.price += delta.price;
+            a.end.timestamp = a.end.timestamp.saturating_add(delta.timestamp);
+            a.end.price += delta.price;
+            return true;
+        }
+        if let Some(r) = self.rays.iter_mut().find(|r| r.id == *id) {
+            r.start.timestamp = r.start.timestamp.saturating_add(delta.timestamp);
+            r.start.price += delta.price;
+            return true;
+        }
+        if let Some(s) = self.segments.iter_mut().find(|s| s.id == *id) {
+            s.start.timestamp = s.start.timestamp.saturating_add(delta.timestamp);
+            s.start.price += delta.price;
+            s.end.timestamp = s.end.timestamp.saturating_add(delta.timestamp);
+            s.end.price += delta.price;
+            return true;
+        }
+        if let Some(t) = self.text_drawings.iter_mut().find(|t| t.id == *id) {
+            t.position.timestamp = t.position.timestamp.saturating_add(delta.timestamp);
+            t.position.price += delta.price;
+            return true;
+        }
+        if let Some(i) = self.image_drawings.iter_mut().find(|i| i.id == *id) {
+            i.position.timestamp = i.position.timestamp.saturating_add(delta.timestamp);
+            i.position.price += delta.price;
+            return true;
+        }
+        if let Some(l) = self.label_drawings.iter_mut().find(|l| l.id == *id) {
+            l.position.timestamp = l.position.timestamp.saturating_add(delta.timestamp);
+            l.position.price += delta.price;
+            return true;
+        }
+        if let Some(h) = self.horizontal_lines.iter_mut().find(|h| h.id == *id) {
+            h.price += delta.price;
+            return true;
+        }
+        if let Some(v) = self.vertical_lines.iter_mut().find(|v| v.id == *id) {
+            v.timestamp = v.timestamp.saturating_add(delta.timestamp);
+            return true;
+        }
+        if let Some(rect) = self.rectangles.iter_mut().find(|r| r.id == *id) {
+            rect.top_left.timestamp = rect.top_left.timestamp.saturating_add(delta.timestamp);
+            rect.top_left.price += delta.price;
+            rect.bottom_right.timestamp = rect.bottom_right.timestamp.saturating_add(delta.timestamp);
+            rect.bottom_right.price += delta.price;
+            return true;
+        }
+        if let Some(p) = self.paths.iter_mut().find(|p| p.id == *id) {
+            for pt in &mut p.points {
+                pt.timestamp = pt.timestamp.saturating_add(delta.timestamp);
+                pt.price += delta.price;
+            }
             return true;
         }
         false

@@ -5,6 +5,7 @@
 
 pub mod backend;
 pub mod commands;
+pub mod passes;
 pub mod context;
 pub mod coordinates;
 pub mod drawing;
@@ -16,6 +17,7 @@ pub mod series_renderer;
 
 pub use backend::RendererBackend;
 pub use commands::{DrawCommand, LineStyle};
+pub use passes::{PassTracker, RenderPass};
 pub use context::RenderContext;
 pub use coordinates::{CoordinatePipeline, ScreenPoint, WorldPoint};
 pub use drawing::{Drawing, DrawingBounds, HitResult};

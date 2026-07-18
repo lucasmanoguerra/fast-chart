@@ -26,6 +26,7 @@
 #[cfg(feature = "animation")]
 pub mod animation;
 pub mod app;
+pub mod builder;
 pub mod cache;
 pub mod input;
 pub mod ports;

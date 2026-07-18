@@ -98,6 +98,7 @@ impl ScissorRect {
 ///   Render RSI pane...
 /// Pop()                              → current = None
 /// ```
+#[derive(Debug)]
 pub struct ScissorManager {
     stack: Vec<ScissorRect>,
     current: Option<ScissorRect>,

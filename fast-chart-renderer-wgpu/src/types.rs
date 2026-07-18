@@ -1,5 +1,8 @@
 use bytemuck::{Pod, Zeroable};
 
+/// A single vertex sent to the GPU.
+///
+/// Contains a 2D position, RGBA color, and texture coordinate.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
 pub struct Vertex {
@@ -32,6 +35,10 @@ impl Vertex {
     };
 }
 
+/// Uniform data uploaded to the GPU each frame.
+///
+/// Provides the viewport resolution and an elapsed-time value for
+/// time-based shader effects.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
 pub struct Uniforms {

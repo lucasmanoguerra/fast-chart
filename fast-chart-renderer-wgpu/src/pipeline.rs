@@ -1,3 +1,8 @@
+/// Wrapper around a wgpu render pipeline.
+///
+/// Holds the compiled shader and pipeline configuration used to
+/// issue draw commands against the GPU.
+#[derive(Debug)]
 pub struct RenderPipeline {
     pipeline: Option<wgpu::RenderPipeline>,
 }

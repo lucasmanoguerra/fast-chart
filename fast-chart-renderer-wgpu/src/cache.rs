@@ -1,3 +1,8 @@
+/// A simple GPU resource cache with a fixed capacity.
+///
+/// Tracks resource slots that can be reused across frames to avoid
+/// repeated allocation of GPU buffers and textures.
+#[derive(Debug)]
 pub struct GpuCache {
     capacity: usize,
 }

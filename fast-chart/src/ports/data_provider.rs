@@ -4,6 +4,7 @@ use std::error::Error;
 use std::sync::mpsc::Receiver;
 
 /// An event emitted by a [`DataProvider`] when new market data arrives.
+#[derive(Debug)]
 pub enum DataEvent {
     BarClosed(Bar),
     TickUpdate(Tick),

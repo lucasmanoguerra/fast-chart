@@ -9,16 +9,22 @@ use super::backend::RendererBackend;
 /// A batch of draw commands for a specific pass.
 #[derive(Debug, Clone)]
 pub struct PassBatch {
+    /// The render pass these commands belong to.
     pub pass: RenderPass,
+    /// The draw commands in this batch, sorted by z-index.
     pub commands: Vec<DrawCommand>,
 }
 
 /// Rendering statistics for a frame.
 #[derive(Debug, Clone, Default)]
 pub struct FrameStats {
+    /// Total number of draw commands submitted.
     pub total_commands: usize,
+    /// Total number of batches after sorting.
     pub total_batches: usize,
+    /// Number of passes that executed.
     pub passes_executed: usize,
+    /// Number of passes skipped (empty).
     pub passes_skipped: usize,
 }
 

@@ -8,6 +8,8 @@ pub enum InteractionCommand {
     ResizePane { pane_index: usize, new_height: f64 },
 }
 
+/// Commands that control the viewport state of the chart.
+#[derive(Debug)]
 pub enum ViewportCommand {
     SetTimeRange { start: u64, end: u64 },
     SetValueRange { min: f64, max: f64 },

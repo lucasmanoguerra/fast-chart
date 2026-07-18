@@ -27,7 +27,7 @@ use crate::price_scale::PriceScale;
 /// vp.pan(100);
 /// assert!(vp.time_start > 0);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Viewport {
     pub time_start: u64,
     pub time_end: u64,

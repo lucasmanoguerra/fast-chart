@@ -1,5 +1,6 @@
 use std::fmt;
 
+/// Errors that can occur during chart data processing or rendering.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChartError {
     InvalidPriceData(String),

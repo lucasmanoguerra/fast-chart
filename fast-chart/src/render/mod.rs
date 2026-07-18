@@ -17,6 +17,7 @@ pub mod indicator_renderer;
 pub mod layers;
 pub mod pixel_perfect;
 pub mod series_renderer;
+pub mod session;
 
 pub use backend::RendererBackend;
 pub use commands::{DrawCommand, LineStyle};

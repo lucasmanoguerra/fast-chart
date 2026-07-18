@@ -6,6 +6,20 @@
 use crate::theme::Rgba;
 
 /// A trading session definition.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::render::session::Session;
+/// use fast_chart::theme::Rgba;
+///
+/// let session = Session::new("US PM", 13, 30, 20, 0);
+/// assert_eq!(session.name, "US PM");
+/// assert_eq!(session.duration_minutes(), 390);
+///
+/// assert!(session.contains_utc(15, 0));
+/// assert!(!session.contains_utc(21, 0));
+/// ```
 #[derive(Debug, Clone)]
 pub struct Session {
     /// Session name (e.g., "Regular", "Pre-Market", "After-Hours").
@@ -150,6 +164,25 @@ pub struct SessionLine {
 }
 
 /// Renderer for session lines.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::render::session::{SessionLineConfig, SessionLineRenderer, Session};
+/// use fast_chart::theme::Rgba;
+///
+/// let session = Session::new("Regular", 14, 30, 21, 0);
+/// let config = SessionLineConfig {
+///     sessions: vec![session],
+///     show_labels: false,
+///     ..Default::default()
+/// };
+/// let renderer = SessionLineRenderer::new(config);
+///
+/// let lines = renderer.render(0.0, 24.0, 0.0, 600.0, |h| h * 50.0);
+/// assert_eq!(lines.len(), 2);
+/// assert_eq!(lines[0].session_name, "Regular");
+/// ```
 pub struct SessionLineRenderer {
     config: SessionLineConfig,
 }

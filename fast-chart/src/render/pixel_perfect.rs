@@ -15,6 +15,24 @@ use crate::render::coordinates::ScreenPoint;
 /// keeps 1 px wide lines crisp.  For Retina / high-DPI displays the logical
 /// coordinate may already be scaled, so the same rule applies in **logical**
 /// (device-independent) pixels.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::render::pixel_perfect::PixelPerfect;
+///
+/// // Snap a value to the nearest pixel centre
+/// let snapped = 3.2_f64.snap();
+/// assert_eq!(snapped, 3.5);
+///
+/// // Sizes are rounded to whole pixels, not offset
+/// let size = 4.7_f64.snap_size();
+/// assert_eq!(size, 5.0);
+///
+/// // Floor and ceil for bounding box edges
+/// assert_eq!(4.2_f64.floor_pixel(), 4.0);
+/// assert_eq!(4.2_f64.ceil_pixel(), 5.0);
+/// ```
 pub trait PixelPerfect: Sized {
     /// Snap this value to the nearest pixel centre along one axis.
     fn snap(self) -> Self;
@@ -88,6 +106,18 @@ pub fn snap_point(p: ScreenPoint) -> ScreenPoint {
 /// Positions are snapped to pixel centres; sizes are rounded to whole pixels.
 /// The result is guaranteed to cover at least the same visual area (outward
 /// snapping: floor for origin, ceil for bottom-right corner).
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::render::pixel_perfect::pixel_perfect_rect;
+///
+/// let (x, y, w, h) = pixel_perfect_rect(3.2, 5.7, 10.3, 20.9);
+/// assert_eq!(x, 3.0);
+/// assert_eq!(y, 5.0);
+/// assert_eq!(w, 11.0);
+/// assert_eq!(h, 22.0);
+/// ```
 pub fn pixel_perfect_rect(
     x: f64,
     y: f64,
@@ -101,7 +131,24 @@ pub fn pixel_perfect_rect(
     (x1, y1, (x2 - x1).snap_size(), (y2 - y1).snap_size())
 }
 
-/// Ensure a 1 px wide line stays exactly 1 px wide after snapping.
+/// Ensure a line stays at least 1 px wide after snapping.
+///
+/// Both the start and the end of the line are snapped to pixel centres, and
+/// a guard prevents the two from collapsing into a single point.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::render::pixel_perfect::snap_line;
+///
+/// let (a, b) = snap_line(10.2, 50.7);
+/// assert_eq!(a, 10.5);
+/// assert_eq!(b, 50.5);
+///
+/// // Very short lines are kept to at least 1px
+/// let (c, d) = snap_line(10.2, 10.3);
+/// assert!(d - c >= 1.0);
+/// ```
 pub fn snap_line(start: f64, end: f64) -> (f64, f64) {
     let a = start.snap();
     let b = end.snap();

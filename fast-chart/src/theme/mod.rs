@@ -27,6 +27,21 @@ use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 // ---------------------------------------------------------------------------
 
 /// A named color as RGBA with channels in `[0.0, 1.0]`.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::theme::Rgba;
+///
+/// let opaque = Rgba::rgb(1.0, 0.0, 0.0);
+/// assert_eq!(opaque, Rgba(1.0, 0.0, 0.0, 1.0));
+///
+/// let transparent = Rgba::new(0.0, 1.0, 0.0, 0.5);
+/// assert_eq!(transparent.3, 0.5);
+///
+/// let from_hex = Rgba::from_hex(0xFF0000FF);
+/// assert!((from_hex.0 - 1.0).abs() < f64::EPSILON);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rgba(pub f64, pub f64, pub f64, pub f64);
 
@@ -150,6 +165,19 @@ pub enum ThemeToken {
 ///
 /// Colors can be configured at init (via builder or presets) and changed at
 /// runtime via [`set_color`](ChartTheme::set_color) for hot-swap.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::theme::{ChartTheme, ThemeToken, Rgba};
+///
+/// let mut dark = ChartTheme::dark();
+/// let light = ChartTheme::light();
+/// assert_ne!(dark.background, light.background);
+///
+/// dark.set_color(ThemeToken::Bullish, Rgba::rgb(0.0, 1.0, 0.0));
+/// assert_eq!(dark.get_color(ThemeToken::Bullish), Rgba::rgb(0.0, 1.0, 0.0));
+/// ```
 #[derive(Debug, Clone)]
 pub struct ChartTheme {
     // Background
@@ -430,6 +458,20 @@ impl ChartTheme {
 // ---------------------------------------------------------------------------
 
 /// Builder for custom themes — initial configuration.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::theme::{ChartThemeBuilder, ThemeToken, Rgba};
+///
+/// let theme = ChartThemeBuilder::new()
+///     .with("background", Rgba::rgb(0.1, 0.1, 0.1))
+///     .with_token(ThemeToken::Bullish, Rgba::rgb(0.0, 1.0, 0.0))
+///     .build();
+///
+/// assert_eq!(theme.background, Rgba::rgb(0.1, 0.1, 0.1));
+/// assert_eq!(theme.bullish, Rgba::rgb(0.0, 1.0, 0.0));
+/// ```
 pub struct ChartThemeBuilder {
     theme: ChartTheme,
     overrides: HashMap<ThemeToken, Rgba>,

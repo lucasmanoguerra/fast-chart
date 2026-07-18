@@ -28,6 +28,8 @@ pub mod animation;
 pub mod app;
 pub mod builder;
 pub mod cache;
+#[cfg(feature = "file-watcher")]
+pub mod config_watcher;
 pub mod input;
 pub mod ports;
 pub mod render;

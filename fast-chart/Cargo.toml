@@ -17,6 +17,7 @@ log = "0.4"
 bitflags = "2"
 smallvec = "1"
 num-traits = "0.2"
+toml = { version = "0.8", optional = true }
 
 [features]
 default = ["animation", "sessions"]
@@ -24,4 +25,4 @@ serde = ["dep:serde", "fast-chart-domain/serde"]
 animation = []
 sessions = []
 parallel = ["dep:rayon"]
-file-watcher = ["dep:notify"]
+file-watcher = ["dep:notify", "dep:toml"]

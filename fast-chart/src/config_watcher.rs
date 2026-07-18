@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn parse_hex_6() {
-        use crate::theme::Rgba;
+        use fc_types::color::Rgba;
         let c = parse_hex_color("#FF8800").unwrap();
         let expected = Rgba::new(1.0, 0x88 as f64 / 255.0, 0.0, 1.0);
         assert_eq!(c, expected);
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn parse_hex_8() {
-        use crate::theme::Rgba;
+        use fc_types::color::Rgba;
         let c = parse_hex_color("#FF880080").unwrap();
         let expected = Rgba::new(1.0, 0x88 as f64 / 255.0, 0.0, 0x80 as f64 / 255.0);
         assert_eq!(c, expected);
@@ -244,7 +244,7 @@ mod tests {
 
     #[test]
     fn parse_hex_no_hash() {
-        use crate::theme::Rgba;
+        use fc_types::color::Rgba;
         let c = parse_hex_color("00FF00").unwrap();
         let expected = Rgba::new(0.0, 1.0, 0.0, 1.0);
         assert_eq!(c, expected);
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn parse_config_full() {
-        use crate::theme::Rgba;
+        use fc_types::color::Rgba;
         let s = r##"
 [theme]
 background = "#111111"
@@ -276,7 +276,7 @@ text_font_size = 14.0
 
     #[test]
     fn parse_config_partial() {
-        use crate::theme::Rgba;
+        use fc_types::color::Rgba;
         let s = r##"
 [theme]
 background = "#000000"

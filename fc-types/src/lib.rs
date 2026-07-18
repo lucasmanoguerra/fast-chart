@@ -12,6 +12,7 @@
 // Internal modules
 // ---------------------------------------------------------------------------
 pub mod bar;
+pub mod color;
 pub mod crosshair;
 pub mod drawing;
 pub mod error;
@@ -35,6 +36,7 @@ pub mod viewport;
 
 // Core data types
 pub use bar::Bar;
+pub use color::Rgba;
 pub use tick::Tick;
 pub use viewport::Viewport;
 

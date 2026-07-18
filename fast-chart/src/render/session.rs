@@ -3,7 +3,7 @@
 //! Sessions define when a market is open. Session lines render as vertical
 //! lines on the chart at the configured times.
 
-use crate::theme::Rgba;
+use fc_types::color::Rgba;
 
 /// A trading session definition.
 ///

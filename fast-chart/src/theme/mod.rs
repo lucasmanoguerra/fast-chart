@@ -22,58 +22,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-// ---------------------------------------------------------------------------
-// Rgba
-// ---------------------------------------------------------------------------
-
-/// A named color as RGBA with channels in `[0.0, 1.0]`.
-///
-/// # Examples
-///
-/// ```
-/// use fast_chart::theme::Rgba;
-///
-/// let opaque = Rgba::rgb(1.0, 0.0, 0.0);
-/// assert_eq!(opaque, Rgba(1.0, 0.0, 0.0, 1.0));
-///
-/// let transparent = Rgba::new(0.0, 1.0, 0.0, 0.5);
-/// assert_eq!(transparent.3, 0.5);
-///
-/// let from_hex = Rgba::from_hex(0xFF0000FF);
-/// assert!((from_hex.0 - 1.0).abs() < f64::EPSILON);
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Rgba(pub f64, pub f64, pub f64, pub f64);
-
-impl Rgba {
-    /// Create a new RGBA color.
-    #[inline]
-    pub const fn new(r: f64, g: f64, b: f64, a: f64) -> Self {
-        Self(r, g, b, a)
-    }
-
-    /// Fully opaque convenience constructor.
-    #[inline]
-    pub const fn rgb(r: f64, g: f64, b: f64) -> Self {
-        Self(r, g, b, 1.0)
-    }
-
-    /// From `0xRRGGBBAA` hex integer.
-    #[inline]
-    pub fn from_hex(hex: u32) -> Self {
-        let r = ((hex >> 24) & 0xFF) as f64 / 255.0;
-        let g = ((hex >> 16) & 0xFF) as f64 / 255.0;
-        let b = ((hex >> 8) & 0xFF) as f64 / 255.0;
-        let a = (hex & 0xFF) as f64 / 255.0;
-        Self(r, g, b, a)
-    }
-}
-
-impl Default for Rgba {
-    fn default() -> Self {
-        Self(0.0, 0.0, 0.0, 1.0)
-    }
-}
+// Re-export Rgba from fc-types (canonical location)
+pub use fc_types::color::Rgba;
 
 // ---------------------------------------------------------------------------
 // LineStyle

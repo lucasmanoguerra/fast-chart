@@ -10,11 +10,11 @@ use fast_chart::app::pane::events::PaneEventBus;
 use fast_chart::render::series_renderer::Rect;
 use fast_chart::ports::data_provider::{DataEvent, DataProvider};
 use fast_chart::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::kinetic::KineticScroll;
-use fast_chart_domain::marker::{Marker, MarkerPosition, MarkerSet, MarkerShape};
-use fast_chart_domain::price_line::{LineStyle, PriceLine, PriceLineId, PriceLineSet};
-use fast_chart_domain::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScaleId};
+use fc_types::bar::Bar;
+use fc_types::kinetic::KineticScroll;
+use fc_types::marker::{Marker, MarkerPosition, MarkerSet, MarkerShape};
+use fc_types::price_line::{LineStyle, PriceLine, PriceLineId, PriceLineSet};
+use fc_types::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScaleId};
 use std::error::Error;
 use std::sync::{mpsc, Arc, Mutex};
 
@@ -167,10 +167,10 @@ fn markers_remove_by_id() {
     markers.add(Marker::new("a", 100, 100.0));
     markers.add(Marker::new("b", 200, 110.0));
 
-    assert!(markers.remove(&fast_chart_domain::marker::MarkerId("a".to_string())));
+    assert!(markers.remove(&fc_types::marker::MarkerId("a".to_string())));
     assert_eq!(markers.len(), 1);
-    assert!(markers.get(&fast_chart_domain::marker::MarkerId("a".to_string())).is_none());
-    assert!(markers.get(&fast_chart_domain::marker::MarkerId("b".to_string())).is_some());
+    assert!(markers.get(&fc_types::marker::MarkerId("a".to_string())).is_none());
+    assert!(markers.get(&fc_types::marker::MarkerId("b".to_string())).is_some());
 }
 
 #[test]
@@ -259,7 +259,7 @@ fn price_lines_builder_chaining() {
         .with_width(2.5)
         .with_style(LineStyle::Dotted)
         .with_label("Entry")
-        .with_label_position(fast_chart_domain::price_line::LabelPosition::Center);
+        .with_label_position(fc_types::price_line::LabelPosition::Center);
 
     assert_eq!(line.scale_id, PriceScaleId::Left);
     assert_eq!(line.width, 2.5);
@@ -730,8 +730,8 @@ fn full_pipeline_kinetic_then_render() {
 // Phase 2 Integration Tests: Multi-pane, divider, viewport sync, scroll, fit
 // ===========================================================================
 
-use fast_chart_domain::price_scale::{PriceScale, PriceScaleId as PSId, PriceScaleOptions};
-use fast_chart_domain::scale::{LinearScale, TimeScale};
+use fc_types::price_scale::{PriceScale, PriceScaleId as PSId, PriceScaleOptions};
+use fc_types::scale::{LinearScale, TimeScale};
 
 // --- Multi-pane layout ---
 
@@ -920,7 +920,7 @@ fn price_scale_locked_no_autofit_integration() {
         PSId::Left,
         PriceScaleOptions {
             auto_scale: true,
-            mode: fast_chart_domain::price_scale::PriceScaleMode::Locked,
+            mode: fc_types::price_scale::PriceScaleMode::Locked,
             ..Default::default()
         },
     );
@@ -964,7 +964,7 @@ use fast_chart::series::{
     RangeSeries, StepLineSeries, VolumeSeries,
 };
 use fast_chart::render::series_renderer::SeriesRenderer as _;
-use fast_chart_domain::Indicator as _;
+use fc_types::Indicator as _;
 
 // --- StepLineSeries ---
 
@@ -1161,12 +1161,12 @@ fn range_custom_colors() {
 
 #[test]
 fn seriestype_all_count_matches_impl_count() {
-    assert_eq!(fast_chart_domain::SeriesType::ALL.len(), 10);
+    assert_eq!(fc_types::SeriesType::ALL.len(), 10);
 }
 
 #[test]
 fn seriestype_all_display_names_are_unique() {
-    let names: Vec<_> = fast_chart_domain::SeriesType::ALL
+    let names: Vec<_> = fc_types::SeriesType::ALL
         .iter()
         .map(|s| s.display_name())
         .collect();
@@ -1240,29 +1240,29 @@ fn indicator_renderer_separate_integration() {
 #[test]
 fn overlay_mode_default_overlay_on_pane_0() {
     struct SMA;
-    impl fast_chart_domain::Indicator<100> for SMA {
-        fn calculate(&self, _: &fast_chart_domain::series::TimeSeries<fast_chart_domain::Bar, 100>) -> fast_chart_domain::series::TimeSeries<f64, 100> {
-            fast_chart_domain::series::TimeSeries::new()
+    impl fc_types::Indicator<100> for SMA {
+        fn calculate(&self, _: &fc_types::series::TimeSeries<fc_types::Bar, 100>) -> fc_types::series::TimeSeries<f64, 100> {
+            fc_types::series::TimeSeries::new()
         }
         fn name(&self) -> &str { "SMA" }
     }
     let sma = SMA;
-    assert_eq!(sma.overlay_mode(), fast_chart_domain::indicator::OverlayMode::OverlayOnPane(0));
-    assert_eq!(sma.preferred_scale(), fast_chart_domain::price_scale::PriceScaleMode::Normal);
+    assert_eq!(sma.overlay_mode(), fc_types::indicator::OverlayMode::OverlayOnPane(0));
+    assert_eq!(sma.preferred_scale(), fc_types::price_scale::PriceScaleMode::Normal);
 }
 
 #[test]
 fn overlay_mode_separate_pane_integration() {
     struct RSI;
-    impl fast_chart_domain::Indicator<100> for RSI {
-        fn calculate(&self, _: &fast_chart_domain::series::TimeSeries<fast_chart_domain::Bar, 100>) -> fast_chart_domain::series::TimeSeries<f64, 100> {
-            fast_chart_domain::series::TimeSeries::new()
+    impl fc_types::Indicator<100> for RSI {
+        fn calculate(&self, _: &fc_types::series::TimeSeries<fc_types::Bar, 100>) -> fc_types::series::TimeSeries<f64, 100> {
+            fc_types::series::TimeSeries::new()
         }
         fn name(&self) -> &str { "RSI" }
-        fn overlay_mode(&self) -> fast_chart_domain::indicator::OverlayMode {
-            fast_chart_domain::indicator::OverlayMode::SeparatePane
+        fn overlay_mode(&self) -> fc_types::indicator::OverlayMode {
+            fc_types::indicator::OverlayMode::SeparatePane
         }
     }
     let rsi = RSI;
-    assert_eq!(rsi.overlay_mode(), fast_chart_domain::indicator::OverlayMode::SeparatePane);
+    assert_eq!(rsi.overlay_mode(), fc_types::indicator::OverlayMode::SeparatePane);
 }

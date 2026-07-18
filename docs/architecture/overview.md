@@ -14,7 +14,7 @@ Rust's safety, performance, and extensibility guarantees.
 ## Crate Hierarchy
 
 ```
-fast-chart-domain          Pure types, zero dependencies
+fc-types          Pure types, zero dependencies
                            Bar, Tick, Viewport, LinearScale, TimeScale,
                            Crosshair, PriceScale, Marker, Drawing tools,
                            Indicator trait + 16 implementations, Error types
@@ -25,19 +25,19 @@ fast-chart                 Library crate — chart logic, rendering abstractions
                            DrawCommand, SeriesRenderer, CoordinatePipeline,
                            CacheSystem, ThemeEngine, InputEngine
 
-fast-chart-renderer-wgpu   Optional GPU renderer (depends on wgpu)
+fc-renderer-wgpu   Optional GPU renderer (depends on wgpu)
                            WgpuBackend: implements RendererBackend trait
                            Sub-renderers for each series type
 
-fast-chart-examples        Example applications (winit + wgpu)
+fc-examples        Example applications (winit + wgpu)
                            Simulated data provider, GPU renderer, input handler
 ```
 
-**Dependency direction**: `fast-chart-domain` ← `fast-chart` ← `fast-chart-renderer-wgpu`
-← `fast-chart-examples`
+**Dependency direction**: `fc-types` ← `fast-chart` ← `fc-renderer-wgpu`
+← `fc-examples`
 
 The core library crate (`fast-chart`) has zero GPU dependencies — only depends
-on `fast-chart-domain`.
+on `fc-types`.
 
 ---
 
@@ -45,7 +45,7 @@ on `fast-chart-domain`.
 
 ```
                     ┌─────────────────────────────┐
-                    │      fast-chart-domain       │
+                    │      fc-types       │
                     │   (Pure types, zero deps)    │
                     └──────────────┬──────────────┘
                                    │

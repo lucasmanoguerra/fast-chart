@@ -1,12 +1,12 @@
 use crate::ports::data_provider::{DataEvent, DataProvider};
 use crate::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::crosshair::Crosshair;
-use fast_chart_domain::invalidation::{InvalidationLevel, InvalidationMask};
-use fast_chart_domain::kinetic::KineticScroll;
-use fast_chart_domain::series::TimeSeries;
-use fast_chart_domain::series_type::SeriesType;
-use fast_chart_domain::viewport::Viewport;
+use fc_types::bar::Bar;
+use fc_types::crosshair::Crosshair;
+use fc_types::invalidation::{InvalidationLevel, InvalidationMask};
+use fc_types::kinetic::KineticScroll;
+use fc_types::series::TimeSeries;
+use fc_types::series_type::SeriesType;
+use fc_types::viewport::Viewport;
 
 const CHART_CAPACITY: usize = 100_000;
 

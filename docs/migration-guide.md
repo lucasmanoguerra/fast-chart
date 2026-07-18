@@ -22,11 +22,11 @@ dependency. Your application owns the window, event loop, and GPU surface.
 
 | Before | After |
 |--------|-------|
-| Single `fast-chart-app` crate | `fast-chart-domain` + `fast-chart` |
-| Domain types mixed with app logic | Domain types isolated in `fast-chart-domain` |
+| Single `fast-chart-app` crate | `fc-types` + `fast-chart` |
+| Domain types mixed with app logic | Domain types isolated in `fc-types` |
 
-**Action**: Import domain types from `fast-chart` (re-exports `fast-chart-domain`).
-Do not depend on `fast-chart-domain` directly unless building a custom renderer.
+**Action**: Import domain types from `fast-chart` (re-exports `fc-types`).
+Do not depend on `fc-types` directly unless building a custom renderer.
 
 ## Phase 1: Core Abstractions
 
@@ -49,7 +49,7 @@ pub trait RendererBackend: Send + Sync {
 ```
 
 **Action**: Replace direct wgpu calls with `RendererBackend` implementations.
-The `WgpuBackend` in `fast-chart-renderer-wgpu` is the reference implementation.
+The `WgpuBackend` in `fc-renderer-wgpu` is the reference implementation.
 
 ### DrawCommand Enum
 

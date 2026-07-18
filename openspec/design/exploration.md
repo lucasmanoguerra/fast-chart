@@ -296,7 +296,7 @@ Each port trait gets one or more adapter implementations:
 - `adapters/` depends on everything (the outer ring that violates DIP)
 - In the Cargo.toml: domain as a path dependency if using workspace, or careful `pub use` re-exports in a single crate
 
-**CI enforcement:** `cargo check --package fast-chart-domain` must compile with zero GPU/async deps.
+**CI enforcement:** `cargo check --package fc-types` must compile with zero GPU/async deps.
 
 ---
 
@@ -606,7 +606,7 @@ When the user scroll-zooms: only the uniform buffer is updated via `queue.write_
 | LTO effectiveness | Full crate LTO, better optimization | Less aggressive cross-crate inlining |
 | Dependency management | One `Cargo.toml` | Each crate has its own, some duplication |
 | Boundary enforcement | Module visibility only (can be bypassed) | Crate-level `pub use` gating |
-| Test isolation | `#[cfg(test)]` modules | `cargo test -p fast-chart-domain` |
+| Test isolation | `#[cfg(test)]` modules | `cargo test -p fc-types` |
 | Build on change | Rebuilds entire project | Only changed crates |
 | First-build time | ~same | ~same (all crates built) |
 | Incremental | Rebuilds more | Rebuilds less |
@@ -617,7 +617,7 @@ When the user scroll-zooms: only the uniform buffer is updated via `queue.write_
 fast-chart/
 ├── Cargo.toml                  # workspace root
 ├── openspec/
-├── fast-chart-domain/          # Zero-dependency pure domain
+├── fc-types/          # Zero-dependency pure domain
 │   ├── Cargo.toml
 │   └── src/
 │       ├── lib.rs
@@ -655,7 +655,7 @@ fast-chart/
 ```
 
 **Rationale:**
-- `fast-chart-domain` compiles in < 1s, zero deps — devs iterate on data structures instantly
+- `fc-types` compiles in < 1s, zero deps — devs iterate on data structures instantly
 - `fast-chart-core` compiles without GPU deps — continuous integration in CI without GPU
 - `fast-chart-app` is the heavy compilation target (wgpu, glyphon, winit, tokio) — only rebuilt when adapters change
 - Cross-crate boundary enforcement means `domain` types cannot accidentally import `wgpu`
@@ -682,7 +682,7 @@ shaders/
 ### 6.3 Module Dependency Graph
 
 ```
-fast-chart-domain
+fc-types
     ↑ (no deps)
     │
 fast-chart-core

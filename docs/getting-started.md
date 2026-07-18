@@ -12,16 +12,16 @@ safety, performance, and extensibility guarantees.
 ## Architecture in 30 Seconds
 
 ```
-fast-chart-domain     Pure types, zero dependencies
+fc-types     Pure types, zero dependencies
                       Bar, Tick, Viewport, TimeSeries, Indicators, Drawings
 
 fast-chart            Application layer + rendering abstractions
                       ChartController, Pane, LayoutManager, DrawCommand, Ports
 
-fast-chart-renderer-wgpu   Optional wgpu backend (implements RendererBackend)
+fc-renderer-wgpu   Optional wgpu backend (implements RendererBackend)
 ```
 
-**Dependency direction**: `fast-chart-domain` ← `fast-chart` ← `fast-chart-renderer-wgpu`
+**Dependency direction**: `fc-types` ← `fast-chart` ← `fc-renderer-wgpu`
 
 The core library crate has zero GPU dependencies.
 
@@ -32,7 +32,7 @@ The core library crate has zero GPU dependencies.
 fast-chart = { path = "../fast-chart" }
 
 # Optional: wgpu renderer
-fast-chart-renderer-wgpu = { path = "../fast-chart-renderer-wgpu" }
+fc-renderer-wgpu = { path = "../fc-renderer-wgpu" }
 ```
 
 Feature flags:
@@ -306,7 +306,7 @@ impl SeriesRenderer for MyCustomSeries {
 If using the wgpu backend:
 
 ```rust
-use fast_chart_renderer_wgpu::{WgpuBackend, WgpuRenderer};
+use fc_renderer_wgpu::{WgpuBackend, WgpuRenderer};
 
 // Initialize wgpu
 let instance = wgpu::Instance::default();

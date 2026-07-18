@@ -1,6 +1,6 @@
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::scale::{LinearScale, TimeScale};
-use fast_chart_domain::viewport::Viewport;
+use fc_types::bar::Bar;
+use fc_types::scale::{LinearScale, TimeScale};
+use fc_types::viewport::Viewport;
 
 pub struct ViewportManager {
     min_zoom: f64,

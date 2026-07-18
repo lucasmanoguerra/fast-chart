@@ -9,7 +9,7 @@ keywords = ["trading", "chart", "finance", "ohlc", "indicators"]
 categories = ["finance", "gui", "rendering"]
 
 [dependencies]
-fast-chart-domain = { path = "../fast-chart-domain" }
+fc-types = { path = "../fc-types" }
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1.10", optional = true }
 notify = { version = "6.1", optional = true }
@@ -21,7 +21,7 @@ toml = { version = "0.8", optional = true }
 
 [features]
 default = ["animation", "sessions"]
-serde = ["dep:serde", "fast-chart-domain/serde"]
+serde = ["dep:serde", "fc-types/serde"]
 animation = []
 sessions = []
 parallel = ["dep:rayon"]

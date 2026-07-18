@@ -3,7 +3,7 @@
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::scale::LinearScale;
+/// use fc_types::scale::LinearScale;
 ///
 /// let scale = LinearScale { min: 90.0, max: 120.0, height: 300.0 };
 ///
@@ -48,7 +48,7 @@ impl LinearScale {
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::scale::TimeScale;
+/// use fc_types::scale::TimeScale;
 ///
 /// let ts = TimeScale { start: 0, end: 2000, width: 800.0, bar_spacing: 8.0, right_offset: 0.0 };
 ///

@@ -66,14 +66,14 @@ Each carries a `z_index` for render ordering.
 
 | Feature | Default | Description |
 |---------|---------|-------------|
-| `serde` | off | Propagates to `fast-chart-domain/serde` |
+| `serde` | off | Propagates to `fc-types/serde` |
 
 ---
 
 ## Gateway Pattern
 
 `fast-chart` re-exports all domain types so consumers never need to import
-`fast-chart-domain` directly:
+`fc-types` directly:
 
 ```rust
 // This is all you need:

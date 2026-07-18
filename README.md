@@ -6,7 +6,7 @@
 
 High-performance · Low-latency · Hexagonal Architecture · 7 Indicators · 8-Layer GPU Pipeline
 
-[![Crates.io](https://img.shields.io/crates/v/fast-chart-domain.svg)](https://crates.io/crates/fast-chart-domain)
+[![Crates.io](https://img.shields.io/crates/v/fc-types.svg)](https://crates.io/crates/fc-types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-1.75+-orange?logo=rust)](https://rust-lang.org)
 [![Tests](https://img.shields.io/badge/tests-324%20passing-brightgreen)]()
@@ -47,7 +47,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-fast-chart-domain = "0.1"
+fc-types = "0.1"
 fast-chart-core = "0.1"
 ```
 
@@ -62,7 +62,7 @@ cargo run --release -p fast-chart-app
 ## Quick Start
 
 ```rust
-use fast_chart_domain::bar::Bar;
+use fc_types::bar::Bar;
 use fast_chart_core::app::chart_controller::ChartController;
 
 // Create a chart controller with your data provider
@@ -90,7 +90,7 @@ println!("Bars loaded: {}", state.time_series.len());
 │  (app: controller, layout, pane, viewport)      │
 │  (ports: DataProvider, InteractionHandler)       │
 ├─────────────────────────────────────────────────┤
-│                fast-chart-domain                 │
+│                fc-types                 │
 │  (Bar, Viewport, Crosshair, Indicators, etc.)   │
 └─────────────────────────────────────────────────┘
 ```
@@ -132,7 +132,7 @@ println!("Bars loaded: {}", state.time_series.len());
 
 ```
 fast-chart/
-├── fast-chart-domain/        # Zero-dependency domain types
+├── fc-types/        # Zero-dependency domain types
 │   └── src/
 │       ├── bar.rs            # OHLCV bar
 │       ├── viewport.rs       # Viewport (time + value range)
@@ -184,7 +184,7 @@ fast-chart/
 cargo test --workspace
 
 # Run domain tests only
-cargo test -p fast-chart-domain
+cargo test -p fc-types
 
 # Run core tests only
 cargo test -p fast-chart-core

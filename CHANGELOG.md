@@ -113,6 +113,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PassBatch` fields were missing doc comments (added)
 - `FrameStats` fields were missing doc comments (added)
 
+#### Phase 9 — Crate Renames (PR 9.1)
+- Renamed `fast-chart-domain` → `fc-types` (directory and crate name)
+- Renamed `fast-chart-renderer-wgpu` → `fc-renderer-wgpu` (directory and crate name)
+- Renamed `fast-chart-examples` → `fc-examples` (directory and crate name)
+- Updated all `use` statements, Cargo.toml dependencies, CI workflows, and documentation to reflect new names
+- `fast-chart` crate remains unchanged (will become `fc-core` in Phase 2)
+
 ### Known Issues
-- Three identical `LineStyle` enums exist across `fast-chart-domain::price_line`, `fast-chart::render::commands`, and `fast-chart::theme`. These should be unified in a future refactor.
+- Three identical `LineStyle` enums exist across `fc-types::price_line`, `fast-chart::render::commands`, and `fast-chart::theme`. These should be unified in a future refactor.
 - `ChartRenderer` trait has only one method (`resize`). It may need additional methods as the rendering pipeline matures.

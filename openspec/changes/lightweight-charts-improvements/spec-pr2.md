@@ -235,8 +235,8 @@ The price mapping functions MUST have unit tests covering: midpoint, boundaries,
 
 ## Testing Strategy
 
-- Unit tests in `fast-chart-domain/src/price_scale.rs` for `PriceScale`, `PriceScaleOptions`, `DefaultPriceFormatter`
-- Unit tests in `fast-chart-domain/src/viewport.rs` for `price_to_y` / `y_to_price`
+- Unit tests in `fc-types/src/price_scale.rs` for `PriceScale`, `PriceScaleOptions`, `DefaultPriceFormatter`
+- Unit tests in `fc-types/src/viewport.rs` for `price_to_y` / `y_to_price`
 - Property tests: roundtrip `y_to_price(price_to_y(p)) ≈ p` for random prices within scale range
 - Integration: verify `GpuRenderer` uses per-series scale for axis labels
 
@@ -244,9 +244,9 @@ The price mapping functions MUST have unit tests covering: midpoint, boundaries,
 
 | File | Change |
 |------|--------|
-| `fast-chart-domain/src/price_scale.rs` | **New** — `PriceScaleId`, `PriceScaleMode`, `PriceScaleOptions`, `PriceScale`, `PriceFormatter`, `DefaultPriceFormatter` + tests |
-| `fast-chart-domain/src/viewport.rs` | Add `price_to_y()`, `y_to_price()` methods that accept a `PriceScale` reference |
-| `fast-chart-domain/src/scale.rs` | No structural changes — `LinearScale` remains for internal use; `PriceScale` is the public API |
+| `fc-types/src/price_scale.rs` | **New** — `PriceScaleId`, `PriceScaleMode`, `PriceScaleOptions`, `PriceScale`, `PriceFormatter`, `DefaultPriceFormatter` + tests |
+| `fc-types/src/viewport.rs` | Add `price_to_y()`, `y_to_price()` methods that accept a `PriceScale` reference |
+| `fc-types/src/scale.rs` | No structural changes — `LinearScale` remains for internal use; `PriceScale` is the public API |
 | `fast-chart-core/src/app/pane.rs` | Add `price_scales: Vec<PriceScale>`, `ensure_price_scales()`, lookup methods |
 | `fast-chart-core/src/app/pane.rs` | `SeriesRef` gains `price_scale_id: PriceScaleId` field with Left default |
 | `fast-chart-app/src/adapters/gpu_renderer.rs` | Use `PriceScale` for coordinate mapping in `update_line_from_vec`, `screen_y_to_price`, and axis label generation |

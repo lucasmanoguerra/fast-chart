@@ -38,7 +38,7 @@ impl Default for MarkerShape {
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::{Marker, MarkerShape, MarkerPosition};
+/// use fc_types::{Marker, MarkerShape, MarkerPosition};
 ///
 /// let marker = Marker::new("buy-1", 1000, 105.0)
 ///     .with_shape(MarkerShape::ArrowUp)

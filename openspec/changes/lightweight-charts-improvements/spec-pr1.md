@@ -179,7 +179,7 @@ The `InvalidationMask` module MUST include unit tests covering: default state, m
 
 ## Testing Strategy
 
-- Pure unit tests in `fast-chart-domain/src/invalidation.rs` (or `fast-chart-core`)
+- Pure unit tests in `fc-types/src/invalidation.rs` (or `fast-chart-core`)
 - Property tests: for any sequence of `mark()` calls, `level()` equals max of all marked levels
 - Integration: verify `GpuRenderer::render()` dispatches correct sub-renderers based on mask
 
@@ -187,6 +187,6 @@ The `InvalidationMask` module MUST include unit tests covering: default state, m
 
 | File | Change |
 |------|--------|
-| `fast-chart-domain/src/invalidation.rs` | **New** — `InvalidationLevel`, `PaneBitmask`, `InvalidationMask` + tests |
+| `fc-types/src/invalidation.rs` | **New** — `InvalidationLevel`, `PaneBitmask`, `InvalidationMask` + tests |
 | `fast-chart-core/src/app/chart_controller.rs` | Replace `needs_redraw: bool` with `invalidation: InvalidationMask` |
 | `fast-chart-app/src/adapters/gpu_renderer.rs` | Replace 4 `needs_*` bools with `InvalidationMask`; update all call sites |

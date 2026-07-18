@@ -1,6 +1,6 @@
 //! Integration tests for the render pipeline.
 //!
-//! Tests the public API surface of `fast-chart-renderer-wgpu` and
+//! Tests the public API surface of `fc-renderer-wgpu` and
 //! `fast-chart` render components working together: pipeline orchestration,
 //! dirty-region tracking, scissor clipping, cache, pixel-perfect alignment,
 //! vertex generation, and series renderers.
@@ -15,10 +15,10 @@ use fast_chart::render::pixel_perfect::{
 };
 use fast_chart::render::series_renderer::Rect;
 use fast_chart::render::coordinates::ScreenPoint;
-use fast_chart_renderer_wgpu::cache::GpuCache;
-use fast_chart_renderer_wgpu::scissor::{ScissorManager, ScissorRect};
-use fast_chart_renderer_wgpu::types::Vertex;
-use fast_chart_renderer_wgpu::vertex_gen;
+use fc_renderer_wgpu::cache::GpuCache;
+use fc_renderer_wgpu::scissor::{ScissorManager, ScissorRect};
+use fc_renderer_wgpu::types::Vertex;
+use fc_renderer_wgpu::vertex_gen;
 
 // ---------------------------------------------------------------------------
 // Recording backend — captures execute calls for assertion
@@ -379,8 +379,8 @@ fn full_chart_render_flow() {
 
 #[test]
 fn series_renderer_commands_to_pipeline() {
-    use fast_chart_renderer_wgpu::renderers::candle::{CandleRenderer, DataPoint as CandleData};
-    use fast_chart_renderer_wgpu::renderers::line::{LineRenderer, DataPoint as LineData};
+    use fc_renderer_wgpu::renderers::candle::{CandleRenderer, DataPoint as CandleData};
+    use fc_renderer_wgpu::renderers::line::{LineRenderer, DataPoint as LineData};
 
     // Generate candle commands.
     let candle_renderer = CandleRenderer::new([1.0; 4], 8.0);

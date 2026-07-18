@@ -9,7 +9,7 @@ use crate::error::ChartError;
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::Bar;
+/// use fc_types::Bar;
 ///
 /// let bar = Bar::new(1000, 100.0, 105.0, 99.0, 102.0, 5000).unwrap();
 /// assert_eq!(bar.open, 100.0);

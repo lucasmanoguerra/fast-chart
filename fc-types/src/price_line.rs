@@ -5,8 +5,8 @@ use crate::price_scale::PriceScaleId;
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::{PriceLine, LineStyle};
-/// use fast_chart_domain::price_scale::PriceScaleId;
+/// use fc_types::{PriceLine, LineStyle};
+/// use fc_types::price_scale::PriceScaleId;
 ///
 /// let line = PriceLine::new("entry", 150.0)
 ///     .with_color([1.0, 0.0, 0.0, 1.0])

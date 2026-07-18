@@ -1,5 +1,5 @@
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::tick::Tick;
+use fc_types::bar::Bar;
+use fc_types::tick::Tick;
 use std::error::Error;
 use std::sync::mpsc::Receiver;
 

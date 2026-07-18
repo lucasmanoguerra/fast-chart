@@ -7,7 +7,7 @@
 //! adapters through well-defined port traits.
 //!
 //! `fast-chart` is the single gateway to domain types — the app
-//! crate should never import `fast-chart-domain` directly.
+//! crate should never import `fc-types` directly.
 //!
 //! ```rust
 //! use fast_chart::{
@@ -38,9 +38,9 @@ pub mod theme;
 
 // ---------------------------------------------------------------------------
 // Domain re-exports (gateway pattern)
-// App should never need to import fast-chart-domain directly
+// App should never need to import fc-types directly
 // ---------------------------------------------------------------------------
-pub use fast_chart_domain::{
+pub use fc_types::{
     // Core data types
     Bar, Tick, Viewport,
     // Series
@@ -68,10 +68,10 @@ pub use fast_chart_domain::{
     ChartError,
 };
 
-pub use fast_chart_domain::indicators::{Adx, Atr, Bollinger, Cci, Ema, HeikinAshi, Ichimoku, Kagi, Macd, ParabolicSar, Renko, Rsi, Sma, Stochastic, Supertrend, Vwap, WilliamsR};
+pub use fc_types::indicators::{Adx, Atr, Bollinger, Cci, Ema, HeikinAshi, Ichimoku, Kagi, Macd, ParabolicSar, Renko, Rsi, Sma, Stochastic, Supertrend, Vwap, WilliamsR};
 
 // Drawing types
-pub use fast_chart_domain::drawing::{
+pub use fc_types::drawing::{
     Arrow, ChartPoint, DrawingId, Ellipse, FibonacciExtension, FibonacciRetracement,
     HorizontalLine, ImageDrawing, LabelDrawing, Path, Pitchfork, Rectangle, Segment, TextDrawing, TrendLine, VerticalLine,
 };

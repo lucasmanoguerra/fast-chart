@@ -1,5 +1,5 @@
 [package]
-name = "fast-chart-domain"
+name = "fc-types"
 version = "0.1.0"
 edition = "2021"
 description = "Pure domain types for the fast-chart trading library"

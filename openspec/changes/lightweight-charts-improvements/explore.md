@@ -4,7 +4,7 @@
 
 The fast-chart project has a solid hexagonal architecture with three crates:
 
-- **fast-chart-domain**: Pure domain types — `Bar`, `Crosshair`, `Viewport`, `LinearScale`, `TimeScale`, `SeriesType` enum (Candle/Bar/Line/Area/Baseline), `TimeSeries<T,N>` ring buffer, `Indicator` trait.
+- **fc-types**: Pure domain types — `Bar`, `Crosshair`, `Viewport`, `LinearScale`, `TimeScale`, `SeriesType` enum (Candle/Bar/Line/Area/Baseline), `TimeSeries<T,N>` ring buffer, `Indicator` trait.
 - **fast-chart-core**: Application orchestration — `ChartController` (tick loop + input routing), `Pane` (viewport + series refs), `LayoutManager` (vertical pane stack), `ViewportManager` (zoom/pan/auto-fit), `IndicatorRegistry`. Ports: `ChartRenderer`, `DataProvider`, `InteractionHandler`.
 - **fast-chart-app**: Adapters — `GpuRenderer` (wgpu), sub-renderers (CandleRenderer, LineRenderer, GridRenderer, CrosshairRenderer, TextRenderer), `SimulatedDataProvider`, `WinitInteractionHandler`.
 
@@ -32,8 +32,8 @@ The fast-chart project has a solid hexagonal architecture with three crates:
 **Gap**: No concept of Left/Right/Overlay price scales. Each pane gets exactly one auto-scaled y-axis. No formatter abstraction. No way to attach a series to a specific price scale.
 
 **Files affected**:
-- `fast-chart-domain/src/scale.rs` — new `PriceScaleId`, `PriceScaleConfig`
-- `fast-chart-domain/src/viewport.rs` — `Viewport` holds `Vec<PriceScale>` instead of scalar min/max
+- `fc-types/src/scale.rs` — new `PriceScaleId`, `PriceScaleConfig`
+- `fc-types/src/viewport.rs` — `Viewport` holds `Vec<PriceScale>` instead of scalar min/max
 - `fast-chart-core/src/app/pane.rs` — `Pane` holds price scale references
 - `fast-chart-core/src/app/viewport_management.rs` — auto-fit per price scale
 - `fast-chart-app/src/adapters/gpu_renderer.rs` — render multiple y-axes
@@ -56,7 +56,7 @@ The fast-chart project has a solid hexagonal architecture with three crates:
 **Gap**: Crosshair price snaps to arbitrary interpolated price, not to nearest bar's O/H/L/C. No magnet mode.
 
 **Files affected**:
-- `fast-chart-domain/src/crosshair.rs` — magnet snap logic
+- `fc-types/src/crosshair.rs` — magnet snap logic
 - `fast-chart-core/src/app/chart_controller.rs` — magnet state
 - `fast-chart-core/src/ports/interaction.rs` — magnet toggle command
 
@@ -78,7 +78,7 @@ The fast-chart project has a solid hexagonal architecture with three crates:
 **Current**: No horizontal line primitive. Price lines would be new domain objects rendered as thin quads.
 
 **Files affected**:
-- New: `fast-chart-domain/src/price_line.rs` — domain type
+- New: `fc-types/src/price_line.rs` — domain type
 - New: `fast-chart-app/src/adapters/rendering/price_line_renderer.rs`
 - `fast-chart-core/src/app/pane.rs` — price lines per pane
 
@@ -87,7 +87,7 @@ The fast-chart project has a solid hexagonal architecture with three crates:
 **Current**: No marker concept. Markers are point annotations (arrows, circles) at specific timestamps.
 
 **Files affected**:
-- New: `fast-chart-domain/src/marker.rs` — domain type
+- New: `fc-types/src/marker.rs` — domain type
 - Integrated into plugin system (improvement #3)
 
 ### 10. Localization + Kinetic Scroll (P3)
@@ -95,7 +95,7 @@ The fast-chart project has a solid hexagonal architecture with three crates:
 **Current**: `format_price()` and `format_price_short()` are hardcoded in gpu_renderer.rs (lines 804-823). Scrolling uses simple `ViewportCommand::PanBy` with fixed delta.
 
 **Files affected**:
-- `fast-chart-domain/src/scale.rs` — `PriceFormatter` trait
+- `fc-types/src/scale.rs` — `PriceFormatter` trait
 - `fast-chart-core/src/app/viewport_management.rs` — kinetic scroll momentum
 
 ---

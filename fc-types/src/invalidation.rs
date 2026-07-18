@@ -89,7 +89,7 @@ impl Iterator for PaneBitmaskIter {
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::{InvalidationMask, InvalidationLevel, PaneBitmask};
+/// use fc_types::{InvalidationMask, InvalidationLevel, PaneBitmask};
 ///
 /// // No invalidation
 /// let none = InvalidationMask::NONE;

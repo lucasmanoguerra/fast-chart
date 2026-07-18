@@ -2,7 +2,7 @@
 // DrawingManager — unified CRUD + hit-test + rendering for all drawing types
 // ---------------------------------------------------------------------------
 
-use fast_chart_domain::drawing::{
+use fc_types::drawing::{
     ChartPoint, DrawingId, DrawingSet,
 };
 
@@ -335,7 +335,7 @@ impl Default for DrawingManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fast_chart_domain::drawing::{TrendLine, HorizontalLine, VerticalLine, FibonacciRetracement, FibonacciExtension, Pitchfork, Arrow};
+    use fc_types::drawing::{TrendLine, HorizontalLine, VerticalLine, FibonacciRetracement, FibonacciExtension, Pitchfork, Arrow};
 
     #[test]
     fn new_manager_is_empty() {

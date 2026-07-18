@@ -7,7 +7,7 @@ Build a greenfield native desktop trading chart application in Rust. GPU-acceler
 ## Scope
 
 ### In Scope
-- 3-crate workspace: `fast-chart-domain` (zero deps) → `fast-chart-core` (ports + app) → `fast-chart-app` (adapters + main)
+- 3-crate workspace: `fc-types` (zero deps) → `fast-chart-core` (ports + app) → `fast-chart-app` (adapters + main)
 - Domain types: Bar, Tick, Indicator trait, Viewport, Scale, Crosshair, SeriesType
 - wgpu rendering: line, candle, bar, fill WGSL pipelines + glyphon text
 - Zoom/pan via projection uniform update (vertex buffers unchanged)
@@ -49,7 +49,7 @@ Single wgpu render pass, draw-order layering: grid → price series → indicato
 
 | Area | Impact | Description |
 |------|--------|-------------|
-| `fast-chart-domain/src/` | New | Domain types (zero external deps) |
+| `fc-types/src/` | New | Domain types (zero external deps) |
 | `fast-chart-core/src/` | New | Port traits + ChartController |
 | `fast-chart-app/src/` | New | wgpu/winit/glyphon adapters, shaders, main |
 
@@ -74,7 +74,7 @@ Greenfield project — no production to roll back. Architecture direction can be
 
 ## Success Criteria
 
-- [ ] `cargo check -p fast-chart-domain` compiles with zero external deps
+- [ ] `cargo check -p fc-types` compiles with zero external deps
 - [ ] Domain types have full test coverage
 - [ ] Simulated data renders as line + candle series in winit window
 - [ ] Zoom/pan updates projection uniform without vertex buffer change

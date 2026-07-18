@@ -6,7 +6,7 @@ use crate::render::commands::DrawCommand;
 use crate::render::context::RenderContext;
 use crate::render::coordinates::WorldPoint;
 use crate::render::series_renderer::Rect;
-use fast_chart_domain::drawing::{ChartPoint, DrawingId};
+use fc_types::drawing::{ChartPoint, DrawingId};
 
 /// Result of a hit-test against a drawing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -110,7 +110,7 @@ impl DrawingBounds {
 // Drawing impl for ImageDrawing
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::ImageDrawing {
+impl Drawing for fc_types::drawing::ImageDrawing {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -171,7 +171,7 @@ impl Drawing for fast_chart_domain::drawing::ImageDrawing {
 // Drawing impl for LabelDrawing
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::LabelDrawing {
+impl Drawing for fc_types::drawing::LabelDrawing {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -274,7 +274,7 @@ impl Drawing for fast_chart_domain::drawing::LabelDrawing {
 // Drawing impl for TextDrawing
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::TextDrawing {
+impl Drawing for fc_types::drawing::TextDrawing {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -343,7 +343,7 @@ impl Drawing for fast_chart_domain::drawing::TextDrawing {
 // Drawing impl for Path (Polygon / Polyline)
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Path {
+impl Drawing for fc_types::drawing::Path {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -451,9 +451,9 @@ impl Drawing for fast_chart_domain::drawing::Path {
 
         // Stroke
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         cmds.push(DrawCommand::DrawPath {
             points: screen_points,
@@ -473,7 +473,7 @@ impl Drawing for fast_chart_domain::drawing::Path {
 // Drawing impl for Ellipse (Circle)
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Ellipse {
+impl Drawing for fc_types::drawing::Ellipse {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -556,7 +556,7 @@ impl Drawing for fast_chart_domain::drawing::Ellipse {
 // Drawing impl for Rectangle (Box)
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Rectangle {
+impl Drawing for fc_types::drawing::Rectangle {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -628,9 +628,9 @@ impl Drawing for fast_chart_domain::drawing::Rectangle {
 
         // Stroke
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         cmds.push(DrawCommand::DrawRect {
             x,
@@ -651,7 +651,7 @@ impl Drawing for fast_chart_domain::drawing::Rectangle {
 // Drawing impl for Segment
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Segment {
+impl Drawing for fc_types::drawing::Segment {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -718,9 +718,9 @@ impl Drawing for fast_chart_domain::drawing::Segment {
         let end_screen = pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
 
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
 
         vec![DrawCommand::DrawLine {
@@ -740,7 +740,7 @@ impl Drawing for fast_chart_domain::drawing::Segment {
 // Drawing impl for Ray
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Ray {
+impl Drawing for fc_types::drawing::Ray {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -840,9 +840,9 @@ impl Drawing for fast_chart_domain::drawing::Ray {
         };
 
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
 
         vec![DrawCommand::DrawLine {
@@ -862,7 +862,7 @@ impl Drawing for fast_chart_domain::drawing::Ray {
 // Drawing impl for Arrow
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Arrow {
+impl Drawing for fc_types::drawing::Arrow {
     fn id(&self) -> &DrawingId {
         &self.id
     }
@@ -940,13 +940,13 @@ impl Drawing for fast_chart_domain::drawing::Arrow {
             color: self.color,
             width: self.width,
             style: match self.style {
-                fast_chart_domain::price_line::LineStyle::Solid => {
+                fc_types::price_line::LineStyle::Solid => {
                     crate::render::commands::LineStyle::Solid
                 }
-                fast_chart_domain::price_line::LineStyle::Dashed => {
+                fc_types::price_line::LineStyle::Dashed => {
                     crate::render::commands::LineStyle::Dashed
                 }
-                fast_chart_domain::price_line::LineStyle::Dotted => {
+                fc_types::price_line::LineStyle::Dotted => {
                     crate::render::commands::LineStyle::Dotted
                 }
             },
@@ -994,7 +994,7 @@ impl Drawing for fast_chart_domain::drawing::Arrow {
 // Drawing impl for TrendLine
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::TrendLine {
+impl Drawing for fc_types::drawing::TrendLine {
     fn id(&self) -> &DrawingId { &self.id }
 
     fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
@@ -1028,9 +1028,9 @@ impl Drawing for fast_chart_domain::drawing::TrendLine {
         let start_screen = ctx.pipeline.world_to_screen(WorldPoint::new(self.start.timestamp as f64, self.start.price));
         let end_screen = ctx.pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         vec![DrawCommand::DrawLine { x0: start_screen.x, y0: start_screen.y, x1: end_screen.x, y1: end_screen.y, color: self.color, width: self.width, style, z_index: 10 }]
     }
@@ -1040,7 +1040,7 @@ impl Drawing for fast_chart_domain::drawing::TrendLine {
 // Drawing impl for HorizontalLine
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::HorizontalLine {
+impl Drawing for fc_types::drawing::HorizontalLine {
     fn id(&self) -> &DrawingId { &self.id }
 
     fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
@@ -1063,9 +1063,9 @@ impl Drawing for fast_chart_domain::drawing::HorizontalLine {
         let screen = ctx.pipeline.world_to_screen(WorldPoint::new(ctx.time_range.0, self.price));
         let screen2 = ctx.pipeline.world_to_screen(WorldPoint::new(ctx.time_range.1, self.price));
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         vec![DrawCommand::DrawLine { x0: screen.x, y0: screen.y, x1: screen2.x, y1: screen2.y, color: self.color, width: self.width, style, z_index: 8 }]
     }
@@ -1075,7 +1075,7 @@ impl Drawing for fast_chart_domain::drawing::HorizontalLine {
 // Drawing impl for VerticalLine
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::VerticalLine {
+impl Drawing for fc_types::drawing::VerticalLine {
     fn id(&self) -> &DrawingId { &self.id }
 
     fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
@@ -1098,9 +1098,9 @@ impl Drawing for fast_chart_domain::drawing::VerticalLine {
         let screen1 = ctx.pipeline.world_to_screen(WorldPoint::new(self.timestamp as f64, ctx.price_range.0));
         let screen2 = ctx.pipeline.world_to_screen(WorldPoint::new(self.timestamp as f64, ctx.price_range.1));
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         vec![DrawCommand::DrawLine { x0: screen1.x, y0: screen1.y, x1: screen2.x, y1: screen2.y, color: self.color, width: self.width, style, z_index: 8 }]
     }
@@ -1110,7 +1110,7 @@ impl Drawing for fast_chart_domain::drawing::VerticalLine {
 // Drawing impl for FibonacciRetracement
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::FibonacciRetracement {
+impl Drawing for fc_types::drawing::FibonacciRetracement {
     fn id(&self) -> &DrawingId { &self.id }
 
     fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
@@ -1137,9 +1137,9 @@ impl Drawing for fast_chart_domain::drawing::FibonacciRetracement {
     fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let mut cmds = Vec::new();
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         let left = ctx.time_range.0;
         let right = ctx.time_range.1;
@@ -1157,7 +1157,7 @@ impl Drawing for fast_chart_domain::drawing::FibonacciRetracement {
 // Drawing impl for FibonacciExtension
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::FibonacciExtension {
+impl Drawing for fc_types::drawing::FibonacciExtension {
     fn id(&self) -> &DrawingId { &self.id }
 
     fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
@@ -1188,9 +1188,9 @@ impl Drawing for fast_chart_domain::drawing::FibonacciExtension {
     fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let mut cmds = Vec::new();
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         let left = ctx.time_range.0;
         let right = ctx.time_range.1;
@@ -1208,7 +1208,7 @@ impl Drawing for fast_chart_domain::drawing::FibonacciExtension {
 // Drawing impl for Pitchfork
 // ---------------------------------------------------------------------------
 
-impl Drawing for fast_chart_domain::drawing::Pitchfork {
+impl Drawing for fc_types::drawing::Pitchfork {
     fn id(&self) -> &DrawingId { &self.id }
 
     fn hit_test(&self, point: ChartPoint, tolerance: f32) -> HitResult {
@@ -1247,9 +1247,9 @@ impl Drawing for fast_chart_domain::drawing::Pitchfork {
 
     fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let style = match self.style {
-            fast_chart_domain::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fast_chart_domain::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fast_chart_domain::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
         };
         let sa = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_a.timestamp as f64, self.point_a.price));
         let sb = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_b.timestamp as f64, self.point_b.price));
@@ -1325,8 +1325,8 @@ mod tests {
 
     // ---- Arrow Drawing impl ----
 
-    fn test_arrow() -> fast_chart_domain::drawing::Arrow {
-        fast_chart_domain::drawing::Arrow::new(
+    fn test_arrow() -> fc_types::drawing::Arrow {
+        fc_types::drawing::Arrow::new(
             "test-arrow",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1390,7 +1390,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let arrow = fast_chart_domain::drawing::Arrow::new(
+        let arrow = fc_types::drawing::Arrow::new(
             "cmd-arrow",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1428,7 +1428,7 @@ mod tests {
     #[test]
     fn arrow_degenerate_hit_test() {
         // Arrow with zero length
-        let arrow = fast_chart_domain::drawing::Arrow::new(
+        let arrow = fc_types::drawing::Arrow::new(
             "degen",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(1000, 100.0),
@@ -1439,8 +1439,8 @@ mod tests {
 
     // ---- Ray Drawing impl ----
 
-    fn test_ray() -> fast_chart_domain::drawing::Ray {
-        fast_chart_domain::drawing::Ray::new(
+    fn test_ray() -> fc_types::drawing::Ray {
+        fc_types::drawing::Ray::new(
             "test-ray",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1510,7 +1510,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let ray = fast_chart_domain::drawing::Ray::new(
+        let ray = fc_types::drawing::Ray::new(
             "cmd-ray",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1543,7 +1543,7 @@ mod tests {
 
     #[test]
     fn segment_hit_test_body() {
-        let seg = fast_chart_domain::drawing::Segment::new(
+        let seg = fc_types::drawing::Segment::new(
             "seg1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1553,7 +1553,7 @@ mod tests {
 
     #[test]
     fn segment_hit_test_miss() {
-        let seg = fast_chart_domain::drawing::Segment::new(
+        let seg = fc_types::drawing::Segment::new(
             "seg1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1563,7 +1563,7 @@ mod tests {
 
     #[test]
     fn segment_move_by() {
-        let mut seg = fast_chart_domain::drawing::Segment::new(
+        let mut seg = fc_types::drawing::Segment::new(
             "seg1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1575,7 +1575,7 @@ mod tests {
 
     #[test]
     fn segment_bounds() {
-        let seg = fast_chart_domain::drawing::Segment::new(
+        let seg = fc_types::drawing::Segment::new(
             "seg1",
             ChartPoint::new(2000, 150.0),
             ChartPoint::new(1000, 100.0),
@@ -1590,7 +1590,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let seg = fast_chart_domain::drawing::Segment::new(
+        let seg = fc_types::drawing::Segment::new(
             "cmd-seg",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 150.0),
@@ -1615,7 +1615,7 @@ mod tests {
 
     #[test]
     fn rectangle_hit_test_inside() {
-        let rect = fast_chart_domain::drawing::Rectangle::new(
+        let rect = fc_types::drawing::Rectangle::new(
             "box1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1625,7 +1625,7 @@ mod tests {
 
     #[test]
     fn rectangle_hit_test_outside() {
-        let rect = fast_chart_domain::drawing::Rectangle::new(
+        let rect = fc_types::drawing::Rectangle::new(
             "box1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1635,7 +1635,7 @@ mod tests {
 
     #[test]
     fn rectangle_hit_test_edge_tolerance() {
-        let rect = fast_chart_domain::drawing::Rectangle::new(
+        let rect = fc_types::drawing::Rectangle::new(
             "box1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1646,7 +1646,7 @@ mod tests {
 
     #[test]
     fn rectangle_move_by() {
-        let mut rect = fast_chart_domain::drawing::Rectangle::new(
+        let mut rect = fc_types::drawing::Rectangle::new(
             "box1",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1658,7 +1658,7 @@ mod tests {
 
     #[test]
     fn rectangle_bounds() {
-        let rect = fast_chart_domain::drawing::Rectangle::new(
+        let rect = fc_types::drawing::Rectangle::new(
             "box1",
             ChartPoint::new(2000, 200.0),
             ChartPoint::new(1000, 100.0),
@@ -1673,7 +1673,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let rect = fast_chart_domain::drawing::Rectangle::new(
+        let rect = fc_types::drawing::Rectangle::new(
             "box-fill",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1716,7 +1716,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let rect = fast_chart_domain::drawing::Rectangle::new(
+        let rect = fc_types::drawing::Rectangle::new(
             "box-stroke",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1738,7 +1738,7 @@ mod tests {
 
     #[test]
     fn ellipse_hit_test_inside() {
-        let ell = fast_chart_domain::drawing::Ellipse::new(
+        let ell = fc_types::drawing::Ellipse::new(
             "e1",
             ChartPoint::new(1000, 100.0),
             500.0, 50.0,
@@ -1748,7 +1748,7 @@ mod tests {
 
     #[test]
     fn ellipse_hit_test_outside() {
-        let ell = fast_chart_domain::drawing::Ellipse::new(
+        let ell = fc_types::drawing::Ellipse::new(
             "e1",
             ChartPoint::new(1000, 100.0),
             100.0, 10.0,
@@ -1758,7 +1758,7 @@ mod tests {
 
     #[test]
     fn ellipse_move_by() {
-        let mut ell = fast_chart_domain::drawing::Ellipse::new(
+        let mut ell = fc_types::drawing::Ellipse::new(
             "e1",
             ChartPoint::new(1000, 100.0),
             500.0, 50.0,
@@ -1770,7 +1770,7 @@ mod tests {
 
     #[test]
     fn ellipse_bounds() {
-        let ell = fast_chart_domain::drawing::Ellipse::new(
+        let ell = fc_types::drawing::Ellipse::new(
             "e1",
             ChartPoint::new(1000, 100.0),
             500.0, 50.0,
@@ -1787,7 +1787,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let ell = fast_chart_domain::drawing::Ellipse::new(
+        let ell = fc_types::drawing::Ellipse::new(
             "cmd-e",
             ChartPoint::new(1000, 100.0),
             500.0, 50.0,
@@ -1816,7 +1816,7 @@ mod tests {
 
     #[test]
     fn path_hit_test_on_segment() {
-        let path = fast_chart_domain::drawing::Path::new(
+        let path = fc_types::drawing::Path::new(
             "poly1",
             vec![
                 ChartPoint::new(1000, 100.0),
@@ -1830,7 +1830,7 @@ mod tests {
 
     #[test]
     fn path_hit_test_miss() {
-        let path = fast_chart_domain::drawing::Path::new(
+        let path = fc_types::drawing::Path::new(
             "poly1",
             vec![
                 ChartPoint::new(1000, 100.0),
@@ -1842,7 +1842,7 @@ mod tests {
 
     #[test]
     fn path_move_by() {
-        let mut path = fast_chart_domain::drawing::Path::new(
+        let mut path = fc_types::drawing::Path::new(
             "poly1",
             vec![
                 ChartPoint::new(1000, 100.0),
@@ -1856,7 +1856,7 @@ mod tests {
 
     #[test]
     fn path_bounds() {
-        let path = fast_chart_domain::drawing::Path::new(
+        let path = fc_types::drawing::Path::new(
             "poly1",
             vec![
                 ChartPoint::new(3000, 200.0),
@@ -1876,7 +1876,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let path = fast_chart_domain::drawing::Path::new(
+        let path = fc_types::drawing::Path::new(
             "cmd-poly",
             vec![
                 ChartPoint::new(1000, 100.0),
@@ -1910,8 +1910,8 @@ mod tests {
 
     // ---- TrendLine Drawing impl tests ----
 
-    fn test_trend_line() -> fast_chart_domain::drawing::TrendLine {
-        fast_chart_domain::drawing::TrendLine::new(
+    fn test_trend_line() -> fc_types::drawing::TrendLine {
+        fc_types::drawing::TrendLine::new(
             "test-tl",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1965,7 +1965,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let tl = fast_chart_domain::drawing::TrendLine::new(
+        let tl = fc_types::drawing::TrendLine::new(
             "cmd-tl",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -1988,8 +1988,8 @@ mod tests {
 
     // ---- HorizontalLine Drawing impl tests ----
 
-    fn test_horizontal_line() -> fast_chart_domain::drawing::HorizontalLine {
-        fast_chart_domain::drawing::HorizontalLine::new("test-hl", 150.0)
+    fn test_horizontal_line() -> fc_types::drawing::HorizontalLine {
+        fc_types::drawing::HorizontalLine::new("test-hl", 150.0)
     }
 
     #[test]
@@ -2036,7 +2036,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let hl = fast_chart_domain::drawing::HorizontalLine::new("cmd-hl", 150.0);
+        let hl = fc_types::drawing::HorizontalLine::new("cmd-hl", 150.0);
 
         let pipeline = CoordinatePipeline::new(
             (0.0, 3000.0),
@@ -2055,8 +2055,8 @@ mod tests {
 
     // ---- VerticalLine Drawing impl tests ----
 
-    fn test_vertical_line() -> fast_chart_domain::drawing::VerticalLine {
-        fast_chart_domain::drawing::VerticalLine::new("test-vl", 1500)
+    fn test_vertical_line() -> fc_types::drawing::VerticalLine {
+        fc_types::drawing::VerticalLine::new("test-vl", 1500)
     }
 
     #[test]
@@ -2103,7 +2103,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let vl = fast_chart_domain::drawing::VerticalLine::new("cmd-vl", 1500);
+        let vl = fc_types::drawing::VerticalLine::new("cmd-vl", 1500);
 
         let pipeline = CoordinatePipeline::new(
             (0.0, 3000.0),
@@ -2122,8 +2122,8 @@ mod tests {
 
     // ---- FibonacciRetracement Drawing impl tests ----
 
-    fn test_fib_retracement() -> fast_chart_domain::drawing::FibonacciRetracement {
-        fast_chart_domain::drawing::FibonacciRetracement::new(
+    fn test_fib_retracement() -> fc_types::drawing::FibonacciRetracement {
+        fc_types::drawing::FibonacciRetracement::new(
             "test-fib",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -2178,7 +2178,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let fib = fast_chart_domain::drawing::FibonacciRetracement::new(
+        let fib = fc_types::drawing::FibonacciRetracement::new(
             "cmd-fib",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -2204,8 +2204,8 @@ mod tests {
 
     // ---- FibonacciExtension Drawing impl tests ----
 
-    fn test_fib_extension() -> fast_chart_domain::drawing::FibonacciExtension {
-        fast_chart_domain::drawing::FibonacciExtension::new(
+    fn test_fib_extension() -> fc_types::drawing::FibonacciExtension {
+        fc_types::drawing::FibonacciExtension::new(
             "test-fibext",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -2263,7 +2263,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let fib = fast_chart_domain::drawing::FibonacciExtension::new(
+        let fib = fc_types::drawing::FibonacciExtension::new(
             "cmd-fibext",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -2290,8 +2290,8 @@ mod tests {
 
     // ---- Pitchfork Drawing impl tests ----
 
-    fn test_pitchfork() -> fast_chart_domain::drawing::Pitchfork {
-        fast_chart_domain::drawing::Pitchfork::new(
+    fn test_pitchfork() -> fc_types::drawing::Pitchfork {
+        fc_types::drawing::Pitchfork::new(
             "test-pf",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -2350,7 +2350,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let pf = fast_chart_domain::drawing::Pitchfork::new(
+        let pf = fc_types::drawing::Pitchfork::new(
             "cmd-pf",
             ChartPoint::new(1000, 100.0),
             ChartPoint::new(2000, 200.0),
@@ -2379,7 +2379,7 @@ mod tests {
 
     #[test]
     fn text_drawing_hit_test() {
-        let td = fast_chart_domain::drawing::TextDrawing::new(
+        let td = fc_types::drawing::TextDrawing::new(
             "txt1",
             ChartPoint::new(2000, 150.0),
             "hello world",
@@ -2392,7 +2392,7 @@ mod tests {
 
     #[test]
     fn text_drawing_move_by() {
-        let mut td = fast_chart_domain::drawing::TextDrawing::new(
+        let mut td = fc_types::drawing::TextDrawing::new(
             "txt1",
             ChartPoint::new(1000, 100.0),
             "label",
@@ -2404,7 +2404,7 @@ mod tests {
 
     #[test]
     fn text_drawing_bounds() {
-        let td = fast_chart_domain::drawing::TextDrawing::new(
+        let td = fc_types::drawing::TextDrawing::new(
             "txt1",
             ChartPoint::new(2000, 150.0),
             "hello",
@@ -2421,7 +2421,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let td = fast_chart_domain::drawing::TextDrawing::new(
+        let td = fc_types::drawing::TextDrawing::new(
             "cmd-t",
             ChartPoint::new(1000, 100.0),
             "Price",
@@ -2451,7 +2451,7 @@ mod tests {
 
     #[test]
     fn text_drawing_selected_toggle() {
-        let mut td = fast_chart_domain::drawing::TextDrawing::new(
+        let mut td = fc_types::drawing::TextDrawing::new(
             "txt1",
             ChartPoint::new(1000, 100.0),
             "sel",
@@ -2467,7 +2467,7 @@ mod tests {
 
     #[test]
     fn image_hit_test() {
-        let img = fast_chart_domain::drawing::ImageDrawing::new(
+        let img = fc_types::drawing::ImageDrawing::new(
             "img1",
             ChartPoint::new(2000, 150.0),
             "logo.png",
@@ -2482,7 +2482,7 @@ mod tests {
 
     #[test]
     fn image_move_by() {
-        let mut img = fast_chart_domain::drawing::ImageDrawing::new(
+        let mut img = fc_types::drawing::ImageDrawing::new(
             "img1",
             ChartPoint::new(1000, 100.0),
             "pic.png",
@@ -2494,7 +2494,7 @@ mod tests {
 
     #[test]
     fn image_bounds() {
-        let img = fast_chart_domain::drawing::ImageDrawing::new(
+        let img = fc_types::drawing::ImageDrawing::new(
             "img1",
             ChartPoint::new(2000, 150.0),
             "pic.png",
@@ -2511,7 +2511,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let img = fast_chart_domain::drawing::ImageDrawing::new(
+        let img = fc_types::drawing::ImageDrawing::new(
             "cmd-img",
             ChartPoint::new(1000, 100.0),
             "chart-bg.png",
@@ -2545,7 +2545,7 @@ mod tests {
 
     #[test]
     fn label_hit_test() {
-        let label = fast_chart_domain::drawing::LabelDrawing::new(
+        let label = fc_types::drawing::LabelDrawing::new(
             "lbl1",
             ChartPoint::new(2000, 150.0),
             "BTC",
@@ -2556,7 +2556,7 @@ mod tests {
 
     #[test]
     fn label_move_by() {
-        let mut label = fast_chart_domain::drawing::LabelDrawing::new(
+        let mut label = fc_types::drawing::LabelDrawing::new(
             "lbl1",
             ChartPoint::new(1000, 100.0),
             "ETH",
@@ -2568,7 +2568,7 @@ mod tests {
 
     #[test]
     fn label_bounds() {
-        let label = fast_chart_domain::drawing::LabelDrawing::new(
+        let label = fc_types::drawing::LabelDrawing::new(
             "lbl1",
             ChartPoint::new(2000, 150.0),
             "SOL",
@@ -2585,7 +2585,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let label = fast_chart_domain::drawing::LabelDrawing::new(
+        let label = fc_types::drawing::LabelDrawing::new(
             "cmd-lbl",
             ChartPoint::new(1000, 100.0),
             "Label",
@@ -2629,7 +2629,7 @@ mod tests {
         use crate::render::context::RenderContext;
         use crate::render::coordinates::CoordinatePipeline;
 
-        let mut label = fast_chart_domain::drawing::LabelDrawing::new(
+        let mut label = fc_types::drawing::LabelDrawing::new(
             "cmd-lbl2",
             ChartPoint::new(1000, 100.0),
             "Hi",

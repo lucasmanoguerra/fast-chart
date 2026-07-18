@@ -8,7 +8,7 @@ Both changes are backward-compatible: existing call sites continue to work via d
 
 ## Architecture Decisions
 
-### Decision: InvalidationMask lives in `fast-chart-domain`
+### Decision: InvalidationMask lives in `fc-types`
 
 | Option | Tradeoff | Decision |
 |--------|----------|----------|
@@ -28,7 +28,7 @@ Both changes are backward-compatible: existing call sites continue to work via d
 
 **Rationale**: The domain crate's zero-dependency constraint is an explicit architectural boundary. The bitmask is 32 bits of manual `|` and `&` — not worth a dependency. We wrap it in a newtype for safety.
 
-### Decision: PriceScale lives in `fast-chart-domain`
+### Decision: PriceScale lives in `fc-types`
 
 | Option | Tradeoff | Decision |
 |--------|----------|----------|
@@ -61,7 +61,7 @@ Both changes are backward-compatible: existing call sites continue to work via d
 ### PR1: InvalidationMask
 
 ```rust
-// fast-chart-domain/src/invalidation.rs
+// fc-types/src/invalidation.rs
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -112,7 +112,7 @@ pub struct InvalidationMask {
 ### PR2: PriceScale types
 
 ```rust
-// fast-chart-domain/src/price_scale.rs
+// fc-types/src/price_scale.rs
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PriceScaleId {
@@ -229,7 +229,7 @@ impl PriceScale {
 ### Viewport integration
 
 ```rust
-// Added to fast-chart-domain/src/viewport.rs
+// Added to fc-types/src/viewport.rs
 
 impl Viewport {
     pub fn price_to_y(&self, price: f64, scale: &PriceScale, pane_height: f32) -> f32 {
@@ -258,7 +258,7 @@ impl Viewport {
 ```rust
 // Changes to fast-chart-core/src/app/pane.rs
 
-use fast_chart_domain::price_scale::{PriceScale, PriceScaleId, PriceScaleOptions};
+use fc_types::price_scale::{PriceScale, PriceScaleId, PriceScaleOptions};
 
 pub struct Pane {
     // ... existing fields ...
@@ -377,10 +377,10 @@ The renderer currently hardcodes `self.viewport.value_min/max` for coordinate ma
 
 | File | Action | Description |
 |------|--------|-------------|
-| `fast-chart-domain/src/invalidation.rs` | **Create** | `InvalidationLevel`, `PaneBitmask`, `InvalidationMask` + 10 unit tests |
-| `fast-chart-domain/src/price_scale.rs` | **Create** | `PriceScaleId`, `PriceScaleMode`, `PriceScaleOptions`, `PriceScale`, `PriceFormatter`, `DefaultPriceFormatter` + tests |
-| `fast-chart-domain/src/lib.rs` | **Modify** | Add `pub mod invalidation; pub mod price_scale;` |
-| `fast-chart-domain/src/viewport.rs` | **Modify** | Add `price_to_y()`, `y_to_price()` methods accepting `PriceScale` |
+| `fc-types/src/invalidation.rs` | **Create** | `InvalidationLevel`, `PaneBitmask`, `InvalidationMask` + 10 unit tests |
+| `fc-types/src/price_scale.rs` | **Create** | `PriceScaleId`, `PriceScaleMode`, `PriceScaleOptions`, `PriceScale`, `PriceFormatter`, `DefaultPriceFormatter` + tests |
+| `fc-types/src/lib.rs` | **Modify** | Add `pub mod invalidation; pub mod price_scale;` |
+| `fc-types/src/viewport.rs` | **Modify** | Add `price_to_y()`, `y_to_price()` methods accepting `PriceScale` |
 | `fast-chart-core/src/app/pane.rs` | **Modify** | Add `price_scales: Vec<PriceScale>`, `primary_scale_id`, `ensure_price_scales()`, lookup methods; add `price_scale_id` to `SeriesRef` |
 | `fast-chart-core/src/app/chart_controller.rs` | **Modify** | Replace `needs_redraw: bool` with `InvalidationMask` in `ChartState`; update `tick()` and `handle_input()` |
 | `fast-chart-app/src/adapters/gpu_renderer.rs` | **Modify** | Replace 4 `needs_*` bools with `InvalidationMask`; update `render()` dispatch; update coordinate mapping to use `PriceScale` |
@@ -428,13 +428,13 @@ The renderer currently hardcodes `self.viewport.value_min/max` for coordinate ma
 
 ### PR1: InvalidationMask (3 commits)
 
-1. **Commit 1**: Add `fast-chart-domain/src/invalidation.rs` with types + unit tests. Update `lib.rs`. Zero call-site changes — purely additive.
+1. **Commit 1**: Add `fc-types/src/invalidation.rs` with types + unit tests. Update `lib.rs`. Zero call-site changes — purely additive.
 2. **Commit 2**: Add `InvalidationMask` field to `ChartState` and `GpuRenderer` alongside existing booleans. Wire up `mark()` calls next to existing boolean sets. Both systems coexist.
 3. **Commit 3**: Remove 4 `needs_*` booleans from `GpuRenderer` and `needs_redraw` from `ChartState`. Replace all check sites with `invalidation.contains()`. Remove boolean-setting code.
 
 ### PR2: Price Scales (4 commits)
 
-1. **Commit 1**: Add `fast-chart-domain/src/price_scale.rs` with types + `PriceFormatter` + unit tests. Update `lib.rs`. Zero call-site changes.
+1. **Commit 1**: Add `fc-types/src/price_scale.rs` with types + `PriceFormatter` + unit tests. Update `lib.rs`. Zero call-site changes.
 2. **Commit 2**: Add `price_to_y()`/`y_to_price()` to `Viewport` with unit tests. Add `price_scales` field to `Pane` with `ensure_price_scales()`. Update `SeriesRef` with `price_scale_id` default.
 3. **Commit 3**: Wire `GpuRenderer` to use `PriceScale` for coordinate mapping in `update_line_from_vec()`, `screen_y_to_price()`, and axis labels. Replace standalone `format_price()` with `PriceFormatter`.
 4. **Commit 4**: Add `auto_fit()` integration — call `PriceScale::auto_fit()` in the render path when data changes. Deprecate direct `Viewport.value_min/max` writes for price data.

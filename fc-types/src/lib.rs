@@ -1,4 +1,4 @@
-//! # fast-chart-domain
+//! # fc-types
 //!
 //! Pure domain types for the fast-chart trading library.
 //! Zero external dependencies.

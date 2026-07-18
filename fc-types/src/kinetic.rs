@@ -27,7 +27,7 @@ pub enum SnapTarget {
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::KineticScroll;
+/// use fc_types::KineticScroll;
 ///
 /// let mut ks = KineticScroll::new(0.95);
 /// assert!(!ks.is_active());

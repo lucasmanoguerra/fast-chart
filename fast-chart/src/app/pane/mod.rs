@@ -1,12 +1,12 @@
 pub mod divider;
 pub mod events;
 
-use fast_chart_domain::drawing::DrawingSet;
-use fast_chart_domain::marker::MarkerSet;
-use fast_chart_domain::price_line::PriceLineSet;
-use fast_chart_domain::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScale, PriceScaleId};
-use fast_chart_domain::series_type::SeriesType;
-use fast_chart_domain::viewport::Viewport;
+use fc_types::drawing::DrawingSet;
+use fc_types::marker::MarkerSet;
+use fc_types::price_line::PriceLineSet;
+use fc_types::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScale, PriceScaleId};
+use fc_types::series_type::SeriesType;
+use fc_types::viewport::Viewport;
 
 use crate::render::series_renderer::SeriesRenderer;
 
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     fn pane_markers_mut_accessor() {
         let mut pane = Pane::new(0, 0.7);
-        pane.markers_mut().add(fast_chart_domain::marker::Marker::new(
+        pane.markers_mut().add(fc_types::marker::Marker::new(
             "buy", 1000, 105.0,
         ));
         assert_eq!(pane.markers().len(), 1);
@@ -426,7 +426,7 @@ mod tests {
     #[test]
     fn pane_price_lines_mut_accessor() {
         let mut pane = Pane::new(0, 0.7);
-        pane.price_lines_mut().add(fast_chart_domain::price_line::PriceLine::new(
+        pane.price_lines_mut().add(fc_types::price_line::PriceLine::new(
             "support", 100.0,
         ));
         assert_eq!(pane.price_lines().len(), 1);

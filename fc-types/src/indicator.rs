@@ -17,9 +17,9 @@ pub enum OverlayMode {
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::Indicator;
-/// use fast_chart_domain::Bar;
-/// use fast_chart_domain::series::TimeSeries;
+/// use fc_types::Indicator;
+/// use fc_types::Bar;
+/// use fc_types::series::TimeSeries;
 ///
 /// struct SimpleMovingAverage { period: usize }
 ///

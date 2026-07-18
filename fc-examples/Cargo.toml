@@ -1,5 +1,5 @@
 [package]
-name = "fast-chart-examples"
+name = "fc-examples"
 version = "0.1.0"
 edition = "2021"
 description = "Example applications for the fast-chart trading library"

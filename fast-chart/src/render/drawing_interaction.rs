@@ -2,7 +2,7 @@
 // DrawingInteraction — interaction state machine for drawing tools
 // ---------------------------------------------------------------------------
 
-use fast_chart_domain::drawing::{ChartPoint, DrawingId};
+use fc_types::drawing::{ChartPoint, DrawingId};
 
 use crate::render::drawing_manager::DrawingManager;
 

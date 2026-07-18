@@ -4,9 +4,9 @@ use fast_chart::render::commands::DrawCommand;
 use fast_chart::render::pixel_perfect::{pixel_perfect_rect, snap_point, PixelPerfect};
 use fast_chart::render::session::Session;
 use fast_chart::theme::{ChartTheme, Rgba, ThemeToken};
-use fast_chart_renderer_wgpu::scissor::ScissorRect;
-use fast_chart_renderer_wgpu::types::Vertex;
-use fast_chart_renderer_wgpu::vertex_gen::{generate_sorted_vertices, generate_vertices};
+use fc_renderer_wgpu::scissor::ScissorRect;
+use fc_renderer_wgpu::types::Vertex;
+use fc_renderer_wgpu::vertex_gen::{generate_sorted_vertices, generate_vertices};
 
 const SURFACE_W: f32 = 1920.0;
 const SURFACE_H: f32 = 1080.0;
@@ -204,15 +204,15 @@ fn bench_cache_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("cache");
 
     group.bench_function("construct_1k", |b| {
-        b.iter(|| fast_chart_renderer_wgpu::cache::GpuCache::new(1024));
+        b.iter(|| fc_renderer_wgpu::cache::GpuCache::new(1024));
     });
 
     group.bench_function("construct_1m", |b| {
-        b.iter(|| fast_chart_renderer_wgpu::cache::GpuCache::new(1_000_000));
+        b.iter(|| fc_renderer_wgpu::cache::GpuCache::new(1_000_000));
     });
 
     group.bench_function("capacity_check", |b| {
-        let cache = fast_chart_renderer_wgpu::cache::GpuCache::new(1024);
+        let cache = fc_renderer_wgpu::cache::GpuCache::new(1024);
         b.iter(|| cache.capacity());
     });
 

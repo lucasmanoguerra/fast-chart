@@ -84,8 +84,8 @@ pub fn snap_to_ohlc(price: f64, bar: &Bar, mode: MagnetMode) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::Crosshair;
-/// use fast_chart_domain::scale::{TimeScale, LinearScale};
+/// use fc_types::Crosshair;
+/// use fc_types::scale::{TimeScale, LinearScale};
 ///
 /// let ts = TimeScale { start: 0, end: 2000, width: 800.0, bar_spacing: 8.0, right_offset: 0.0 };
 /// let vs = LinearScale { min: 90.0, max: 120.0, height: 300.0 };

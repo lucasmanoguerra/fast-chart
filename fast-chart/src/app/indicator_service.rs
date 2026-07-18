@@ -1,6 +1,6 @@
-use fast_chart_domain::bar::Bar;
-use fast_chart_domain::indicator::Indicator;
-use fast_chart_domain::series::TimeSeries;
+use fc_types::bar::Bar;
+use fc_types::indicator::Indicator;
+use fc_types::series::TimeSeries;
 use std::collections::HashMap;
 
 const CHART_CAPACITY: usize = 100_000;

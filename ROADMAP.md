@@ -52,7 +52,7 @@ User's application
 ## Architecture After Refactor
 
 ```
-fast-chart-domain          Pure types, zero dependencies
+fc-types          Pure types, zero dependencies
                            Bar, Tick, Viewport, LinearScale, TimeScale,
                            Crosshair, PriceScale, Marker, Drawing tools,
                            Indicator trait + implementations, Error types
@@ -63,17 +63,17 @@ fast-chart                 Library crate — chart logic, rendering abstractions
                            CoordinatePipeline, InteractionEngine,
                            CacheManager, AnimationEngine
 
-fast-chart-renderer-wgpu   Optional GPU renderer (depends on wgpu)
+fc-renderer-wgpu   Optional GPU renderer (depends on wgpu)
                            WgpuBackend: implements RendererBackend trait
                            Sub-renderers for each series type
                            WGSL shaders, text rendering (glyphon)
 
-fast-chart-examples        Example applications (winit + wgpu)
+fc-examples        Example applications (winit + wgpu)
                            Simple chart, multi-pane, custom series,
                            drawing tools demo, real-time data
 ```
 
-**Dependency direction**: `fast-chart-domain` ← `fast-chart` ← `fast-chart-renderer-wgpu` → `fast-chart-examples`
+**Dependency direction**: `fc-types` ← `fast-chart` ← `fc-renderer-wgpu` → `fc-examples`
 
 ---
 
@@ -84,7 +84,7 @@ fast-chart-examples        Example applications (winit + wgpu)
 ### Objectives
 
 1. `fast-chart` (root crate) becomes the **library** — no binary, no winit, no wgpu dependency
-2. `fast-chart-app` is renamed to `fast-chart-examples` (or removed)
+2. `fast-chart-app` is renamed to `fc-examples` (or removed)
 3. Domain crate is stable and complete
 4. Core crate is renamed to be the library itself (or merged into root)
 
@@ -93,10 +93,10 @@ fast-chart-examples        Example applications (winit + wgpu)
 | # | Task | Complexity | Files |
 |---|---|---|---|
 | 0.1 | Rename `fast-chart-core` → `fast-chart` (the library crate). Update root `Cargo.toml` workspace members. | M | `Cargo.toml`, `fast-chart/Cargo.toml` |
-| 0.2 | Create `fast-chart-examples/` crate. Move `fast-chart-app/src/main.rs` + adapters into it. Update workspace members. | M | `fast-chart-examples/Cargo.toml`, `fast-chart-examples/src/main.rs` |
-| 0.3 | Remove wgpu/winit deps from the library crate. `GpuRenderer`, all sub-renderers, WGSL shaders, `winit::Window` references move to `fast-chart-examples` (temporarily) until `fast-chart-renderer-wgpu` is created. | S | `fast-chart/Cargo.toml`, adapter files |
+| 0.2 | Create `fc-examples/` crate. Move `fast-chart-app/src/main.rs` + adapters into it. Update workspace members. | M | `fc-examples/Cargo.toml`, `fc-examples/src/main.rs` |
+| 0.3 | Remove wgpu/winit deps from the library crate. `GpuRenderer`, all sub-renderers, WGSL shaders, `winit::Window` references move to `fc-examples` (temporarily) until `fc-renderer-wgpu` is created. | S | `fast-chart/Cargo.toml`, adapter files |
 | 0.4 | Strip the `ChartRenderer` port trait of wgpu specifics. It should reference abstract rendering concepts only. | S | `fast-chart/src/ports/render.rs` |
-| 0.5 | Add `#[cfg(doctest)]` documentation examples to all public types in `fast-chart-domain`. Ensure `cargo test --doc` passes. | M | `fast-chart-domain/src/*.rs` |
+| 0.5 | Add `#[cfg(doctest)]` documentation examples to all public types in `fc-types`. Ensure `cargo test --doc` passes. | M | `fc-types/src/*.rs` |
 | 0.6 | Add `docs/` directory with `architecture/overview.md` explaining the library's hexagonal boundaries. | S | `docs/architecture/overview.md` |
 | 0.7 | Establish CI gate: library crate must compile with `--no-default-features` and zero wgpu/winit deps. | S | `.github/workflows/ci.yml` |
 
@@ -108,15 +108,15 @@ None. This is the foundation.
 
 - The `fast-chart-core/src/app/` directory (chart_controller, pane, layout_manager, viewport_management, frame_counter, indicator_service) moves into `fast-chart/src/app/`.
 - The `fast-chart-core/src/ports/` directory moves into `fast-chart/src/ports/`.
-- All re-exports from `fast-chart-domain` remain in `fast-chart/src/lib.rs` (gateway pattern preserved).
-- `fast-chart-app` adapter code moves to `fast-chart-examples/` and is no longer part of the library's public surface.
+- All re-exports from `fc-types` remain in `fast-chart/src/lib.rs` (gateway pattern preserved).
+- `fast-chart-app` adapter code moves to `fc-examples/` and is no longer part of the library's public surface.
 
 ### Success Criteria
 
 - [ ] `cargo build -p fast-chart` compiles with zero wgpu/winit deps
-- [ ] `cargo build -p fast-chart-examples` compiles (uses wgpu + winit)
+- [ ] `cargo build -p fc-examples` compiles (uses wgpu + winit)
 - [ ] `cargo test --workspace` passes (554+ tests)
-- [ ] No `unsafe` outside of `fast-chart-renderer-wgpu` (future crate)
+- [ ] No `unsafe` outside of `fc-renderer-wgpu` (future crate)
 - [ ] `fast-chart/src/lib.rs` has zero rendering-specific imports
 
 ---
@@ -153,7 +153,7 @@ Phase 0 complete (library crate exists, no GPU deps).
 ### Migration Notes
 
 - The `fast-chart-app/src/adapters/rendering/layers.rs` 16-line stub is replaced by the new `DrawLayer` enum in the library.
-- Existing sub-renderers in `fast-chart-app` (or `fast-chart-examples`) will eventually implement `SeriesRenderer`, but that happens in Phase 6 when the wgpu renderer is refactored.
+- Existing sub-renderers in `fast-chart-app` (or `fc-examples`) will eventually implement `SeriesRenderer`, but that happens in Phase 6 when the wgpu renderer is refactored.
 - The current `ChartRenderer` port trait (1 method: `resize`) is superseded by `RendererBackend`.
 
 ### Success Criteria
@@ -184,8 +184,8 @@ Phase 0 complete (library crate exists, no GPU deps).
 | 2.1 | Refactor `Pane` to own a `PaneState` with: `viewport: Viewport`, `price_scales: Vec<PriceScale>`, `layers: Vec<Box<dyn SeriesRenderer>>`, `drawings: DrawingSet`, `markers: MarkerSet`, `price_lines: PriceLineSet`. | L | `fast-chart/src/pane/mod.rs` |
 | 2.2 | Implement `LayoutEngine` trait with variants: `VerticalStack`, `HorizontalSplit`, `GridLayout { rows, cols }`. Each layout computes pane rects from parent rect. | L | `fast-chart/src/layout/mod.rs` |
 | 2.3 | Add `PaneDivider` — draggable separator between panes with hit testing, cursor changes, and resize events. | M | `fast-chart/src/pane/divider.rs` |
-| 2.4 | Implement `TimeScale` improvements: `bar_spacing: f64`, `right_offset: f64`, `scroll_to_end()`, `visible_range() -> Range<usize>`, business days awareness (placeholder for Phase 7). | L | `fast-chart-domain/src/scale.rs` |
-| 2.5 | Implement `PriceScale` improvements: `mode: PriceScaleMode { Auto, Manual, Locked, Logarithmic, Percentage, Indexed, Inverted }`, `margin_top: f64`, `margin_bottom: f64`, auto-fit with padding. | L | `fast-chart-domain/src/price_scale.rs` |
+| 2.4 | Implement `TimeScale` improvements: `bar_spacing: f64`, `right_offset: f64`, `scroll_to_end()`, `visible_range() -> Range<usize>`, business days awareness (placeholder for Phase 7). | L | `fc-types/src/scale.rs` |
+| 2.5 | Implement `PriceScale` improvements: `mode: PriceScaleMode { Auto, Manual, Locked, Logarithmic, Percentage, Indexed, Inverted }`, `margin_top: f64`, `margin_bottom: f64`, auto-fit with padding. | L | `fc-types/src/price_scale.rs` |
 | 2.6 | Add `PaneEvent` enum: `DividerDragged { index, delta }`, `PaneResized { id, new_height }`, `PaneAdded { id }`, `PaneRemoved { id }`. Route through `InteractionEngine`. | M | `fast-chart/src/pane/events.rs` |
 | 2.7 | Write tests: multi-pane layout, divider drag, viewport sync across panes, time scale infinite scroll, price scale auto-fit. | M | test modules in pane/ and layout/ |
 
@@ -229,9 +229,9 @@ Phase 1 complete (coordinate pipeline and draw commands exist).
 | 3.3 | Add `PointFigureSeries` — X/O chart with configurable reversal amount. No time axis (column-based). | L | `fast-chart/src/series/point_figure.rs` |
 | 3.4 | Add `LineBreakSeries` — Renko-like but uses N-line break logic. | M | `fast-chart/src/series/line_break.rs` |
 | 3.5 | Add `RangeSeries` — price range bars (high-low range fixed). | M | `fast-chart/src/series/range.rs` |
-| 3.6 | Refactor `Indicator` trait: add `fn overlay_mode(&self) -> OverlayMode { OverlayOnPane(pane_id) | SeparatePane }` and `fn preferred_scale(&self) -> PriceScaleMode`. | M | `fast-chart-domain/src/indicator.rs` |
+| 3.6 | Refactor `Indicator` trait: add `fn overlay_mode(&self) -> OverlayMode { OverlayOnPane(pane_id) | SeparatePane }` and `fn preferred_scale(&self) -> PriceScaleMode`. | M | `fc-types/src/indicator.rs` |
 | 3.7 | Add `IndicatorRenderer` trait (extends `SeriesRenderer`): `fn render_overlay(&self, ctx, pane) -> Vec<DrawCommand>` and `fn render_separate(&self, ctx) -> Vec<DrawCommand>`. | M | `fast-chart/src/render/indicator_renderer.rs` |
-| 3.8 | Implement `SeriesType::All` enum with all 15+ variants. Each variant maps to its `SeriesRenderer` implementation. | S | `fast-chart-domain/src/series_type.rs` |
+| 3.8 | Implement `SeriesType::All` enum with all 15+ variants. Each variant maps to its `SeriesRenderer` implementation. | S | `fc-types/src/series_type.rs` |
 | 3.9 | Add tests for each new series type: data generation, rendering commands, edge cases (empty data, single point, gaps). | L | test modules per series |
 
 ### Dependencies
@@ -240,7 +240,7 @@ Phase 1 complete (SeriesRenderer trait exists). Phase 2 helps but is not strictl
 
 ### Migration Notes
 
-- The existing 16 indicators in `fast-chart-domain/src/indicators/` remain as pure computation (they already are). The new `IndicatorRenderer` wraps them with rendering logic.
+- The existing 16 indicators in `fc-types/src/indicators/` remain as pure computation (they already are). The new `IndicatorRenderer` wraps them with rendering logic.
 - `HeikinAshi`, `Renko`, and `Kagi` in the indicators module are actually series transformations — they should be promoted to series types in `fast-chart/src/series/` with their computation staying in domain.
 - The current `SeriesType` enum (Candle, Bar, Line, Area, Baseline) is extended, not replaced.
 
@@ -268,20 +268,20 @@ Phase 1 complete (SeriesRenderer trait exists). Phase 2 helps but is not strictl
 
 | # | Task | Complexity | Files |
 |---|---|---|---|
-| 4.1 | Define `Drawing` trait: `fn id(&self) -> DrawingId`, `fn hit_test(&self, point) -> HitResult`, `fn move_to(&mut self, delta)`, `fn bounds(&self) -> Rect`, `fn to_commands(&self, ctx) -> Vec<DrawCommand>`. | M | `fast-chart-domain/src/drawing/trait.rs` |
-| 4.2 | Add `Arrow` drawing — line with arrowhead at one or both ends. Configurable head size, fill, and color. | S | `fast-chart-domain/src/drawing/arrow.rs` |
-| 4.3 | Add `Ray` drawing — starts at a point, extends infinitely in one direction. | S | `fast-chart-domain/src/drawing/ray.rs` |
-| 4.4 | Add `Segment` drawing — line between two points with configurable endpoints (one or both extend to edge). | S | `fast-chart-domain/src/drawing/segment.rs` |
-| 4.5 | Add `Box` drawing — 3D-style box with depth perspective (optional), fill, and border. | M | `fast-chart-domain/src/drawing/box_shape.rs` |
-| 4.6 | Add `Circle` drawing — center + radius (pixel or price-based). | S | `fast-chart-domain/src/drawing/circle.rs` |
-| 4.7 | Add `Polygon` drawing — arbitrary N-vertex shape, closed or open, with fill. | M | `fast-chart-domain/src/drawing/polygon.rs` |
-| 4.8 | Add `TextDrawing` — anchored text with font size, color, background, alignment. | M | `fast-chart-domain/src/drawing/text_drawing.rs` |
-| 4.9 | Add `ImageDrawing` — image at chart position with width/height. (Placeholder for Phase 7 image loading.) | S | `fast-chart-domain/src/drawing/image_drawing.rs` |
-| 4.10 | Add `LabelDrawing` — floating label attached to a price level or bar, with configurable style. | M | `fast-chart-domain/src/drawing/label.rs` |
+| 4.1 | Define `Drawing` trait: `fn id(&self) -> DrawingId`, `fn hit_test(&self, point) -> HitResult`, `fn move_to(&mut self, delta)`, `fn bounds(&self) -> Rect`, `fn to_commands(&self, ctx) -> Vec<DrawCommand>`. | M | `fc-types/src/drawing/trait.rs` |
+| 4.2 | Add `Arrow` drawing — line with arrowhead at one or both ends. Configurable head size, fill, and color. | S | `fc-types/src/drawing/arrow.rs` |
+| 4.3 | Add `Ray` drawing — starts at a point, extends infinitely in one direction. | S | `fc-types/src/drawing/ray.rs` |
+| 4.4 | Add `Segment` drawing — line between two points with configurable endpoints (one or both extend to edge). | S | `fc-types/src/drawing/segment.rs` |
+| 4.5 | Add `Box` drawing — 3D-style box with depth perspective (optional), fill, and border. | M | `fc-types/src/drawing/box_shape.rs` |
+| 4.6 | Add `Circle` drawing — center + radius (pixel or price-based). | S | `fc-types/src/drawing/circle.rs` |
+| 4.7 | Add `Polygon` drawing — arbitrary N-vertex shape, closed or open, with fill. | M | `fc-types/src/drawing/polygon.rs` |
+| 4.8 | Add `TextDrawing` — anchored text with font size, color, background, alignment. | M | `fc-types/src/drawing/text_drawing.rs` |
+| 4.9 | Add `ImageDrawing` — image at chart position with width/height. (Placeholder for Phase 7 image loading.) | S | `fc-types/src/drawing/image_drawing.rs` |
+| 4.10 | Add `LabelDrawing` — floating label attached to a price level or bar, with configurable style. | M | `fc-types/src/drawing/label.rs` |
 | 4.11 | Implement `DrawingManager` — manages all drawings in a pane: add, remove, select, deselect, hit-test cycle, bring-to-front, send-to-back. | L | `fast-chart/src/drawing/manager.rs` |
 | 4.12 | Implement `DrawingInteraction` — state machine for create/select/move/resize/delete flows. Driven by `InteractionEngine` events. | L | `fast-chart/src/drawing/interaction.rs` |
-| 4.13 | Refactor existing drawing types (TrendLine, Rectangle, etc.) to implement the `Drawing` trait. | M | `fast-chart-domain/src/drawing/*.rs` |
-| 4.14 | Add serialization support (`serde`) for all drawing types (optional feature flag). | M | `fast-chart-domain/Cargo.toml`, `fast-chart-domain/src/drawing/*.rs` |
+| 4.13 | Refactor existing drawing types (TrendLine, Rectangle, etc.) to implement the `Drawing` trait. | M | `fc-types/src/drawing/*.rs` |
+| 4.14 | Add serialization support (`serde`) for all drawing types (optional feature flag). | M | `fc-types/Cargo.toml`, `fc-types/src/drawing/*.rs` |
 | 4.15 | Tests: hit testing for each drawing type, move/resize, drawing manager operations, serialization roundtrip. | L | test modules |
 
 ### Dependencies
@@ -290,7 +290,7 @@ Phase 1 complete (DrawCommand and CoordinatePipeline exist). Phase 2 helps (pane
 
 ### Migration Notes
 
-- The existing 9 drawing types in `fast-chart-domain/src/drawing.rs` (983 lines) are refactored to implement the `Drawing` trait. The file is split into one file per type.
+- The existing 9 drawing types in `fc-types/src/drawing.rs` (983 lines) are refactored to implement the `Drawing` trait. The file is split into one file per type.
 - The existing `DrawingSet` (typed vectors per drawing kind) is replaced by `DrawingManager` which uses `Box<dyn Drawing>` for polymorphic handling.
 - The `DrawingId` type and `ChartPoint` type are preserved.
 
@@ -324,7 +324,7 @@ Phase 1 complete (DrawCommand and CoordinatePipeline exist). Phase 2 helps (pane
 | 5.2 | Define `InteractionEngine` — processes `InputEvent`s and produces `ChartCommand`s (zoom, pan, select, draw, etc.). State machine pattern. | L | `fast-chart/src/input/engine.rs` |
 | 5.3 | Implement zoom modes: `WheelZoom` (current), `PinchZoom` (two-finger), `BoxZoom` (drag rectangle), `AxisZoom` (x or y only), `AnimatedZoom` (smooth interpolation), `ProgrammaticZoom` (API). | L | `fast-chart/src/input/zoom.rs` |
 | 5.4 | Implement pan modes: `DragPan` (current), `MomentumPan` (fling), `InertiaPan` (decelerate), `AutoScroll` (follow latest bar), `FollowPrice` (lock crosshair to last price). | L | `fast-chart/src/input/pan.rs` |
-| 5.5 | Refactor `KineticScroll` to support momentum + inertia with configurable friction, velocity decay, and snap-to-bar. | M | `fast-chart-domain/src/kinetic.rs` |
+| 5.5 | Refactor `KineticScroll` to support momentum + inertia with configurable friction, velocity decay, and snap-to-bar. | M | `fc-types/src/kinetic.rs` |
 | 5.6 | Implement crosshair modes: `Normal`, `Magnetic` (snap to OHLC), `Hidden`, `Sync` (same position across panes), `Global` (shared across charts). | M | `fast-chart/src/input/crosshair.rs` |
 | 5.7 | Implement `KeyboardShortcuts` — configurable key bindings for timeframe switch, drawing tool selection, undo/redo, zoom reset. | M | `fast-chart/src/input/keyboard.rs` |
 | 5.8 | Add `GestureDetector` — unifies mouse, touch, and trackpad gestures into a common gesture vocabulary (tap, double-tap, long-press, drag, pinch, rotate). | L | `fast-chart/src/input/gesture.rs` |
@@ -363,22 +363,22 @@ Phase 1 (DrawCommand, CoordinatePipeline) and Phase 2 (Pane, LayoutEngine) must 
 2. Dirty rendering — only redraw changed regions
 3. Multi-level caching (geometry, text, glyph, series, axis, grid, indicator, label)
 4. Pixel-perfect rendering throughout
-5. Create `fast-chart-renderer-wgpu` crate
+5. Create `fc-renderer-wgpu` crate
 
 ### PRs
 
 | # | Task | Complexity | Files |
 |---|---|---|---|
-| 6.1 | Create `fast-chart-renderer-wgpu/` crate. Move wgpu code from `fast-chart-examples` into it. Depends on `fast-chart` (library). | L | `fast-chart-renderer-wgpu/Cargo.toml`, all rendering files |
-| 6.2 | Implement `WgpuBackend: RendererBackend` — execute `DrawCommand`s via wgpu. Batches commands by type for efficient GPU submission. | XL | `fast-chart-renderer-wgpu/src/backend.rs` |
+| 6.1 | Create `fc-renderer-wgpu/` crate. Move wgpu code from `fc-examples` into it. Depends on `fast-chart` (library). | L | `fc-renderer-wgpu/Cargo.toml`, all rendering files |
+| 6.2 | Implement `WgpuBackend: RendererBackend` — execute `DrawCommand`s via wgpu. Batches commands by type for efficient GPU submission. | XL | `fc-renderer-wgpu/src/backend.rs` |
 | 6.3 | Define `RenderPass` enum: `Background`, `Watermark`, `Grid`, `Session`, `Indicator`, `Series`, `Drawing`, `Overlay`, `Labels`, `Crosshair`, `Tooltip`, `Debug`. Each pass has a priority and can be skipped. | M | `fast-chart/src/render/passes.rs` |
 | 6.4 | Implement `RenderPipeline` — orchestrates pass execution. Collects `DrawCommand`s from all panes, sorts by layer, batches by pass, clips to pane rects. | L | `fast-chart/src/render/pipeline.rs` |
 | 6.5 | Implement `DirtyRegion` tracking — `InvalidationMask` is extended with per-region granularity (viewport rect, not just level flags). `needs_redraw(region) -> bool`. | L | `fast-chart/src/render/dirty.rs` |
 | 6.6 | Implement `CacheManager` with sub-caches: `GeometryCache` (vertex buffers), `TextCache` (formatted strings), `AxisCache` (tick positions), `GridCache` (grid lines), `IndicatorCache` (indicator geometry). Invalidation via content hash. | XL | `fast-chart/src/cache/mod.rs` |
 | 6.7 | Pixel-perfect audit — ensure all line rendering uses `floor(x) + 0.5` alignment. Add `PixelPerfect` helper trait. | M | `fast-chart/src/render/pixel_perfect.rs` |
-| 6.8 | Implement all existing sub-renderers (Candle, Line, Bar, Area, Histogram, Baseline, Crosshair, Grid, Markers, PriceLines, Text) as `SeriesRenderer` implementations in the wgpu crate. | XL | `fast-chart-renderer-wgpu/src/renderers/*.rs` |
-| 6.9 | Add scissor rect management for multi-pane rendering (existing per-pane scissor logic in gpu_renderer.rs is the starting point). | M | `fast-chart-renderer-wgpu/src/backend.rs` |
-| 6.10 | Performance benchmarks: 10K, 100K, 1M bars. Target: 60fps at 100K visible bars, <16ms frame time. | L | `fast-chart-renderer-wgpu/benches/` |
+| 6.8 | Implement all existing sub-renderers (Candle, Line, Bar, Area, Histogram, Baseline, Crosshair, Grid, Markers, PriceLines, Text) as `SeriesRenderer` implementations in the wgpu crate. | XL | `fc-renderer-wgpu/src/renderers/*.rs` |
+| 6.9 | Add scissor rect management for multi-pane rendering (existing per-pane scissor logic in gpu_renderer.rs is the starting point). | M | `fc-renderer-wgpu/src/backend.rs` |
+| 6.10 | Performance benchmarks: 10K, 100K, 1M bars. Target: 60fps at 100K visible bars, <16ms frame time. | L | `fc-renderer-wgpu/benches/` |
 
 ### Dependencies
 
@@ -427,8 +427,8 @@ Phases 1-5 complete. This is the integration phase.
 | 7.8 | Performance: profile with 10M bars. Optimize hot paths: vertex generation, cache invalidation, draw command sorting. Target: <1ms frame time for pan/zoom. | XL | benchmark-driven |
 | 7.9 | Add `#[inline]` and `#[cold]` annotations to hot/cold paths identified by profiling. | M | hot path functions |
 | 7.10 | Add `ChartBuilder` fluent API: `Chart::builder().pane(\|p\| p.series(Candle::new(data))).theme(DarkTheme).build()`. | L | `fast-chart/src/builder.rs` |
-| 7.11 | Create `fast-chart-examples/` with 5+ examples: simple candle, multi-pane, custom series, drawing tools, real-time data. | L | `fast-chart-examples/src/` |
-| 7.12 | Publish `fast-chart` and `fast-chart-domain` to crates.io (pre-release: `0.1.0-alpha`). | S | `Cargo.toml` version bump |
+| 7.11 | Create `fc-examples/` with 5+ examples: simple candle, multi-pane, custom series, drawing tools, real-time data. | L | `fc-examples/src/` |
+| 7.12 | Publish `fast-chart` and `fc-types` to crates.io (pre-release: `0.1.0-alpha`). | S | `Cargo.toml` version bump |
 
 ### Dependencies
 
@@ -448,7 +448,7 @@ Phase 6 complete (render pipeline works end-to-end).
 - [ ] All public items have rustdoc with examples
 - [ ] `cargo doc` produces no warnings
 - [ ] 10M bars: pan at <1ms, zoom at <5ms
-- [ ] At least 3 examples in `fast-chart-examples/`
+- [ ] At least 3 examples in `fc-examples/`
 - [ ] Pre-release published to crates.io
 
 ---

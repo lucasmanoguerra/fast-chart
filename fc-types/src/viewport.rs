@@ -9,7 +9,7 @@ use crate::price_scale::PriceScale;
 /// # Examples
 ///
 /// ```
-/// use fast_chart_domain::Viewport;
+/// use fc_types::Viewport;
 ///
 /// let mut vp = Viewport {
 ///     time_start: 0,

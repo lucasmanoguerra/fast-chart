@@ -76,6 +76,23 @@ impl AnimationState {
 // ---------------------------------------------------------------------------
 
 /// Animated value that interpolates between two `f64`s over time.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::animation::{AnimatedValue, Easing};
+///
+/// let mut anim = AnimatedValue::new(0.0, 100.0, 200.0, Easing::Linear);
+/// assert!(!anim.is_complete());
+///
+/// anim.update(100.0); // half-way
+/// let val = anim.current();
+/// assert!((val - 50.0).abs() < 1e-10, "expected ~50, got {}", val);
+///
+/// anim.complete();
+/// assert!(anim.is_complete());
+/// assert_eq!(anim.current(), 100.0);
+/// ```
 #[derive(Debug, Clone)]
 pub struct AnimatedValue {
     /// Start value.
@@ -166,6 +183,34 @@ impl AnimatedValue {
 // ---------------------------------------------------------------------------
 
 /// Engine that manages multiple named animated values.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::animation::{AnimationEngine, AnimatedValue, Easing};
+///
+/// let mut engine = AnimationEngine::new();
+/// engine.animate(
+///     "scroll",
+///     AnimatedValue::new(0.0, 100.0, 500.0, Easing::EaseInOut),
+/// );
+/// engine.animate(
+///     "fade",
+///     AnimatedValue::new(1.0, 0.0, 300.0, Easing::EaseOut),
+/// );
+///
+/// engine.update(200.0); // tick the clock
+/// assert!(engine.value("scroll").is_some());
+/// assert_eq!(engine.active_count(), 2);
+/// assert!(!engine.is_complete("fade"));  // only 200/300ms
+///
+/// engine.update(200.0); // total 400ms
+/// assert!(engine.is_complete("fade"));   // 400 > 300
+/// assert!(!engine.is_complete("scroll")); // 400 < 500
+///
+/// engine.update(200.0); // total 600ms
+/// assert!(engine.is_complete("scroll"));  // 600 > 500
+/// ```
 #[derive(Debug, Default)]
 pub struct AnimationEngine {
     /// Active animations keyed by name.
@@ -231,6 +276,21 @@ impl AnimationEngine {
 ///
 /// Returns the eased output in the same range for well-behaved easings.
 /// Spring easing may overshoot.
+///
+/// # Examples
+///
+/// ```
+/// use fast_chart::animation::{apply_easing, Easing};
+///
+/// let t = apply_easing(0.5, Easing::Linear);
+/// assert!((t - 0.5).abs() < 1e-10);
+///
+/// let eased = apply_easing(0.5, Easing::EaseIn);
+/// assert!((eased - 0.25).abs() < 1e-10);
+///
+/// let overshoot = apply_easing(0.5, Easing::Spring { stiffness: 200.0, damping: 5.0 });
+/// assert!(overshoot > 0.5); // Spring overshoots past the midpoint
+/// ```
 pub fn apply_easing(t: f64, easing: Easing) -> f64 {
     let t = t.clamp(0.0, 1.0);
     match easing {

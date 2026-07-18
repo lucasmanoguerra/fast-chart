@@ -13,6 +13,7 @@ use winit::window::{CursorIcon, WindowAttributes, WindowId};
 
 mod adapters;
 mod config;
+mod examples;
 
 use adapters::data::simulated::SimulatedDataProvider;
 use adapters::gpu_renderer::GpuRenderer;

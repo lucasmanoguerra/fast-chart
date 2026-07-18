@@ -3,6 +3,8 @@
 //! This module defines the universal render commands, layer system,
 //! coordinate pipeline, and renderer backend trait.
 
+use smallvec::SmallVec;
+
 pub mod backend;
 pub mod commands;
 pub mod dirty;
@@ -33,3 +35,9 @@ pub use drawing_manager::DrawingManager;
 pub use indicator_renderer::IndicatorRenderer;
 pub use layers::DrawLayer;
 pub use series_renderer::{Rect, SeriesHit, SeriesRenderer};
+
+/// A small, stack-allocated buffer for draw commands within a single pane.
+///
+/// Most panes produce fewer than 32 draw commands. `SmallVec` avoids heap
+/// allocation for the common case while still supporting arbitrary counts.
+pub type DrawBuffer = SmallVec<[DrawCommand; 32]>;

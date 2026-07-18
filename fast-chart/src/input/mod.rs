@@ -8,6 +8,34 @@
 // InputEvent — platform-agnostic input vocabulary
 // ---------------------------------------------------------------------------
 
+use bitflags::bitflags;
+
+bitflags! {
+    /// Bitflags for modifier keys — compact storage and fast membership tests.
+    ///
+    /// Prefer this over `ModifierState` when storing or comparing modifiers
+    /// in hot paths (e.g., keyboard shortcut matching).
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct ModifierFlags: u8 {
+        const SHIFT  = 0b0001;
+        const CTRL   = 0b0010;
+        const ALT    = 0b0100;
+        const SUPER  = 0b1000;
+    }
+}
+
+impl ModifierFlags {
+    /// Convert from `ModifierState` struct.
+    pub fn from_state(state: ModifierState) -> Self {
+        let mut flags = Self::empty();
+        if state.shift { flags |= Self::SHIFT; }
+        if state.ctrl { flags |= Self::CTRL; }
+        if state.alt { flags |= Self::ALT; }
+        if state.super_key { flags |= Self::SUPER; }
+        flags
+    }
+}
+
 /// A platform-agnostic input event.
 ///
 /// Adapters convert platform-specific events (winit, web, touch) into these.

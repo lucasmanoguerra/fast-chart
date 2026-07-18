@@ -132,6 +132,7 @@ impl ChartController {
     /// Forward an interaction command to the handler and apply the resulting
     /// viewport commands to the chart state.
     pub fn handle_input(&mut self, command: InteractionCommand) {
+        log::trace!("handle_input: processing command");
         // 1. Pass to interaction handler
         let commands = self.interaction.handle_event(command);
 

@@ -99,9 +99,19 @@ impl RenderPipeline {
 
     /// End frame: sort commands by z-index, group into pass batches.
     pub fn end_frame(&mut self) {
-        // Sort all pending commands by z_index (stable sort preserves submission order within same z).
-        self.pending_commands
-            .sort_by_key(|cmd| cmd.z_index());
+        // Sort all pending commands by z_index.
+        // Use parallel sort when the `parallel` feature is enabled and dataset is large.
+        #[cfg(feature = "parallel")]
+        {
+            use rayon::prelude::*;
+            self.pending_commands
+                .par_sort_by_key(|cmd| cmd.z_index());
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            self.pending_commands
+                .sort_by_key(|cmd| cmd.z_index());
+        }
 
         // Group into batches per pass.
         self.batches.clear();

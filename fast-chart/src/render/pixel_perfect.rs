@@ -4,6 +4,7 @@
 //! to avoid anti-aliasing blur on screen-aligned geometry.
 
 use crate::render::coordinates::ScreenPoint;
+use num_traits::Float;
 
 // ---------------------------------------------------------------------------
 // Trait
@@ -95,6 +96,18 @@ impl PixelPerfect for f64 {
     fn ceil_pixel(self) -> Self {
         self.ceil().max(0.0)
     }
+}
+
+// ---------------------------------------------------------------------------
+// Generic numeric snap (num-traits)
+// ---------------------------------------------------------------------------
+
+/// Generic snap-to-pixel-centre for any float type via `num_traits::Float`.
+///
+/// Works with f32, f64, or any custom float type implementing `num_traits::Float`.
+#[inline]
+pub fn snap_generic<T: Float>(value: T) -> T {
+    value.floor() + T::from(0.5).unwrap()
 }
 
 // ---------------------------------------------------------------------------

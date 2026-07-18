@@ -10,7 +10,10 @@ categories = ["finance", "gui", "rendering"]
 
 [dependencies]
 fast-chart-domain = { path = "../fast-chart-domain" }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [features]
-default = []
-serde = ["fast-chart-domain/serde"]
+default = ["animation", "sessions"]
+serde = ["dep:serde", "fast-chart-domain/serde"]
+animation = []
+sessions = []

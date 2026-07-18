@@ -9,6 +9,7 @@ pub enum ChartError {
 }
 
 impl fmt::Display for ChartError {
+    #[cold]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ChartError::InvalidPriceData(msg) => write!(f, "Invalid price data: {msg}"),

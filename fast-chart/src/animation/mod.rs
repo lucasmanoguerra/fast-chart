@@ -291,6 +291,7 @@ impl AnimationEngine {
 /// let overshoot = apply_easing(0.5, Easing::Spring { stiffness: 200.0, damping: 5.0 });
 /// assert!(overshoot > 0.5); // Spring overshoots past the midpoint
 /// ```
+#[inline]
 pub fn apply_easing(t: f64, easing: Easing) -> f64 {
     let t = t.clamp(0.0, 1.0);
     match easing {

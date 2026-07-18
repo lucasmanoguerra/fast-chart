@@ -12,6 +12,7 @@ pub struct ScissorRect {
 }
 
 impl ScissorRect {
+    #[inline]
     pub fn new(x: u32, y: u32, width: u32, height: u32) -> Self {
         Self {
             x,
@@ -22,16 +23,19 @@ impl ScissorRect {
     }
 
     /// Full surface rect covering the entire viewport.
+    #[inline]
     pub fn full(width: u32, height: u32) -> Self {
         Self::new(0, 0, width, height)
     }
 
     /// Right edge (exclusive): `x + width`.
+    #[inline]
     pub fn right(&self) -> u32 {
         self.x + self.width
     }
 
     /// Bottom edge (exclusive): `y + height`.
+    #[inline]
     pub fn bottom(&self) -> u32 {
         self.y + self.height
     }
@@ -40,6 +44,7 @@ impl ScissorRect {
     ///
     /// The intersection is the largest rectangle contained in both rects,
     /// computed as `max(left) / max(top) / min(right) / min(bottom)`.
+    #[inline]
     pub fn intersect(&self, other: &ScissorRect) -> Option<ScissorRect> {
         let left = self.x.max(other.x);
         let top = self.y.max(other.y);
@@ -60,6 +65,7 @@ impl ScissorRect {
     ///
     /// The point must be strictly inside the rect bounds (not on the
     /// exclusive right/bottom edge).
+    #[inline]
     pub fn contains(&self, x: u32, y: u32) -> bool {
         x >= self.x && x < self.right() && y >= self.y && y < self.bottom()
     }
@@ -68,6 +74,7 @@ impl ScissorRect {
     ///
     /// The y-coordinate is flipped from screen space (top-left origin)
     /// to wgpu's bottom-left origin using the provided `surface_height`.
+    #[inline]
     pub fn to_wgpu(&self, surface_height: u32) -> (u32, u32, u32, u32) {
         let y_flipped = surface_height.saturating_sub(self.bottom());
         (self.x, y_flipped, self.width, self.height)

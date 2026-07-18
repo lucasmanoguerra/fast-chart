@@ -265,6 +265,7 @@ impl KeyboardPresets {
                 "HorizontalLine" => super::engine::DrawingTool::HorizontalLine,
                 "VerticalLine" => super::engine::DrawingTool::VerticalLine,
                 "FibonacciRetracement" => super::engine::DrawingTool::FibonacciRetracement,
+                #[cold]
                 _ => unreachable!(),
             };
 

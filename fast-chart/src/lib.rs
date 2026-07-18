@@ -30,6 +30,7 @@ pub mod input;
 pub mod ports;
 pub mod render;
 pub mod series;
+pub mod theme;
 
 // ---------------------------------------------------------------------------
 // Domain re-exports (gateway pattern)

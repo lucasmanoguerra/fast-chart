@@ -26,3 +26,8 @@ animation = []
 sessions = []
 parallel = ["dep:rayon"]
 file-watcher = ["dep:notify", "dep:toml"]
+
+[dev-dependencies]
+approx = "0.5"
+proptest = "1"
+tempfile = "3"

@@ -54,36 +54,44 @@ pub trait PixelPerfect: Sized {
 // ---------------------------------------------------------------------------
 
 impl PixelPerfect for f32 {
+    #[inline]
     fn snap(self) -> Self {
         (self.floor() + 0.5).max(0.0)
     }
 
+    #[inline]
     fn snap_size(self) -> Self {
         self.round().max(0.0)
     }
 
+    #[inline]
     fn floor_pixel(self) -> Self {
         self.floor().max(0.0)
     }
 
+    #[inline]
     fn ceil_pixel(self) -> Self {
         self.ceil().max(0.0)
     }
 }
 
 impl PixelPerfect for f64 {
+    #[inline]
     fn snap(self) -> Self {
         (self.floor() + 0.5).max(0.0)
     }
 
+    #[inline]
     fn snap_size(self) -> Self {
         self.round().max(0.0)
     }
 
+    #[inline]
     fn floor_pixel(self) -> Self {
         self.floor().max(0.0)
     }
 
+    #[inline]
     fn ceil_pixel(self) -> Self {
         self.ceil().max(0.0)
     }
@@ -94,6 +102,7 @@ impl PixelPerfect for f64 {
 // ---------------------------------------------------------------------------
 
 /// Snap a `ScreenPoint` so both coordinates land on pixel centres.
+#[inline]
 pub fn snap_point(p: ScreenPoint) -> ScreenPoint {
     ScreenPoint {
         x: p.x.snap(),
@@ -118,6 +127,7 @@ pub fn snap_point(p: ScreenPoint) -> ScreenPoint {
 /// assert_eq!(w, 11.0);
 /// assert_eq!(h, 22.0);
 /// ```
+#[inline]
 pub fn pixel_perfect_rect(
     x: f64,
     y: f64,
@@ -149,6 +159,7 @@ pub fn pixel_perfect_rect(
 /// let (c, d) = snap_line(10.2, 10.3);
 /// assert!(d - c >= 1.0);
 /// ```
+#[inline]
 pub fn snap_line(start: f64, end: f64) -> (f64, f64) {
     let a = start.snap();
     let b = end.snap();

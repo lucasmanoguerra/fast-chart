@@ -47,16 +47,19 @@ pub struct Rgba(pub f64, pub f64, pub f64, pub f64);
 
 impl Rgba {
     /// Create a new RGBA color.
+    #[inline]
     pub const fn new(r: f64, g: f64, b: f64, a: f64) -> Self {
         Self(r, g, b, a)
     }
 
     /// Fully opaque convenience constructor.
+    #[inline]
     pub const fn rgb(r: f64, g: f64, b: f64) -> Self {
         Self(r, g, b, 1.0)
     }
 
     /// From `0xRRGGBBAA` hex integer.
+    #[inline]
     pub fn from_hex(hex: u32) -> Self {
         let r = ((hex >> 24) & 0xFF) as f64 / 255.0;
         let g = ((hex >> 16) & 0xFF) as f64 / 255.0;
@@ -495,6 +498,7 @@ impl ChartThemeBuilder {
     }
 
     /// Override a specific token by name (string).
+    #[inline]
     pub fn with(mut self, name: &str, color: Rgba) -> Self {
         if let Some(token) = parse_token(name) {
             self.overrides.insert(token, color);
@@ -503,6 +507,7 @@ impl ChartThemeBuilder {
     }
 
     /// Override a specific token (type-safe).
+    #[inline]
     pub fn with_token(mut self, token: ThemeToken, color: Rgba) -> Self {
         self.overrides.insert(token, color);
         self
@@ -524,6 +529,7 @@ impl Default for ChartThemeBuilder {
 }
 
 /// Parse a token name string into a `ThemeToken`.
+#[inline]
 fn parse_token(name: &str) -> Option<ThemeToken> {
     Some(match name {
         "background" => ThemeToken::Background,

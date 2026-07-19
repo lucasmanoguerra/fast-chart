@@ -3,11 +3,11 @@
 //!
 //! The engine tracks mouse/keyboard state and produces a stream of commands
 //! that a chart controller executes. It is deliberately decoupled from any
-//! rendering or data layer.
+//! rendering or input data layer.
 
-use crate::input::{
-    InputEvent, KeyCode, MouseButton, MouseButtonEvent, ModifierState, PinchEvent,
-    TouchEvent, WheelEvent,
+use crate::{
+    InputEvent, KeyCode, KeyEvent, MouseButton, MouseButtonEvent, MouseMoveEvent,
+    ModifierState, PinchEvent, TouchEvent, WheelEvent,
 };
 
 // ---------------------------------------------------------------------------
@@ -182,26 +182,22 @@ impl InteractionEngine {
             InputEvent::KeyDown(evt) => self.handle_key_down(evt),
             InputEvent::KeyUp(evt) => self.handle_key_up(evt),
             InputEvent::StylusMove(evt) => {
-                // Treat stylus move like mouse move for crosshair tracking.
-                self.handle_mouse_move(crate::input::MouseMoveEvent {
-                    x: evt.x,
-                    y: evt.y,
+                self.handle_mouse_move(MouseMoveEvent {
+                    x: evt.x, y: evt.y,
                     modifiers: evt.modifiers,
                 })
             }
             InputEvent::StylusDown(evt) => {
                 self.handle_mouse_down(MouseButtonEvent {
                     button: MouseButton::Left,
-                    x: evt.x,
-                    y: evt.y,
+                    x: evt.x, y: evt.y,
                     modifiers: evt.modifiers,
                 })
             }
             InputEvent::StylusUp(evt) => {
                 self.handle_mouse_up(MouseButtonEvent {
                     button: MouseButton::Left,
-                    x: evt.x,
-                    y: evt.y,
+                    x: evt.x, y: evt.y,
                     modifiers: evt.modifiers,
                 })
             }
@@ -210,7 +206,7 @@ impl InteractionEngine {
 
     // -- private handlers ---------------------------------------------------
 
-    fn handle_mouse_move(&mut self, evt: crate::input::MouseMoveEvent) -> Vec<ChartCommand> {
+    fn handle_mouse_move(&mut self, evt: MouseMoveEvent) -> Vec<ChartCommand> {
         self.last_mouse = Some((evt.x, evt.y));
 
         if self.mouse_down {
@@ -411,7 +407,7 @@ impl InteractionEngine {
         ]
     }
 
-    fn handle_key_down(&mut self, evt: crate::input::KeyEvent) -> Vec<ChartCommand> {
+    fn handle_key_down(&mut self, evt: KeyEvent) -> Vec<ChartCommand> {
         self.sync_modifiers(evt.modifiers);
 
         match evt.key {
@@ -453,37 +449,25 @@ impl InteractionEngine {
             }
             KeyCode::ArrowLeft => {
                 vec![
-                    ChartCommand::Pan {
-                        time_delta: -60,
-                        price_delta: 0.0,
-                    },
+                    ChartCommand::Pan { time_delta: -60, price_delta: 0.0 },
                     ChartCommand::RequestRedraw,
                 ]
             }
             KeyCode::ArrowRight => {
                 vec![
-                    ChartCommand::Pan {
-                        time_delta: 60,
-                        price_delta: 0.0,
-                    },
+                    ChartCommand::Pan { time_delta: 60, price_delta: 0.0 },
                     ChartCommand::RequestRedraw,
                 ]
             }
             KeyCode::ArrowUp => {
                 vec![
-                    ChartCommand::Pan {
-                        time_delta: 0,
-                        price_delta: -1.0,
-                    },
+                    ChartCommand::Pan { time_delta: 0, price_delta: -1.0 },
                     ChartCommand::RequestRedraw,
                 ]
             }
             KeyCode::ArrowDown => {
                 vec![
-                    ChartCommand::Pan {
-                        time_delta: 0,
-                        price_delta: 1.0,
-                    },
+                    ChartCommand::Pan { time_delta: 0, price_delta: 1.0 },
                     ChartCommand::RequestRedraw,
                 ]
             }
@@ -500,7 +484,7 @@ impl InteractionEngine {
         }
     }
 
-    fn handle_key_up(&mut self, evt: crate::input::KeyEvent) -> Vec<ChartCommand> {
+    fn handle_key_up(&mut self, evt: KeyEvent) -> Vec<ChartCommand> {
         self.sync_modifiers(evt.modifiers);
         Vec::new()
     }
@@ -532,15 +516,10 @@ impl Default for InteractionEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::ModifierState;
+    use crate::ModifierState;
 
     fn mods(shift: bool, ctrl: bool) -> ModifierState {
-        ModifierState {
-            shift,
-            ctrl,
-            alt: false,
-            super_key: false,
-        }
+        ModifierState { shift, ctrl, alt: false, super_key: false }
     }
 
     #[test]
@@ -597,11 +576,7 @@ mod tests {
     fn wheel_with_shift_produces_pan() {
         let mut eng = InteractionEngine::new();
         let evt = InputEvent::wheel_with_modifiers(
-            0.0,
-            -5.0,
-            400.0,
-            300.0,
-            mods(true, false),
+            0.0, -5.0, 400.0, 300.0, mods(true, false),
         );
         let cmds = eng.handle(evt);
 
@@ -709,45 +684,29 @@ mod tests {
     fn shift_tracking_across_key_down_up() {
         let mut eng = InteractionEngine::new();
 
-        let down_mods = ModifierState {
-            shift: true,
-            ctrl: false,
-            alt: false,
-            super_key: false,
-        };
+        let down_mods = ModifierState { shift: true, ctrl: false, alt: false, super_key: false };
         eng.handle(InputEvent::key_down_with_modifiers(
-            KeyCode::Shift,
-            down_mods,
+            KeyCode::Shift, down_mods,
         ));
-        // After key down with shift modifier, shift should be tracked.
+
         let cmds = eng.handle(InputEvent::wheel_with_modifiers(
             0.0, -5.0, 400.0, 300.0,
             ModifierState { shift: true, ctrl: false, alt: false, super_key: false },
         ));
         assert!(cmds.iter().any(|c| matches!(c, ChartCommand::Pan { .. })));
 
-        // Release shift.
+        // Release shift
         eng.handle(InputEvent::key_up(KeyCode::Shift));
-        // After shift released, wheel should zoom instead of pan.
         let cmds2 = eng.handle(InputEvent::wheel(0.0, -3.0, 400.0, 300.0));
-        assert!(cmds2.iter().any(|c| matches!(
-            c,
-            ChartCommand::ZoomAtCursor { .. }
-        )));
+        assert!(cmds2.iter().any(|c| matches!(c, ChartCommand::ZoomAtCursor { .. })));
     }
 
     #[test]
     fn drag_cycle_mouse_down_move_up() {
         let mut eng = InteractionEngine::new();
-
         eng.handle(InputEvent::mouse_left_down(100.0, 100.0));
         let move_cmds = eng.handle(InputEvent::mouse_move(150.0, 150.0));
-        // Should still emit crosshair (drag threshold not met for select tool).
-        assert!(move_cmds.iter().any(|c| matches!(
-            c,
-            ChartCommand::UpdateCrosshair { .. }
-        )));
-
+        assert!(move_cmds.iter().any(|c| matches!(c, ChartCommand::UpdateCrosshair { .. })));
         let up_cmds = eng.handle(InputEvent::mouse_left_up(150.0, 150.0));
         assert!(up_cmds.is_empty());
     }
@@ -756,7 +715,6 @@ mod tests {
     fn pinch_produces_zoom() {
         let mut eng = InteractionEngine::new();
         let cmds = eng.handle(InputEvent::pinch(400.0, 300.0, 200.0, 1.5));
-
         assert!(cmds.contains(&ChartCommand::ZoomAtCursor {
             factor: 1.5,
             screen_x: 400.0,
@@ -767,7 +725,6 @@ mod tests {
     #[test]
     fn set_tool_active_tool_is_drawing() {
         let mut eng = InteractionEngine::new();
-
         assert_eq!(eng.active_tool(), None);
         assert!(!eng.is_drawing());
 
@@ -784,9 +741,7 @@ mod tests {
     fn mouse_down_with_select_tool_emits_select_drawing() {
         let mut eng = InteractionEngine::new();
         eng.set_tool(Some(DrawingTool::Select));
-
         let cmds = eng.handle(InputEvent::mouse_left_down(200.0, 300.0));
-
         assert!(cmds.contains(&ChartCommand::SelectDrawing {
             screen_x: 200.0,
             screen_y: 300.0,
@@ -797,9 +752,7 @@ mod tests {
     fn mouse_down_with_drawing_tool_emits_place_point() {
         let mut eng = InteractionEngine::new();
         eng.set_tool(Some(DrawingTool::TrendLine));
-
         let cmds = eng.handle(InputEvent::mouse_left_down(100.0, 200.0));
-
         assert!(cmds.contains(&ChartCommand::PlaceDrawingPoint {
             screen_x: 100.0,
             screen_y: 200.0,
@@ -811,8 +764,7 @@ mod tests {
         let mut eng = InteractionEngine::new();
         let cmds = eng.handle(InputEvent::MouseDown(MouseButtonEvent {
             button: MouseButton::Right,
-            x: 100.0,
-            y: 200.0,
+            x: 100.0, y: 200.0,
             modifiers: ModifierState::default(),
         }));
         assert!(cmds.is_empty());
@@ -823,7 +775,6 @@ mod tests {
         let mut eng = InteractionEngine::new();
         eng.handle(InputEvent::mouse_move(500.0, 400.0));
         let cmds = eng.handle(InputEvent::key_down(KeyCode::Plus));
-
         assert!(cmds.iter().any(|c| matches!(
             c,
             ChartCommand::ZoomAtCursor { factor: 1.2, screen_x: 500.0, screen_y: 400.0 }
@@ -835,12 +786,8 @@ mod tests {
         let mut eng = InteractionEngine::new();
         eng.handle(InputEvent::mouse_move(500.0, 400.0));
         let cmds = eng.handle(InputEvent::key_down(KeyCode::Minus));
-
         let expected = 1.0 / 1.2;
-        assert!(cmds.iter().any(|c| matches!(
-            c,
-            ChartCommand::ZoomAtCursor { factor, .. } if (*factor - expected).abs() < 1e-10
-        )));
+        assert!(cmds.iter().any(|c| matches!(c, ChartCommand::ZoomAtCursor { factor, .. } if (*factor - expected).abs() < 1e-10)));
     }
 
     #[test]
@@ -854,11 +801,7 @@ mod tests {
     fn stylus_move_produces_crosshair() {
         let mut eng = InteractionEngine::new();
         let cmds = eng.handle(InputEvent::stylus_move(150.0, 250.0, 0.5));
-
-        assert!(cmds.iter().any(|c| matches!(
-            c,
-            ChartCommand::UpdateCrosshair { screen_x: 150.0, screen_y: 250.0 }
-        )));
+        assert!(cmds.iter().any(|c| matches!(c, ChartCommand::UpdateCrosshair { screen_x: 150.0, screen_y: 250.0 })));
     }
 
     #[test]
@@ -866,7 +809,6 @@ mod tests {
         let mut eng = InteractionEngine::new();
         let down_cmds = eng.handle(InputEvent::touch_start(1, 50.0, 60.0));
         assert!(down_cmds.contains(&ChartCommand::RequestRedraw));
-
         let up_cmds = eng.handle(InputEvent::touch_end(1, 50.0, 60.0));
         assert!(up_cmds.is_empty());
     }
@@ -875,17 +817,8 @@ mod tests {
     fn draw_select_drag_emits_move_selected() {
         let mut eng = InteractionEngine::new();
         eng.set_tool(Some(DrawingTool::Select));
-
         eng.handle(InputEvent::mouse_left_down(100.0, 100.0));
-        // Move past the threshold (0.5 px).
         let cmds = eng.handle(InputEvent::mouse_move(110.0, 115.0));
-
-        assert!(cmds.iter().any(|c| matches!(
-            c,
-            ChartCommand::MoveSelected {
-                delta_timestamp: _,
-                delta_price: _,
-            }
-        )));
+        assert!(cmds.iter().any(|c| matches!(c, ChartCommand::MoveSelected { delta_timestamp: _, delta_price: _ })));
     }
 }

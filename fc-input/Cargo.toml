@@ -1,0 +1,11 @@
+[package]
+name = "fc-input"
+version = "0.1.0"
+edition = "2021"
+description = "Platform-agnostic input events and interaction engine for charts"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+bitflags = "2"
+
+[dev-dependencies]

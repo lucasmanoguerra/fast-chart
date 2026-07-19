@@ -1,7 +1,7 @@
 //! Crosshair state machine.
 //!
 //! Tracks crosshair mode, position, and snapping behaviour. The controller
-//! is a pure state machine — it knows nothing about data series. The host
+//! is a pure state machine — it knows nothing about the data series. The host
 //! application resolves screen coordinates to world space and provides the
 //! nearest data point when in Magnetic mode.
 
@@ -14,7 +14,7 @@
 pub enum CrosshairMode {
     /// Standard crosshair that follows the cursor.
     Normal,
-    /// Snaps to the nearest data point when within threshold.
+    /// Snaps to the nearest data point within threshold.
     Magnetic,
     /// Crosshair not visible.
     Hidden,
@@ -33,7 +33,7 @@ pub enum CrosshairMode {
 /// Crosshair position in world coordinates.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct CrosshairPosition {
-    /// Time coordinate (timestamp).
+    /// Time coordinate.
     pub time: f64,
     /// Price coordinate.
     pub price: f64,
@@ -96,8 +96,6 @@ impl CrosshairController {
     /// In Magnetic mode, if `nearest_data_point` is provided and within
     /// `snap_threshold` (Euclidean distance in normalized 0.0–1.0 space),
     /// the crosshair snaps to that point.
-    ///
-    /// Returns a reference to the stored position.
     pub fn update_position(
         &mut self,
         time: f64,
@@ -121,21 +119,13 @@ impl CrosshairController {
             (time, price)
         };
 
-        self.position = Some(CrosshairPosition {
-            time,
-            price,
-            snapped,
-        });
+        self.position = Some(CrosshairPosition { time, price, snapped });
         self.position.as_ref().expect("just set")
     }
 
     /// Set custom position (for Custom mode).
     pub fn set_custom_position(&mut self, time: f64, price: f64) {
-        self.custom_position = Some(CrosshairPosition {
-            time,
-            price,
-            snapped: false,
-        });
+        self.custom_position = Some(CrosshairPosition { time, price, snapped: false });
     }
 
     /// Clear crosshair position.
@@ -175,8 +165,6 @@ impl CrosshairController {
     }
 
     /// Check if this crosshair should sync with another.
-    ///
-    /// Returns `true` when both controllers share the same non-None sync group.
     pub fn should_sync_with(&self, other: &CrosshairController) -> bool {
         match (self.sync_group, other.sync_group) {
             (Some(a), Some(b)) => a == b,
@@ -234,7 +222,6 @@ mod tests {
         let mut ctrl = CrosshairController::new();
         ctrl.update_position(100.0, 50.0, None);
         assert!(ctrl.position().is_some());
-
         ctrl.clear();
         assert!(ctrl.position().is_none());
     }
@@ -244,7 +231,6 @@ mod tests {
         let mut ctrl = CrosshairController::new();
         ctrl.set_mode(CrosshairMode::Magnetic);
         ctrl.set_snap_threshold(0.1);
-
         let pos = ctrl.update_position(0.5, 0.5, Some((0.52, 0.51)));
         assert!(pos.snapped);
         assert_eq!(pos.time, 0.52);
@@ -256,7 +242,6 @@ mod tests {
         let mut ctrl = CrosshairController::new();
         ctrl.set_mode(CrosshairMode::Magnetic);
         ctrl.set_snap_threshold(0.01);
-
         let pos = ctrl.update_position(0.0, 0.0, Some((0.5, 0.5)));
         assert!(!pos.snapped);
         assert_eq!(pos.time, 0.0);
@@ -267,7 +252,6 @@ mod tests {
     fn magnetic_respects_threshold() {
         let mut ctrl = CrosshairController::new();
         ctrl.set_mode(CrosshairMode::Magnetic);
-
         ctrl.set_snap_threshold(0.1);
         let pos1 = ctrl.update_position(0.5, 0.5, Some((0.55, 0.55)));
         assert!(pos1.snapped);
@@ -289,7 +273,6 @@ mod tests {
         let mut ctrl = CrosshairController::new();
         ctrl.set_mode(CrosshairMode::Custom);
         ctrl.set_custom_position(42.0, 99.0);
-
         let pos = ctrl.position().expect("custom position should exist");
         assert_eq!(pos.time, 42.0);
         assert_eq!(pos.price, 99.0);
@@ -324,10 +307,8 @@ mod tests {
     fn visibility_toggle() {
         let mut ctrl = CrosshairController::new();
         assert!(ctrl.is_visible());
-
         ctrl.set_visible(false);
         assert!(!ctrl.is_visible());
-
         ctrl.set_visible(true);
         assert!(ctrl.is_visible());
     }
@@ -337,10 +318,8 @@ mod tests {
         let mut ctrl = CrosshairController::new();
         ctrl.set_mode(CrosshairMode::Magnetic);
         ctrl.set_snap_threshold(1.0);
-
         let pos_snapped = ctrl.update_position(0.0, 0.0, Some((0.1, 0.1)));
         assert!(pos_snapped.snapped);
-
         let pos_not_snapped = ctrl.update_position(0.0, 0.0, None);
         assert!(!pos_not_snapped.snapped);
     }

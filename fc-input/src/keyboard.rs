@@ -4,10 +4,10 @@
 //! [`ChartCommand`]s. [`KeyboardPresets`] provides ready-made profiles
 //! (default, trading, minimal).
 
-use super::engine::ChartCommand;
+use crate::engine::ChartCommand;
 
 // ---------------------------------------------------------------------------
-// Modifiers
+// Modifiers (keyboard-specific)
 // ---------------------------------------------------------------------------
 
 /// Modifier keys state for shortcut matching.
@@ -20,20 +20,10 @@ pub struct Modifiers {
 }
 
 impl Modifiers {
-    pub const NONE: Self = Self {
-        shift: false,
-        ctrl: false,
-        alt: false,
-        meta: false,
-    };
+    pub const NONE: Self = Self { shift: false, ctrl: false, alt: false, meta: false };
 
-    pub fn new(shift: bool, ctrl: bool, alt: bool, meta: bool) -> Self {
-        Self {
-            shift,
-            ctrl,
-            alt,
-            meta,
-        }
+    pub const fn new(shift: bool, ctrl: bool, alt: bool, meta: bool) -> Self {
+        Self { shift, ctrl, alt, meta }
     }
 }
 
@@ -41,7 +31,7 @@ impl Modifiers {
 // KeyboardShortcut
 // ---------------------------------------------------------------------------
 
-/// A keyboard shortcut: key + modifiers → command.
+/// A keyboard shortcut: key + modifiers -> command.
 #[derive(Debug, Clone)]
 pub struct KeyboardShortcut {
     /// Key name (e.g., `"Escape"`, `"Delete"`, `"1"`, `"ArrowLeft"`).
@@ -65,13 +55,10 @@ pub struct KeyboardShortcutMap {
 
 impl KeyboardShortcutMap {
     pub fn new() -> Self {
-        Self {
-            shortcuts: Vec::new(),
-        }
+        Self { shortcuts: Vec::new() }
     }
 
-    /// Register a shortcut. Duplicate key+modifiers combinations are allowed;
-    /// the first match wins during lookup.
+    /// Register a shortcut. Duplicate key+modifiers allowed; first match wins.
     pub fn register(&mut self, shortcut: KeyboardShortcut) {
         self.shortcuts.push(shortcut);
     }
@@ -81,8 +68,7 @@ impl KeyboardShortcutMap {
         self.shortcuts.clear();
     }
 
-    /// Handle a keyboard event. Returns the command of the first matching
-    /// shortcut, if any.
+    /// Handle a keyboard event. Returns the first matching shortcut's command.
     pub fn handle_event(&self, key: &str, modifiers: &Modifiers) -> Option<&ChartCommand> {
         self.find(key, modifiers).map(|s| &s.command)
     }
@@ -94,19 +80,12 @@ impl KeyboardShortcutMap {
 
     /// Find the first shortcut matching `key` + `modifiers`.
     pub fn find(&self, key: &str, modifiers: &Modifiers) -> Option<&KeyboardShortcut> {
-        self.shortcuts
-            .iter()
-            .find(|s| s.key == key && s.modifiers == *modifiers)
+        self.shortcuts.iter().find(|s| s.key == key && s.modifiers == *modifiers)
     }
 
     /// Remove the first shortcut matching `key` + `modifiers`.
-    /// Returns `true` if a shortcut was removed.
     pub fn remove(&mut self, key: &str, modifiers: &Modifiers) -> bool {
-        if let Some(pos) = self
-            .shortcuts
-            .iter()
-            .position(|s| s.key == key && s.modifiers == *modifiers)
-        {
+        if let Some(pos) = self.shortcuts.iter().position(|s| s.key == key && s.modifiers == *modifiers) {
             self.shortcuts.remove(pos);
             true
         } else {
@@ -146,132 +125,86 @@ impl KeyboardPresets {
         let none = Modifiers::NONE;
 
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: none,
+            key: "Escape".to_string(), modifiers: none,
             command: ChartCommand::CancelDrawing,
             description: "Cancel drawing and deselect all".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: none,
+            key: "Escape".to_string(), modifiers: none,
             command: ChartCommand::DeselectAll,
             description: "Deselect all".to_string(),
         });
-
         map.register(KeyboardShortcut {
-            key: "Delete".to_string(),
-            modifiers: none,
+            key: "Delete".to_string(), modifiers: none,
             command: ChartCommand::DeleteSelected,
             description: "Delete selected drawing".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "Backspace".to_string(),
-            modifiers: none,
+            key: "Backspace".to_string(), modifiers: none,
             command: ChartCommand::DeleteSelected,
             description: "Delete selected drawing".to_string(),
         });
 
-        // Zoom +/= zoom in
+        // Zoom
         map.register(KeyboardShortcut {
-            key: "+".to_string(),
-            modifiers: none,
-            command: ChartCommand::ZoomAtCursor {
-                factor: 1.5,
-                screen_x: 0.0,
-                screen_y: 0.0,
-            },
+            key: "+".to_string(), modifiers: none,
+            command: ChartCommand::ZoomAtCursor { factor: 1.5, screen_x: 0.0, screen_y: 0.0 },
             description: "Zoom in at cursor".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "=".to_string(),
-            modifiers: none,
-            command: ChartCommand::ZoomAtCursor {
-                factor: 1.5,
-                screen_x: 0.0,
-                screen_y: 0.0,
-            },
+            key: "=".to_string(), modifiers: none,
+            command: ChartCommand::ZoomAtCursor { factor: 1.5, screen_x: 0.0, screen_y: 0.0 },
             description: "Zoom in at cursor".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "-".to_string(),
-            modifiers: none,
-            command: ChartCommand::ZoomAtCursor {
-                factor: 0.67,
-                screen_x: 0.0,
-                screen_y: 0.0,
-            },
+            key: "-".to_string(), modifiers: none,
+            command: ChartCommand::ZoomAtCursor { factor: 0.67, screen_x: 0.0, screen_y: 0.0 },
             description: "Zoom out at cursor".to_string(),
         });
 
         // Pan
         map.register(KeyboardShortcut {
-            key: "ArrowLeft".to_string(),
-            modifiers: none,
-            command: ChartCommand::Pan {
-                time_delta: -5,
-                price_delta: 0.0,
-            },
+            key: "ArrowLeft".to_string(), modifiers: none,
+            command: ChartCommand::Pan { time_delta: -5, price_delta: 0.0 },
             description: "Pan left".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "ArrowRight".to_string(),
-            modifiers: none,
-            command: ChartCommand::Pan {
-                time_delta: 5,
-                price_delta: 0.0,
-            },
+            key: "ArrowRight".to_string(), modifiers: none,
+            command: ChartCommand::Pan { time_delta: 5, price_delta: 0.0 },
             description: "Pan right".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "ArrowUp".to_string(),
-            modifiers: none,
-            command: ChartCommand::Pan {
-                time_delta: 0,
-                price_delta: 5.0,
-            },
+            key: "ArrowUp".to_string(), modifiers: none,
+            command: ChartCommand::Pan { time_delta: 0, price_delta: 5.0 },
             description: "Pan up".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "ArrowDown".to_string(),
-            modifiers: none,
-            command: ChartCommand::Pan {
-                time_delta: 0,
-                price_delta: -5.0,
-            },
+            key: "ArrowDown".to_string(), modifiers: none,
+            command: ChartCommand::Pan { time_delta: 0, price_delta: -5.0 },
             description: "Pan down".to_string(),
         });
 
-        // Drawing tools 1–9
+        // Drawing tools 1-9
         let tools = [
-            "TrendLine",
-            "Arrow",
-            "Ray",
-            "Segment",
-            "Rectangle",
-            "Ellipse",
-            "HorizontalLine",
-            "VerticalLine",
-            "FibonacciRetracement",
+            "TrendLine", "Arrow", "Ray", "Segment", "Rectangle", "Ellipse",
+            "HorizontalLine", "VerticalLine", "FibonacciRetracement",
         ];
         for (i, tool_name) in tools.iter().enumerate() {
             let digit = char::from_digit((i + 1) as u32, 10).expect("index 1..=9 is always a digit");
             let tool = match *tool_name {
-                "TrendLine" => super::engine::DrawingTool::TrendLine,
-                "Arrow" => super::engine::DrawingTool::Arrow,
-                "Ray" => super::engine::DrawingTool::Ray,
-                "Segment" => super::engine::DrawingTool::Segment,
-                "Rectangle" => super::engine::DrawingTool::Rectangle,
-                "Ellipse" => super::engine::DrawingTool::Ellipse,
-                "HorizontalLine" => super::engine::DrawingTool::HorizontalLine,
-                "VerticalLine" => super::engine::DrawingTool::VerticalLine,
-                "FibonacciRetracement" => super::engine::DrawingTool::FibonacciRetracement,
-                #[cold]
+                "TrendLine" => crate::engine::DrawingTool::TrendLine,
+                "Arrow" => crate::engine::DrawingTool::Arrow,
+                "Ray" => crate::engine::DrawingTool::Ray,
+                "Segment" => crate::engine::DrawingTool::Segment,
+                "Rectangle" => crate::engine::DrawingTool::Rectangle,
+                "Ellipse" => crate::engine::DrawingTool::Ellipse,
+                "HorizontalLine" => crate::engine::DrawingTool::HorizontalLine,
+                "VerticalLine" => crate::engine::DrawingTool::VerticalLine,
+                "FibonacciRetracement" => crate::engine::DrawingTool::FibonacciRetracement,
                 _ => unreachable!(),
             };
-
             map.register(KeyboardShortcut {
-                key: digit.to_string(),
-                modifiers: none,
+                key: digit.to_string(), modifiers: none,
                 command: ChartCommand::StartDrawing { tool },
                 description: format!("Start drawing {tool_name}"),
             });
@@ -280,27 +213,23 @@ impl KeyboardPresets {
         map
     }
 
-    /// Trading-focused shortcuts. Adds crosshair toggle, magnetic crosshair,
-    /// and auto-scroll toggle to the default set.
+    /// Trading-focused shortcuts.
     pub fn trading_shortcuts() -> KeyboardShortcutMap {
         let mut map = Self::default_shortcuts();
         let none = Modifiers::NONE;
 
         map.register(KeyboardShortcut {
-            key: "h".to_string(),
-            modifiers: none,
+            key: "h".to_string(), modifiers: none,
             command: ChartCommand::RequestRedraw,
             description: "Toggle crosshair mode".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "m".to_string(),
-            modifiers: none,
+            key: "m".to_string(), modifiers: none,
             command: ChartCommand::RequestRedraw,
             description: "Toggle magnetic crosshair".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: " ".to_string(),
-            modifiers: none,
+            key: " ".to_string(), modifiers: none,
             command: ChartCommand::RequestRedraw,
             description: "Toggle auto-scroll".to_string(),
         });
@@ -314,24 +243,20 @@ impl KeyboardPresets {
         let none = Modifiers::NONE;
 
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: none,
+            key: "Escape".to_string(), modifiers: none,
             command: ChartCommand::CancelDrawing,
             description: "Cancel drawing".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: none,
+            key: "Escape".to_string(), modifiers: none,
             command: ChartCommand::DeselectAll,
             description: "Deselect all".to_string(),
         });
         map.register(KeyboardShortcut {
-            key: "Delete".to_string(),
-            modifiers: none,
+            key: "Delete".to_string(), modifiers: none,
             command: ChartCommand::DeleteSelected,
             description: "Delete selected drawing".to_string(),
         });
-
         map
     }
 }
@@ -344,17 +269,9 @@ impl KeyboardPresets {
 mod tests {
     use super::*;
 
-    fn command_delete() -> ChartCommand {
-        ChartCommand::DeleteSelected
-    }
-
-    fn command_cancel() -> ChartCommand {
-        ChartCommand::CancelDrawing
-    }
-
-    fn command_deselect() -> ChartCommand {
-        ChartCommand::DeselectAll
-    }
+    fn cmd_delete() -> ChartCommand { ChartCommand::DeleteSelected }
+    fn cmd_cancel() -> ChartCommand { ChartCommand::CancelDrawing }
+    fn cmd_deselect() -> ChartCommand { ChartCommand::DeselectAll }
 
     #[test]
     fn empty_map() {
@@ -367,12 +284,8 @@ mod tests {
     fn register_shortcut() {
         let mut map = KeyboardShortcutMap::new();
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "Cancel".to_string(),
+            key: "Escape".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "Cancel".to_string(),
         });
-
         assert_eq!(map.len(), 1);
         assert!(!map.is_empty());
     }
@@ -381,70 +294,45 @@ mod tests {
     fn handle_event_match() {
         let mut map = KeyboardShortcutMap::new();
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "Cancel".to_string(),
+            key: "Escape".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "Cancel".to_string(),
         });
-
-        let cmd = map.handle_event("Escape", &Modifiers::NONE);
-        assert_eq!(cmd, Some(&command_cancel()));
+        assert_eq!(map.handle_event("Escape", &Modifiers::NONE), Some(&cmd_cancel()));
     }
 
     #[test]
     fn handle_event_no_match() {
         let mut map = KeyboardShortcutMap::new();
         map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "Cancel".to_string(),
+            key: "Escape".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "".to_string(),
         });
-
-        let cmd = map.handle_event("Delete", &Modifiers::NONE);
-        assert!(cmd.is_none());
+        assert!(map.handle_event("Delete", &Modifiers::NONE).is_none());
     }
 
     #[test]
     fn handle_event_with_modifier() {
         let mut map = KeyboardShortcutMap::new();
         map.register(KeyboardShortcut {
-            key: "z".to_string(),
-            modifiers: Modifiers::new(true, true, false, false),
-            command: command_cancel(),
-            description: "Shift+Ctrl+Z".to_string(),
+            key: "z".to_string(), modifiers: Modifiers::new(true, true, false, false), command: cmd_cancel(), description: "Shift+Ctrl+Z".to_string(),
         });
-
-        let cmd = map.handle_event("z", &Modifiers::new(true, true, false, false));
-        assert_eq!(cmd, Some(&command_cancel()));
+        assert_eq!(map.handle_event("z", &Modifiers::new(true, true, false, false)), Some(&cmd_cancel()));
     }
 
     #[test]
     fn handle_event_wrong_modifier() {
         let mut map = KeyboardShortcutMap::new();
         map.register(KeyboardShortcut {
-            key: "z".to_string(),
-            modifiers: Modifiers::new(true, false, false, false),
-            command: command_cancel(),
-            description: "Shift+Z".to_string(),
+            key: "z".to_string(), modifiers: Modifiers::new(true, false, false, false), command: cmd_cancel(), description: "Shift+Z".to_string(),
         });
-
-        // No modifier pressed — should not match.
-        let cmd = map.handle_event("z", &Modifiers::NONE);
-        assert!(cmd.is_none());
+        assert!(map.handle_event("z", &Modifiers::NONE).is_none());
     }
 
     #[test]
     fn find_shortcut() {
         let mut map = KeyboardShortcutMap::new();
         let shortcut = KeyboardShortcut {
-            key: "Delete".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_delete(),
-            description: "Delete".to_string(),
+            key: "Delete".to_string(), modifiers: Modifiers::NONE, command: cmd_delete(), description: "Delete".to_string(),
         };
         map.register(shortcut);
-
         let found = map.find("Delete", &Modifiers::NONE);
         assert!(found.is_some());
         assert_eq!(found.unwrap().key, "Delete");
@@ -454,33 +342,17 @@ mod tests {
     fn remove_shortcut() {
         let mut map = KeyboardShortcutMap::new();
         map.register(KeyboardShortcut {
-            key: "Delete".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_delete(),
-            description: "Delete".to_string(),
+            key: "Delete".to_string(), modifiers: Modifiers::NONE, command: cmd_delete(), description: "Delete".to_string(),
         });
-
-        let removed = map.remove("Delete", &Modifiers::NONE);
-        assert!(removed);
+        assert!(map.remove("Delete", &Modifiers::NONE));
         assert!(map.is_empty());
     }
 
     #[test]
     fn clear_shortcuts() {
         let mut map = KeyboardShortcutMap::new();
-        map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "Cancel".to_string(),
-        });
-        map.register(KeyboardShortcut {
-            key: "Delete".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_delete(),
-            description: "Delete".to_string(),
-        });
-
+        map.register(KeyboardShortcut { key: "a".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "".to_string() });
+        map.register(KeyboardShortcut { key: "b".to_string(), modifiers: Modifiers::NONE, command: cmd_delete(), description: "".to_string() });
         map.clear();
         assert!(map.is_empty());
     }
@@ -490,22 +362,10 @@ mod tests {
         let mut map = KeyboardShortcutMap::new();
         assert_eq!(map.len(), 0);
         assert!(map.is_empty());
-
-        map.register(KeyboardShortcut {
-            key: "a".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "a".to_string(),
-        });
+        map.register(KeyboardShortcut { key: "a".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "".to_string() });
         assert_eq!(map.len(), 1);
         assert!(!map.is_empty());
-
-        map.register(KeyboardShortcut {
-            key: "b".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "b".to_string(),
-        });
+        map.register(KeyboardShortcut { key: "b".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "".to_string() });
         assert_eq!(map.len(), 2);
     }
 
@@ -536,14 +396,8 @@ mod tests {
     #[test]
     fn minimal_preset_has_few() {
         let map = KeyboardPresets::minimal_shortcuts();
-        // Escape×2 + Delete = 3 entries, but only 2 distinct keys.
         let keys: Vec<&str> = map.shortcuts().iter().map(|s| s.key.as_str()).collect();
-        let unique: Vec<&str> = keys
-            .iter()
-            .copied()
-            .collect::<std::collections::HashSet<_>>()
-            .into_iter()
-            .collect();
+        let unique: std::collections::HashSet<&str> = keys.iter().copied().collect();
         assert_eq!(unique.len(), 2);
         assert!(map.find("Escape", &Modifiers::NONE).is_some());
         assert!(map.find("Delete", &Modifiers::NONE).is_some());
@@ -552,30 +406,16 @@ mod tests {
     #[test]
     fn duplicate_key_register() {
         let mut map = KeyboardShortcutMap::new();
-        map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
-            description: "Cancel".to_string(),
-        });
-        map.register(KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_deselect(),
-            description: "Deselect".to_string(),
-        });
-
+        map.register(KeyboardShortcut { key: "Escape".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(), description: "Cancel".to_string() });
+        map.register(KeyboardShortcut { key: "Escape".to_string(), modifiers: Modifiers::NONE, command: cmd_deselect(), description: "Deselect".to_string() });
         assert_eq!(map.len(), 2);
-        // First match wins.
-        assert_eq!(map.handle_event("Escape", &Modifiers::NONE), Some(&command_cancel()));
+        assert_eq!(map.handle_event("Escape", &Modifiers::NONE), Some(&cmd_cancel()));
     }
 
     #[test]
     fn description_field() {
         let shortcut = KeyboardShortcut {
-            key: "Escape".to_string(),
-            modifiers: Modifiers::NONE,
-            command: command_cancel(),
+            key: "Escape".to_string(), modifiers: Modifiers::NONE, command: cmd_cancel(),
             description: "Cancel the current drawing".to_string(),
         };
         assert_eq!(shortcut.description, "Cancel the current drawing");

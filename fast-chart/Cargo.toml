@@ -14,11 +14,11 @@ fc-theme = { path = "../fc-theme" }
 fc-cache = { path = "../fc-cache" }
 fc-animation = { path = "../fc-animation" }
 fc-sessions = { path = "../fc-sessions" }
+fc-input = { path = "../fc-input" }
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1.10", optional = true }
 notify = { version = "6.1", optional = true }
 log = "0.4"
-bitflags = "2"
 smallvec = "1"
 num-traits = "0.2"
 toml = { version = "0.8", optional = true }

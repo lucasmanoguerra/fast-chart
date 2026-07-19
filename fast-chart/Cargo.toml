@@ -15,6 +15,7 @@ fc-cache = { path = "../fc-cache" }
 fc-animation = { path = "../fc-animation" }
 fc-sessions = { path = "../fc-sessions" }
 fc-input = { path = "../fc-input" }
+fc-render = { path = "../fc-render" }
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1.10", optional = true }
 notify = { version = "6.1", optional = true }

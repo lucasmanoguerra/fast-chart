@@ -6,9 +6,9 @@ use fc_types::drawing::{
     ChartPoint, DrawingId, DrawingSet,
 };
 
-use crate::render::commands::DrawCommand;
-use crate::render::context::RenderContext;
-use crate::render::drawing::{Drawing, DrawingBounds, HitResult};
+use crate::commands::DrawCommand;
+use crate::context::RenderContext;
+use crate::drawing::{Drawing, DrawingBounds, HitResult};
 
 /// A unified manager for all drawing types in a pane.
 ///
@@ -390,15 +390,15 @@ mod tests {
         let mut mgr = DrawingManager::new();
         mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
 
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let pipeline = CoordinatePipeline::new(
             (0.0, 3000.0),
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = mgr.render(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -491,15 +491,15 @@ mod tests {
         let mut mgr = DrawingManager::new();
         mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
 
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let pipeline = CoordinatePipeline::new(
             (0.0, 3000.0),
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = mgr.render(&ctx);
         assert_eq!(cmds.len(), 1);

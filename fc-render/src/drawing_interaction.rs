@@ -4,7 +4,7 @@
 
 use fc_types::drawing::{ChartPoint, DrawingId};
 
-use crate::render::drawing_manager::DrawingManager;
+use crate::drawing_manager::DrawingManager;
 
 /// The current drawing interaction mode.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -2,10 +2,10 @@
 // Drawing — unified trait for all chart drawing tools
 // ---------------------------------------------------------------------------
 
-use crate::render::commands::DrawCommand;
-use crate::render::context::RenderContext;
-use crate::render::coordinates::WorldPoint;
-use crate::render::series_renderer::Rect;
+use crate::commands::DrawCommand;
+use crate::context::RenderContext;
+use crate::coordinates::WorldPoint;
+use crate::series_renderer::Rect;
 use fc_types::drawing::{ChartPoint, DrawingId};
 
 /// Result of a hit-test against a drawing.
@@ -441,7 +441,7 @@ impl Drawing for fc_types::drawing::Path {
                     points: screen_points.clone(),
                     color: [0.0; 4],
                     width: 0.0,
-                    style: crate::render::commands::LineStyle::Solid,
+                    style: crate::commands::LineStyle::Solid,
                     closed: true,
                     fill: Some(fill),
                     z_index: 5,
@@ -451,9 +451,9 @@ impl Drawing for fc_types::drawing::Path {
 
         // Stroke
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         cmds.push(DrawCommand::DrawPath {
             points: screen_points,
@@ -628,9 +628,9 @@ impl Drawing for fc_types::drawing::Rectangle {
 
         // Stroke
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         cmds.push(DrawCommand::DrawRect {
             x,
@@ -718,9 +718,9 @@ impl Drawing for fc_types::drawing::Segment {
         let end_screen = pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
 
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
 
         vec![DrawCommand::DrawLine {
@@ -840,9 +840,9 @@ impl Drawing for fc_types::drawing::Ray {
         };
 
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
 
         vec![DrawCommand::DrawLine {
@@ -941,13 +941,13 @@ impl Drawing for fc_types::drawing::Arrow {
             width: self.width,
             style: match self.style {
                 fc_types::price_line::LineStyle::Solid => {
-                    crate::render::commands::LineStyle::Solid
+                    crate::commands::LineStyle::Solid
                 }
                 fc_types::price_line::LineStyle::Dashed => {
-                    crate::render::commands::LineStyle::Dashed
+                    crate::commands::LineStyle::Dashed
                 }
                 fc_types::price_line::LineStyle::Dotted => {
-                    crate::render::commands::LineStyle::Dotted
+                    crate::commands::LineStyle::Dotted
                 }
             },
             z_index: 10,
@@ -1028,9 +1028,9 @@ impl Drawing for fc_types::drawing::TrendLine {
         let start_screen = ctx.pipeline.world_to_screen(WorldPoint::new(self.start.timestamp as f64, self.start.price));
         let end_screen = ctx.pipeline.world_to_screen(WorldPoint::new(self.end.timestamp as f64, self.end.price));
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         vec![DrawCommand::DrawLine { x0: start_screen.x, y0: start_screen.y, x1: end_screen.x, y1: end_screen.y, color: self.color, width: self.width, style, z_index: 10 }]
     }
@@ -1063,9 +1063,9 @@ impl Drawing for fc_types::drawing::HorizontalLine {
         let screen = ctx.pipeline.world_to_screen(WorldPoint::new(ctx.time_range.0, self.price));
         let screen2 = ctx.pipeline.world_to_screen(WorldPoint::new(ctx.time_range.1, self.price));
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         vec![DrawCommand::DrawLine { x0: screen.x, y0: screen.y, x1: screen2.x, y1: screen2.y, color: self.color, width: self.width, style, z_index: 8 }]
     }
@@ -1098,9 +1098,9 @@ impl Drawing for fc_types::drawing::VerticalLine {
         let screen1 = ctx.pipeline.world_to_screen(WorldPoint::new(self.timestamp as f64, ctx.price_range.0));
         let screen2 = ctx.pipeline.world_to_screen(WorldPoint::new(self.timestamp as f64, ctx.price_range.1));
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         vec![DrawCommand::DrawLine { x0: screen1.x, y0: screen1.y, x1: screen2.x, y1: screen2.y, color: self.color, width: self.width, style, z_index: 8 }]
     }
@@ -1137,9 +1137,9 @@ impl Drawing for fc_types::drawing::FibonacciRetracement {
     fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let mut cmds = Vec::new();
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         let left = ctx.time_range.0;
         let right = ctx.time_range.1;
@@ -1188,9 +1188,9 @@ impl Drawing for fc_types::drawing::FibonacciExtension {
     fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let mut cmds = Vec::new();
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         let left = ctx.time_range.0;
         let right = ctx.time_range.1;
@@ -1247,9 +1247,9 @@ impl Drawing for fc_types::drawing::Pitchfork {
 
     fn to_commands(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let style = match self.style {
-            fc_types::price_line::LineStyle::Solid => crate::render::commands::LineStyle::Solid,
-            fc_types::price_line::LineStyle::Dashed => crate::render::commands::LineStyle::Dashed,
-            fc_types::price_line::LineStyle::Dotted => crate::render::commands::LineStyle::Dotted,
+            fc_types::price_line::LineStyle::Solid => crate::commands::LineStyle::Solid,
+            fc_types::price_line::LineStyle::Dashed => crate::commands::LineStyle::Dashed,
+            fc_types::price_line::LineStyle::Dotted => crate::commands::LineStyle::Dotted,
         };
         let sa = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_a.timestamp as f64, self.point_a.price));
         let sb = ctx.pipeline.world_to_screen(WorldPoint::new(self.point_b.timestamp as f64, self.point_b.price));
@@ -1387,8 +1387,8 @@ mod tests {
 
     #[test]
     fn arrow_to_commands_produces_line_and_triangle() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let arrow = fc_types::drawing::Arrow::new(
             "cmd-arrow",
@@ -1401,7 +1401,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = arrow.to_commands(&ctx);
         // Should produce: DrawLine + DrawTriangle (arrowhead)
@@ -1507,8 +1507,8 @@ mod tests {
 
     #[test]
     fn ray_to_commands_produces_line() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let ray = fc_types::drawing::Ray::new(
             "cmd-ray",
@@ -1521,7 +1521,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = ray.to_commands(&ctx);
         assert_eq!(cmds.len(), 1, "ray should produce exactly 1 DrawLine");
@@ -1587,8 +1587,8 @@ mod tests {
 
     #[test]
     fn segment_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let seg = fc_types::drawing::Segment::new(
             "cmd-seg",
@@ -1601,7 +1601,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = seg.to_commands(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -1670,8 +1670,8 @@ mod tests {
 
     #[test]
     fn rectangle_to_commands_with_fill() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let rect = fc_types::drawing::Rectangle::new(
             "box-fill",
@@ -1684,7 +1684,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = rect.to_commands(&ctx);
         // Fill + Stroke = 2 commands
@@ -1713,8 +1713,8 @@ mod tests {
 
     #[test]
     fn rectangle_to_commands_no_fill() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let rect = fc_types::drawing::Rectangle::new(
             "box-stroke",
@@ -1727,7 +1727,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = rect.to_commands(&ctx);
         // No fill = only stroke
@@ -1784,8 +1784,8 @@ mod tests {
 
     #[test]
     fn ellipse_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let ell = fc_types::drawing::Ellipse::new(
             "cmd-e",
@@ -1798,7 +1798,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = ell.to_commands(&ctx);
         assert_eq!(cmds.len(), 1, "no fill = only stroke");
@@ -1873,8 +1873,8 @@ mod tests {
 
     #[test]
     fn path_to_commands_closed_polygon() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let path = fc_types::drawing::Path::new(
             "cmd-poly",
@@ -1892,7 +1892,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = path.to_commands(&ctx);
         // Fill + Stroke = 2
@@ -1962,8 +1962,8 @@ mod tests {
 
     #[test]
     fn trend_line_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let tl = fc_types::drawing::TrendLine::new(
             "cmd-tl",
@@ -1976,7 +1976,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = tl.to_commands(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -2033,8 +2033,8 @@ mod tests {
 
     #[test]
     fn horizontal_line_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let hl = fc_types::drawing::HorizontalLine::new("cmd-hl", 150.0);
 
@@ -2043,7 +2043,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = hl.to_commands(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -2100,8 +2100,8 @@ mod tests {
 
     #[test]
     fn vertical_line_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let vl = fc_types::drawing::VerticalLine::new("cmd-vl", 1500);
 
@@ -2110,7 +2110,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = vl.to_commands(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -2175,8 +2175,8 @@ mod tests {
 
     #[test]
     fn fib_retracement_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let fib = fc_types::drawing::FibonacciRetracement::new(
             "cmd-fib",
@@ -2189,7 +2189,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = fib.to_commands(&ctx);
         // 7 default Fibonacci levels
@@ -2260,8 +2260,8 @@ mod tests {
 
     #[test]
     fn fib_extension_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let fib = fc_types::drawing::FibonacciExtension::new(
             "cmd-fibext",
@@ -2275,7 +2275,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = fib.to_commands(&ctx);
         // 9 default extension levels
@@ -2347,8 +2347,8 @@ mod tests {
 
     #[test]
     fn pitchfork_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let pf = fc_types::drawing::Pitchfork::new(
             "cmd-pf",
@@ -2362,7 +2362,7 @@ mod tests {
             (50.0, 250.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = pf.to_commands(&ctx);
         // 2 lines: A→B and A→C
@@ -2418,8 +2418,8 @@ mod tests {
 
     #[test]
     fn text_drawing_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let td = fc_types::drawing::TextDrawing::new(
             "cmd-t",
@@ -2434,7 +2434,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = td.to_commands(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -2508,8 +2508,8 @@ mod tests {
 
     #[test]
     fn image_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let img = fc_types::drawing::ImageDrawing::new(
             "cmd-img",
@@ -2525,7 +2525,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = img.to_commands(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -2582,8 +2582,8 @@ mod tests {
 
     #[test]
     fn label_to_commands() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let label = fc_types::drawing::LabelDrawing::new(
             "cmd-lbl",
@@ -2599,7 +2599,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = label.to_commands(&ctx);
         // bg rect + text = 2 (not selected)
@@ -2626,8 +2626,8 @@ mod tests {
 
     #[test]
     fn label_selected_adds_outline() {
-        use crate::render::context::RenderContext;
-        use crate::render::coordinates::CoordinatePipeline;
+        use crate::context::RenderContext;
+        use crate::coordinates::CoordinatePipeline;
 
         let mut label = fc_types::drawing::LabelDrawing::new(
             "cmd-lbl2",
@@ -2641,7 +2641,7 @@ mod tests {
             (50.0, 200.0),
             0.0, 0.0, 800.0, 400.0, 1.0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::render::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
+        let ctx = RenderContext::from_pipeline(pipeline, crate::series_renderer::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = label.to_commands(&ctx);
         // bg rect + text + selection outline = 3

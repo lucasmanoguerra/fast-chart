@@ -3,7 +3,7 @@
 //! Ensures lines, rectangles, and other primitives align to pixel centers
 //! to avoid anti-aliasing blur on screen-aligned geometry.
 
-use crate::render::coordinates::ScreenPoint;
+use crate::coordinates::ScreenPoint;
 use num_traits::Float;
 
 // ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ use num_traits::Float;
 /// # Examples
 ///
 /// ```
-/// use fast_chart::render::pixel_perfect::PixelPerfect;
+/// use fc_render::pixel_perfect::PixelPerfect;
 ///
 /// // Snap a value to the nearest pixel centre
 /// let snapped = 3.2_f64.snap();
@@ -132,7 +132,7 @@ pub fn snap_point(p: ScreenPoint) -> ScreenPoint {
 /// # Examples
 ///
 /// ```
-/// use fast_chart::render::pixel_perfect::pixel_perfect_rect;
+/// use fc_render::pixel_perfect::pixel_perfect_rect;
 ///
 /// let (x, y, w, h) = pixel_perfect_rect(3.2, 5.7, 10.3, 20.9);
 /// assert_eq!(x, 3.0);
@@ -162,7 +162,7 @@ pub fn pixel_perfect_rect(
 /// # Examples
 ///
 /// ```
-/// use fast_chart::render::pixel_perfect::snap_line;
+/// use fc_render::pixel_perfect::snap_line;
 ///
 /// let (a, b) = snap_line(10.2, 50.7);
 /// assert_eq!(a, 10.5);

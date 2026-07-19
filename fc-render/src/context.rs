@@ -76,7 +76,7 @@ impl RenderContext {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::coordinates::{CoordinatePipeline, ScreenPoint, WorldPoint};
+    use crate::coordinates::{CoordinatePipeline, ScreenPoint, WorldPoint};
 
     fn test_pipeline() -> CoordinatePipeline {
         CoordinatePipeline::new(

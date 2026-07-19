@@ -2,8 +2,8 @@
 // IndicatorRenderer — trait for rendering indicators with draw commands
 // ---------------------------------------------------------------------------
 
-use crate::render::commands::DrawCommand;
-use crate::render::series_renderer::{Rect, SeriesHit, SeriesRenderer};
+use crate::commands::DrawCommand;
+use crate::series_renderer::{Rect, SeriesHit, SeriesRenderer};
 
 /// A trait for rendering indicators, extending SeriesRenderer with
 /// overlay and separate-pane rendering modes.

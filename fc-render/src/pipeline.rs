@@ -218,7 +218,7 @@ impl Default for RenderPipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::commands::DrawCommand;
+    use crate::commands::DrawCommand;
 
     // ---- 1. new_pipeline ----
 
@@ -340,7 +340,7 @@ mod tests {
                 self.calls.push(format!("exec:{}", commands.len()));
             }
             fn resize(&mut self, _w: u32, _h: u32) {}
-            fn set_clip(&mut self, _r: super::super::series_renderer::Rect) {}
+            fn set_clip(&mut self, _r: crate::series_renderer::Rect) {}
             fn clear_clip(&mut self) {}
             fn clear(&mut self, _c: [f32; 4]) {}
             fn width(&self) -> u32 { 800 }
@@ -374,7 +374,7 @@ mod tests {
                 self.calls.push(format!("exec:{}", commands.len()));
             }
             fn resize(&mut self, _w: u32, _h: u32) {}
-            fn set_clip(&mut self, _r: super::super::series_renderer::Rect) {}
+            fn set_clip(&mut self, _r: crate::series_renderer::Rect) {}
             fn clear_clip(&mut self) {}
             fn clear(&mut self, _c: [f32; 4]) {}
             fn width(&self) -> u32 { 800 }
@@ -435,7 +435,7 @@ mod tests {
         impl RendererBackend for NoopBackend {
             fn execute(&mut self, _: &[DrawCommand]) {}
             fn resize(&mut self, _: u32, _: u32) {}
-            fn set_clip(&mut self, _: super::super::series_renderer::Rect) {}
+            fn set_clip(&mut self, _: crate::series_renderer::Rect) {}
             fn clear_clip(&mut self) {}
             fn clear(&mut self, _: [f32; 4]) {}
             fn width(&self) -> u32 { 800 }

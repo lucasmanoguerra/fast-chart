@@ -3,7 +3,7 @@
 //! Demonstrates: constructing drawing objects with builder-style chaining,
 //! reading level prices from Fibonacci, and the drawing API.
 
-use fast_chart::{ChartPoint, FibonacciRetracement, HorizontalLine, LineStyle, VerticalLine};
+use fc_core::{ChartPoint, FibonacciRetracement, HorizontalLine, LineStyle, VerticalLine};
 
 pub fn run() {
     // Horizontal line at a support level

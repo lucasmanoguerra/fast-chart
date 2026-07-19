@@ -3,13 +3,13 @@
 //! Tests markers, price lines, kinetic scroll, price formatting, and the
 //! ChartController end-to-end using mock ports.
 
-use fast_chart::app::chart_controller::ChartController;
-use fast_chart::app::layout::{LayoutEngine, VerticalStack};
-use fast_chart::app::layout_manager::LayoutManager;
-use fast_chart::app::pane::events::PaneEventBus;
-use fast_chart::render::series_renderer::Rect;
-use fast_chart::ports::data_provider::{DataEvent, DataProvider};
-use fast_chart::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
+use fc_core::app::chart_controller::ChartController;
+use fc_core::app::layout::{LayoutEngine, VerticalStack};
+use fc_core::app::layout_manager::LayoutManager;
+use fc_core::app::pane::events::PaneEventBus;
+use fc_core::render::series_renderer::Rect;
+use fc_core::ports::data_provider::{DataEvent, DataProvider};
+use fc_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
 use fc_types::bar::Bar;
 use fc_types::kinetic::KineticScroll;
 use fc_types::marker::{Marker, MarkerPosition, MarkerSet, MarkerShape};
@@ -802,13 +802,13 @@ fn divider_drag_resize_integration() {
     let mut bus = PaneEventBus::new();
 
     // Simulate a divider drag
-    bus.push(fast_chart::app::pane::events::PaneEvent::DividerDragged {
+    bus.push(fc_core::app::pane::events::PaneEvent::DividerDragged {
         index: 0,
         delta: 30.0,
     });
 
     // Simulate resulting pane resize
-    bus.push(fast_chart::app::pane::events::PaneEvent::PaneResized {
+    bus.push(fc_core::app::pane::events::PaneEvent::PaneResized {
         id: 1,
         new_height: 0.55,
     });
@@ -818,7 +818,7 @@ fn divider_drag_resize_integration() {
 
     // Verify the events have correct data
     match &events[0] {
-        fast_chart::app::pane::events::PaneEvent::DividerDragged { index, delta } => {
+        fc_core::app::pane::events::PaneEvent::DividerDragged { index, delta } => {
             assert_eq!(*index, 0);
             assert!((delta - 30.0).abs() < f64::EPSILON);
         }
@@ -826,7 +826,7 @@ fn divider_drag_resize_integration() {
     }
 
     match &events[1] {
-        fast_chart::app::pane::events::PaneEvent::PaneResized { id, new_height } => {
+        fc_core::app::pane::events::PaneEvent::PaneResized { id, new_height } => {
             assert_eq!(*id, 1);
             assert!((new_height - 0.55).abs() < f64::EPSILON);
         }
@@ -939,9 +939,9 @@ fn price_scale_locked_no_autofit_integration() {
 fn pane_add_remove_roundtrip() {
     let mut bus = PaneEventBus::new();
 
-    bus.push(fast_chart::app::pane::events::PaneEvent::PaneAdded { id: 3 });
-    bus.push(fast_chart::app::pane::events::PaneEvent::PaneAdded { id: 4 });
-    bus.push(fast_chart::app::pane::events::PaneEvent::PaneRemoved { id: 3 });
+    bus.push(fc_core::app::pane::events::PaneEvent::PaneAdded { id: 3 });
+    bus.push(fc_core::app::pane::events::PaneEvent::PaneAdded { id: 4 });
+    bus.push(fc_core::app::pane::events::PaneEvent::PaneRemoved { id: 3 });
 
     let events = bus.drain();
     assert_eq!(events.len(), 3);
@@ -949,7 +949,7 @@ fn pane_add_remove_roundtrip() {
     // After remove, only id=4 should remain "active" in a real system
     let removed: Vec<_> = events
         .iter()
-        .filter(|e| matches!(e, fast_chart::app::pane::events::PaneEvent::PaneRemoved { .. }))
+        .filter(|e| matches!(e, fc_core::app::pane::events::PaneEvent::PaneRemoved { .. }))
         .collect();
     assert_eq!(removed.len(), 1);
 }
@@ -958,12 +958,12 @@ fn pane_add_remove_roundtrip() {
 // Phase 3 Integration Tests: All series types
 // ===========================================================================
 
-use fast_chart::series::{
+use fc_core::series::{
     line_break::LineBreakBlock, point_figure::PfColumn, range::RangeBar,
     step_line::StepPoint, volume::VolumeBar, LineBreakSeries, PointFigureSeries,
     RangeSeries, StepLineSeries, VolumeSeries,
 };
-use fast_chart::render::series_renderer::SeriesRenderer as _;
+use fc_core::render::series_renderer::SeriesRenderer as _;
 use fc_types::Indicator as _;
 
 // --- StepLineSeries ---
@@ -1020,7 +1020,7 @@ fn volume_z_index_is_500() {
     v.set_data(vec![VolumeBar::new(1000, 1000.0, true)]);
     let cmds = v.update(&[], Rect::new(0.0, 200.0, 800.0, 200.0));
     for cmd in &cmds {
-        if let fast_chart::render::commands::DrawCommand::DrawRect { z_index, .. } = cmd {
+        if let fc_core::render::commands::DrawCommand::DrawRect { z_index, .. } = cmd {
             assert_eq!(*z_index, 500, "volume bars should be z-index 500");
         }
     }
@@ -1178,19 +1178,19 @@ fn seriestype_all_display_names_are_unique() {
 
 // --- IndicatorRenderer integration ---
 
-use fast_chart::render::indicator_renderer::IndicatorRenderer;
-use fast_chart::render::commands::DrawCommand as DC;
+use fc_core::render::indicator_renderer::IndicatorRenderer;
+use fc_core::render::commands::DrawCommand as DC;
 
 struct MockIndicator;
 
-impl fast_chart::render::series_renderer::SeriesRenderer for MockIndicator {
+impl fc_core::render::series_renderer::SeriesRenderer for MockIndicator {
     fn update(&mut self, _data: &[DC], bounds: Rect) -> Vec<DC> {
         vec![DC::DrawRect {
             x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
             fill: Some([0.0, 1.0, 0.0, 1.0]), stroke: None, stroke_width: 0.0, z_index: 700,
         }]
     }
-    fn hit_test(&self, _x: f32, _y: f32) -> Option<fast_chart::render::series_renderer::SeriesHit> { None }
+    fn hit_test(&self, _x: f32, _y: f32) -> Option<fc_core::render::series_renderer::SeriesHit> { None }
     fn bounds(&self) -> Rect { Rect::new(0.0, 0.0, 0.0, 0.0) }
 }
 
@@ -1203,7 +1203,7 @@ impl IndicatorRenderer for MockIndicator {
             y1: pane_bounds.y,
             color: [1.0, 0.0, 0.0, 1.0],
             width: 2.0,
-            style: fast_chart::render::commands::LineStyle::Solid,
+            style: fc_core::render::commands::LineStyle::Solid,
             z_index: 700,
         }]
     }

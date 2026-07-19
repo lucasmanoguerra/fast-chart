@@ -3,9 +3,9 @@
 //! Demonstrates: creating bars, choosing a theme, building the chart config,
 //! and reading back the built configuration.
 
-use fast_chart::builder::ChartBuilder;
-use fast_chart::theme::ChartTheme;
-use fast_chart::Bar;
+use fc_core::builder::ChartBuilder;
+use fc_core::theme::ChartTheme;
+use fc_core::Bar;
 
 pub fn run() {
     let theme = ChartTheme::dark();

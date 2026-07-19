@@ -1,5 +1,5 @@
-use fast_chart::render::commands::DrawCommand;
-use fast_chart::render::series_renderer::{Rect, SeriesHit, SeriesRenderer};
+use fc_core::render::commands::DrawCommand;
+use fc_core::render::series_renderer::{Rect, SeriesHit, SeriesRenderer};
 
 /// A single data point for baseline rendering (screen coordinates).
 #[derive(Debug, Clone, Copy)]

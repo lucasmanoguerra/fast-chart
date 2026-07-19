@@ -1,6 +1,6 @@
-use fast_chart::app::chart_controller::ChartState;
-use fast_chart::app::layout_manager::LayoutManager;
-use fast_chart::{
+use fc_core::app::chart_controller::ChartState;
+use fc_core::app::layout_manager::LayoutManager;
+use fc_core::{
     DefaultPriceFormatter, InvalidationLevel, PriceFormatter, Viewport,
 };
 use winit::window::CursorIcon;
@@ -888,7 +888,7 @@ impl GpuRenderer {
     fn find_bar_at_crosshair<'a>(
         &self,
         state: &'a ChartState,
-    ) -> Option<&'a fast_chart::Bar> {
+    ) -> Option<&'a fc_core::Bar> {
         if !self.crosshair_active {
             return None;
         }
@@ -1059,7 +1059,7 @@ impl GpuRenderer {
     }
 }
 
-impl fast_chart::ports::render::ChartRenderer for GpuRenderer {
+impl fc_core::ports::render::ChartRenderer for GpuRenderer {
     fn resize(&mut self, width: u32, height: u32) {
         GpuRenderer::resize(self, width, height);
     }
@@ -1079,7 +1079,7 @@ fn visible_bar_count(state: &ChartState) -> usize {
 }
 
 /// Collect bars visible in the current viewport.
-fn collect_visible_bars(state: &ChartState) -> Vec<fast_chart::Bar> {
+fn collect_visible_bars(state: &ChartState) -> Vec<fc_core::Bar> {
     state
         .time_series
         .iter()

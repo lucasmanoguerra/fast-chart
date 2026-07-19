@@ -10,7 +10,7 @@ proptest! {
         value_min in -1000.0f64..0.0,
         value_max in 0.1f64..1000.0,
     ) {
-        let vp = fast_chart::Viewport {
+        let vp = fc_core::Viewport {
             time_start,
             time_end,
             value_min,
@@ -23,19 +23,19 @@ proptest! {
 
     #[test]
     fn snap_never_negative(x in -1000.0f64..1000.0) {
-        use fast_chart::render::pixel_perfect::PixelPerfect;
+        use fc_core::render::pixel_perfect::PixelPerfect;
         prop_assert!(x.snap() >= 0.0);
     }
 
     #[test]
     fn snap_size_non_negative(x in -100.0f64..100.0) {
-        use fast_chart::render::pixel_perfect::PixelPerfect;
+        use fc_core::render::pixel_perfect::PixelPerfect;
         prop_assert!(x.snap_size() >= 0.0);
     }
 
     #[test]
     fn snap_generic_matches_snap(x in 0.0f64..1000.0) {
-        use fast_chart::render::pixel_perfect::{PixelPerfect, snap_generic};
+        use fc_core::render::pixel_perfect::{PixelPerfect, snap_generic};
         let trait_result = x.snap();
         let generic_result = snap_generic(x);
         prop_assert!((trait_result - generic_result).abs() < 1e-10, "snap={} snap_generic={}", trait_result, generic_result);
@@ -48,7 +48,7 @@ proptest! {
         b in 0.0f64..=1.0,
         a in 0.0f64..=1.0,
     ) {
-        let c = fast_chart::theme::Rgba::new(r, g, b, a);
+        let c = fc_core::theme::Rgba::new(r, g, b, a);
         prop_assert!(c.0 >= 0.0 && c.0 <= 1.0);
         prop_assert!(c.1 >= 0.0 && c.1 <= 1.0);
         prop_assert!(c.2 >= 0.0 && c.2 <= 1.0);

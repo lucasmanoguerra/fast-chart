@@ -3,13 +3,13 @@
 //! Verifies cross-module interactions between InteractionEngine, ZoomController,
 //! PanController, CrosshairController, KeyboardShortcutMap, and GestureDetector.
 
-use fast_chart::input::crosshair::{CrosshairController, CrosshairMode};
-use fast_chart::input::engine::{ChartCommand, DrawingTool, InteractionEngine};
-use fast_chart::input::gesture::{GestureDetector, GestureConfig, Gesture, FlickDirection};
-use fast_chart::input::keyboard::{KeyboardPresets, Modifiers};
-use fast_chart::input::pan::PanController;
-use fast_chart::input::zoom::{Viewport, ZoomController};
-use fast_chart::input::{InputEvent, KeyCode, ModifierState};
+use fc_core::input::crosshair::{CrosshairController, CrosshairMode};
+use fc_core::input::engine::{ChartCommand, DrawingTool, InteractionEngine};
+use fc_core::input::gesture::{GestureDetector, GestureConfig, Gesture, FlickDirection};
+use fc_core::input::keyboard::{KeyboardPresets, Modifiers};
+use fc_core::input::pan::PanController;
+use fc_core::input::zoom::{Viewport, ZoomController};
+use fc_core::input::{InputEvent, KeyCode, ModifierState};
 
 // ---------------------------------------------------------------------------
 // Helpers

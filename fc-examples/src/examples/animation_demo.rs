@@ -3,7 +3,7 @@
 //! Demonstrates: creating animations, easing functions, retargeting,
 //! the engine for managing multiple named tracks, and garbage collection.
 
-use fast_chart::animation::{AnimatedValue, AnimationEngine, Easing};
+use fc_core::animation::{AnimatedValue, AnimationEngine, Easing};
 
 pub fn run() {
     // Single animated value: linear interpolation from 50k → 52k over 500ms

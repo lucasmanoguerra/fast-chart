@@ -10,7 +10,7 @@
 //! crate should never import `fc-types` directly.
 //!
 //! ```rust
-//! use fast_chart::{
+//! use fc_core::{
 //!     // Render types (top-level re-exports)
 //!     DrawCommand, DrawLayer, LineStyle as RenderLineStyle,
 //!     RendererBackend, RenderContext, CoordinatePipeline,

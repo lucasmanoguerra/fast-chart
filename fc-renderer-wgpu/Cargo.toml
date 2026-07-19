@@ -5,7 +5,7 @@ edition = "2021"
 description = "WGPU rendering backend for fast-chart"
 
 [dependencies]
-fast-chart = { path = "../fast-chart" }
+fc-core = { path = "../fc-core" }
 fc-types = { path = "../fc-types" }
 wgpu = "25.0"
 bytemuck = { version = "1", features = ["derive"] }

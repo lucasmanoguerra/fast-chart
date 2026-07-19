@@ -5,16 +5,16 @@
 //! dirty-region tracking, scissor clipping, cache, pixel-perfect alignment,
 //! vertex generation, and series renderers.
 
-use fast_chart::render::backend::RendererBackend;
-use fast_chart::render::commands::DrawCommand;
-use fast_chart::render::dirty::{DirtyRegionTracker, ScreenRect};
-use fast_chart::render::passes::RenderPass;
-use fast_chart::render::pipeline::RenderPipeline;
-use fast_chart::render::pixel_perfect::{
+use fc_core::render::backend::RendererBackend;
+use fc_core::render::commands::DrawCommand;
+use fc_core::render::dirty::{DirtyRegionTracker, ScreenRect};
+use fc_core::render::passes::RenderPass;
+use fc_core::render::pipeline::RenderPipeline;
+use fc_core::render::pixel_perfect::{
     PixelPerfect, pixel_perfect_rect, snap_line, snap_point,
 };
-use fast_chart::render::series_renderer::Rect;
-use fast_chart::render::coordinates::ScreenPoint;
+use fc_core::render::series_renderer::Rect;
+use fc_core::render::coordinates::ScreenPoint;
 use fc_renderer_wgpu::cache::GpuCache;
 use fc_renderer_wgpu::scissor::{ScissorManager, ScissorRect};
 use fc_renderer_wgpu::types::Vertex;
@@ -801,7 +801,7 @@ fn renderpass_z_index_ranges() {
     assert_eq!(RenderPass::Debug.z_range(), (11000, 11999));
 
     // z_index_to_pass mapping from fast-chart pipeline.
-    use fast_chart::render::pipeline::z_index_to_pass;
+    use fc_core::render::pipeline::z_index_to_pass;
     assert_eq!(z_index_to_pass(0), RenderPass::Background);
     assert_eq!(z_index_to_pass(999), RenderPass::Background);
     assert_eq!(z_index_to_pass(2000), RenderPass::Grid);

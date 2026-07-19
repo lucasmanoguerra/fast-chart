@@ -1,6 +1,6 @@
-use fast_chart::render::backend::RendererBackend;
-use fast_chart::render::commands::DrawCommand;
-use fast_chart::Rect;
+use fc_core::render::backend::RendererBackend;
+use fc_core::render::commands::DrawCommand;
+use fc_core::Rect;
 
 use crate::types::{Uniforms, Vertex};
 use crate::vertex_gen;

@@ -6,8 +6,8 @@
 //! # Example
 //!
 //! ```no_run
-//! use fast_chart::config_watcher::ConfigWatcher;
-//! use fast_chart::theme::{ChartTheme, ThemeHandle};
+//! use fc_core::config_watcher::ConfigWatcher;
+//! use fc_core::theme::{ChartTheme, ThemeHandle};
 //!
 //! let handle = ThemeHandle::new(ChartTheme::dark());
 //!

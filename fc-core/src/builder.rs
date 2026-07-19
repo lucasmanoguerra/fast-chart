@@ -1,8 +1,8 @@
 //! Fluent builder API for chart construction.
 //!
 //! ```rust
-//! use fast_chart::builder::ChartBuilder;
-//! use fast_chart::theme::ChartTheme;
+//! use fc_core::builder::ChartBuilder;
+//! use fc_core::theme::ChartTheme;
 //!
 //! let chart = ChartBuilder::new()
 //!     .theme(ChartTheme::dark())

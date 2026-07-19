@@ -1,4 +1,4 @@
-use fast_chart::{Marker, MarkerPosition, MarkerShape, Viewport};
+use fc_core::{Marker, MarkerPosition, MarkerShape, Viewport};
 
 use super::types::{Uniforms, Vertex};
 

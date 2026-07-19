@@ -1,4 +1,4 @@
-use fast_chart::render::commands::{DrawCommand, LineStyle};
+use fc_core::render::commands::{DrawCommand, LineStyle};
 use std::f32::consts::TAU;
 
 use crate::types::Vertex;

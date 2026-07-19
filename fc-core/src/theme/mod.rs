@@ -9,7 +9,7 @@
 //! [`ChartTheme::get_color`]. For thread-safe sharing, use [`ThemeHandle`].
 //!
 //! ```rust
-//! use fast_chart::theme::{ChartTheme, ThemeToken, Rgba};
+//! use fc_core::theme::{ChartTheme, ThemeToken, Rgba};
 //!
 //! let mut theme = ChartTheme::dark();
 //! // Initial config — done via builder or presets

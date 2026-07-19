@@ -1,4 +1,4 @@
-use fast_chart::Bar;
+use fc_core::Bar;
 
 use super::pipeline_utils;
 use super::types::{Uniforms, Vertex, colors};

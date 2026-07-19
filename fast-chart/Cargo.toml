@@ -12,6 +12,7 @@ categories = ["finance", "gui", "rendering"]
 fc-types = { path = "../fc-types" }
 fc-theme = { path = "../fc-theme" }
 fc-cache = { path = "../fc-cache" }
+fc-animation = { path = "../fc-animation" }
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1.10", optional = true }
 notify = { version = "6.1", optional = true }

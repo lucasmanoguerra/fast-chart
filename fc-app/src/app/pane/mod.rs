@@ -1,10 +1,12 @@
+pub mod content;
 pub mod divider;
 pub mod events;
 
+use content::PaneContent;
 use fc_domain::drawing::DrawingSet;
 use fc_domain::marker::MarkerSet;
 use fc_domain::price_line::PriceLineSet;
-use fc_domain::price_scale::{DefaultPriceFormatter, PriceFormatter, PriceScale, PriceScaleId};
+use fc_domain::price_scale::{PriceFormatter, PriceScale, PriceScaleId};
 use fc_primitives::series_type::SeriesType;
 use fc_domain::viewport::Viewport;
 
@@ -23,10 +25,8 @@ pub struct Pane {
     pub viewport: Viewport,
     /// Proportional height as a fraction of the total canvas (0.0 – 1.0).
     pub height: f64,
-    /// Series that belong to this pane.
-    series: Vec<SeriesRef>,
-    /// Indicators rendered as overlays in this pane.
-    indicators: Vec<IndicatorOverlay>,
+    /// Data-related contents (series, indicators, drawings, markers, etc.).
+    pub(crate) content: PaneContent,
     /// Whether the pane is currently visible.
     visible: bool,
     /// Price scales owned by this pane (Left, Right, and optional overlays).
@@ -35,14 +35,6 @@ pub struct Pane {
     primary_scale_id: PriceScaleId,
     /// Series renderers (layers) for this pane, ordered by z-index.
     layers: Vec<Box<dyn SeriesRenderer>>,
-    /// Drawing tools attached to this pane.
-    drawings: DrawingSet,
-    /// Markers (annotations) attached to this pane.
-    markers: MarkerSet,
-    /// Horizontal price lines drawn across this pane.
-    price_lines: PriceLineSet,
-    /// Formatter for price values displayed on this pane.
-    formatter: Box<dyn PriceFormatter>,
 }
 
 /// Reference to a named series with its rendering type.
@@ -88,22 +80,17 @@ impl Pane {
             id,
             viewport: Viewport::default(),
             height,
-            series: Vec::new(),
-            indicators: Vec::new(),
+            content: PaneContent::new(),
             visible: true,
             price_scales,
             primary_scale_id: PriceScaleId::Left,
             layers: Vec::new(),
-            drawings: DrawingSet::new(),
-            markers: MarkerSet::new(),
-            price_lines: PriceLineSet::new(),
-            formatter: Box::new(DefaultPriceFormatter::new(None)),
         }
     }
 
     /// Add a series reference to this pane.
     pub fn add_series(&mut self, name: String, series_type: SeriesType) {
-        self.series.push(SeriesRef {
+        self.content.push_series(SeriesRef {
             name,
             series_type,
             price_scale_id: PriceScaleId::Left,
@@ -112,7 +99,7 @@ impl Pane {
 
     /// Add an indicator overlay to this pane.
     pub fn add_indicator(&mut self, name: String) {
-        self.indicators.push(IndicatorOverlay {
+        self.content.push_indicator(IndicatorOverlay {
             name,
             pane_id: self.id,
         });
@@ -122,12 +109,12 @@ impl Pane {
 
     /// Get a slice of all series references in this pane.
     pub fn series(&self) -> &[SeriesRef] {
-        &self.series
+        self.content.series()
     }
 
     /// Get a slice of all indicator overlays in this pane.
     pub fn indicators(&self) -> &[IndicatorOverlay] {
-        &self.indicators
+        self.content.indicators()
     }
 
     /// Whether the pane is currently visible.
@@ -166,12 +153,12 @@ impl Pane {
 
     /// Get a reference to the drawing set for this pane.
     pub fn drawings(&self) -> &DrawingSet {
-        &self.drawings
+        self.content.drawings()
     }
 
     /// Get a mutable reference to the drawing set for this pane.
     pub fn drawings_mut(&mut self) -> &mut DrawingSet {
-        &mut self.drawings
+        self.content.drawings_mut()
     }
 
     // --- Price scale accessors ---
@@ -249,31 +236,31 @@ impl Pane {
 
     /// Get the marker set for this pane.
     pub fn markers(&self) -> &MarkerSet {
-        &self.markers
+        self.content.markers()
     }
 
     /// Get a mutable reference to the marker set for this pane.
     pub fn markers_mut(&mut self) -> &mut MarkerSet {
-        &mut self.markers
+        self.content.markers_mut()
     }
 
     // --- Price line accessors ---
 
     /// Get the price line set for this pane.
     pub fn price_lines(&self) -> &PriceLineSet {
-        &self.price_lines
+        self.content.price_lines()
     }
 
     /// Get a mutable reference to the price line set for this pane.
     pub fn price_lines_mut(&mut self) -> &mut PriceLineSet {
-        &mut self.price_lines
+        self.content.price_lines_mut()
     }
 
     // --- Formatter accessors ---
 
     /// Get the price formatter for this pane.
     pub fn formatter(&self) -> &dyn PriceFormatter {
-        self.formatter.as_ref()
+        self.content.formatter()
     }
 }
 

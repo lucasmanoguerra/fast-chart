@@ -23,7 +23,8 @@ pub mod theme;
 // ---------------------------------------------------------------------------
 // Application re-exports
 // ---------------------------------------------------------------------------
-pub use app::chart_controller::{ChartController, ChartState};
+pub use app::chart_controller::ChartController;
+pub use app::chart_state::ChartState;
 pub use app::frame_counter::FrameCounter;
 pub use app::layout::{GridLayout, HorizontalSplit, LayoutEngine, VerticalStack};
 pub use app::layout_manager::LayoutManager;

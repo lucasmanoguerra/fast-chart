@@ -1,4 +1,4 @@
-use fc_app::app::chart_controller::ChartState;
+use fc_app::ChartState;
 use fc_app::app::layout_manager::LayoutManager;
 use fc_domain::{
     DefaultPriceFormatter, Viewport,

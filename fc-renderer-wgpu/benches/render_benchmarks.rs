@@ -1,9 +1,9 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
-use fc_core::render::commands::DrawCommand;
-use fc_core::render::pixel_perfect::{pixel_perfect_rect, snap_point, PixelPerfect};
-use fc_core::render::session::Session;
-use fc_core::theme::{ChartTheme, Rgba, ThemeToken};
+use fc_render::commands::DrawCommand;
+use fc_render::pixel_perfect::{pixel_perfect_rect, snap_point, PixelPerfect};
+use fc_sessions::Session;
+use fc_theme::{ChartTheme, Rgba, ThemeToken};
 use fc_renderer_wgpu::scissor::ScissorRect;
 use fc_renderer_wgpu::types::Vertex;
 use fc_renderer_wgpu::vertex_gen::{generate_sorted_vertices, generate_vertices};
@@ -145,7 +145,7 @@ fn bench_pixel_perfect(c: &mut Criterion) {
 
     group.bench_function("snap_point", |b| {
         b.iter(|| {
-            snap_point(fc_core::render::coordinates::ScreenPoint { x: 3.7, y: 12.3 })
+            snap_point(fc_render::coordinates::ScreenPoint { x: 3.7, y: 12.3 })
         });
     });
 

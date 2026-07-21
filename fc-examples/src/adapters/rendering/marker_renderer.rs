@@ -1,4 +1,5 @@
-use fc_core::{Marker, MarkerPosition, MarkerShape, Viewport};
+use fc_domain::marker::{Marker, MarkerPosition, MarkerShape};
+use fc_domain::viewport::Viewport;
 
 use super::types::{Uniforms, Vertex};
 

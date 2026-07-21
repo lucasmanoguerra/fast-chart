@@ -1,5 +1,6 @@
-use std::collections::HashMap;
 use std::time::Instant;
+
+use crate::cache::Cache;
 
 /// Cache key for geometry (vertex data).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -25,75 +26,45 @@ pub struct GeometryEntry {
 
 /// Caches vertex geometry for series rendering.
 pub struct GeometryCache {
-    entries: HashMap<GeometryKey, GeometryEntry>,
-    max_entries: usize,
-    hits: u64,
-    misses: u64,
+    inner: Cache<GeometryKey, GeometryEntry>,
 }
 
 impl GeometryCache {
     pub fn new(max_entries: usize) -> Self {
-        Self {
-            entries: HashMap::with_capacity(max_entries),
-            max_entries,
-            hits: 0,
-            misses: 0,
-        }
+        Self { inner: Cache::new(max_entries) }
     }
 
     pub fn get(&mut self, key: &GeometryKey) -> Option<&GeometryEntry> {
-        if let Some(entry) = self.entries.get(key) {
-            self.hits += 1;
-            Some(entry)
-        } else {
-            self.misses += 1;
-            None
-        }
+        self.inner.get(key)
     }
 
     pub fn insert(&mut self, key: GeometryKey, entry: GeometryEntry) {
-        if self.entries.len() >= self.max_entries {
-            if let Some(oldest_key) = self
-                .entries
-                .iter()
-                .min_by_key(|(_, e)| e.created_at)
-                .map(|(k, _)| k.clone())
-            {
-                self.entries.remove(&oldest_key);
-            }
-        }
-        self.entries.insert(key, entry);
+        self.inner.insert(key, entry);
     }
 
     pub fn invalidate(&mut self, key: &GeometryKey) -> bool {
-        self.entries.remove(key).is_some()
+        self.inner.invalidate(key)
     }
 
+    /// Remove all entries for a given series.
     pub fn invalidate_series(&mut self, series_id: u32) {
-        self.entries.retain(|k, _| k.series_id != series_id);
+        self.inner.invalidate_where(|k| k.series_id == series_id);
     }
 
     pub fn clear(&mut self) {
-        self.entries.clear();
-        self.hits = 0;
-        self.misses = 0;
+        self.inner.clear();
     }
 
     pub fn hit_rate(&self) -> f64 {
-        let total = self.hits + self.misses;
-        if total == 0 {
-            0.0
-        } else {
-            self.hits as f64 / total as f64
-        }
+        self.inner.hit_rate()
     }
 
     pub fn len(&self) -> usize {
-        self.entries.len()
+        self.inner.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
+        self.inner.is_empty()
     }
 }
 
@@ -102,11 +73,7 @@ mod tests {
     use super::*;
 
     fn make_key(series_id: u32, vp: u64, data: u64) -> GeometryKey {
-        GeometryKey {
-            series_id,
-            viewport_hash: vp,
-            data_hash: data,
-        }
+        GeometryKey { series_id, viewport_hash: vp, data_hash: data }
     }
 
     fn make_entry() -> GeometryEntry {
@@ -128,8 +95,7 @@ mod tests {
     fn insert_and_get() {
         let mut cache = GeometryCache::new(16);
         let key = make_key(1, 100, 200);
-        let entry = make_entry();
-        cache.insert(key.clone(), entry);
+        cache.insert(key.clone(), make_entry());
         assert!(cache.get(&key).is_some());
         assert_eq!(cache.len(), 1);
     }
@@ -184,9 +150,9 @@ mod tests {
         let mut cache = GeometryCache::new(16);
         let key = make_key(1, 100, 200);
         cache.insert(key.clone(), make_entry());
-        let _ = cache.get(&key); // hit
-        let _ = cache.get(&make_key(2, 0, 0)); // miss
-        let _ = cache.get(&key); // hit
+        let _ = cache.get(&key);
+        let _ = cache.get(&make_key(2, 0, 0));
+        let _ = cache.get(&key);
         assert!((cache.hit_rate() - 2.0 / 3.0).abs() < f64::EPSILON);
     }
 

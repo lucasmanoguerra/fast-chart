@@ -2,9 +2,9 @@
 //!
 //! Demonstrates: configuring a chart with three panes using the builder API.
 
-use fc_core::builder::{ChartBuilder, PaneConfig};
-use fc_core::theme::ChartTheme;
-use fc_core::Bar;
+use fc_app::builder::{ChartBuilder, PaneConfig};
+use fc_app::theme::ChartTheme;
+use fc_primitives::bar::Bar;
 
 pub fn run() {
     let config = ChartBuilder::new()

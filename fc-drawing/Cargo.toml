@@ -1,0 +1,13 @@
+[package]
+name = "fc-drawing"
+version = "0.1.0"
+edition = "2021"
+description = "Unified drawing trait and types for fast-chart"
+
+[dependencies]
+fc-domain = { path = "../fc-domain" }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+default = []
+serde = ["dep:serde", "fc-domain/serde"]

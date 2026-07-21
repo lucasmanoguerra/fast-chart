@@ -1,4 +1,4 @@
-use fc_core::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
+use fc_app::ports::interaction::{InteractionCommand, InteractionHandler, ViewportCommand};
 
 /// Stateless adapter mapping winit window events to `InteractionCommand`s.
 pub struct WinitInteractionHandler;

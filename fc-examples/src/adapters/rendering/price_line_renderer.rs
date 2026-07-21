@@ -1,4 +1,5 @@
-use fc_core::{PriceLine, Viewport};
+use fc_domain::price_line::PriceLine;
+use fc_domain::viewport::Viewport;
 
 use super::types::{Uniforms, Vertex};
 

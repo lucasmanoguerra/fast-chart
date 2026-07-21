@@ -22,23 +22,11 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-// Re-export Rgba from fc-types (canonical location)
-pub use fc_types::color::Rgba;
+// Re-export Rgba from fc-primitives (canonical location)
+pub use fc_primitives::color::Rgba;
 
-// ---------------------------------------------------------------------------
-// LineStyle
-// ---------------------------------------------------------------------------
-
-/// Line rendering style for themed lines.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LineStyle {
-    /// Solid line.
-    Solid,
-    /// Dashed line.
-    Dashed,
-    /// Dotted line.
-    Dotted,
-}
+// Re-export LineStyle from fc-primitives (canonical location)
+pub use fc_primitives::LineStyle;
 
 // ---------------------------------------------------------------------------
 // ThemeToken — type-safe token identifiers for hot-swap
@@ -196,94 +184,86 @@ pub struct ChartTheme {
 }
 
 // ---------------------------------------------------------------------------
-// Hot-swap API
+// Hot-swap API — generated from single table via macro
 // ---------------------------------------------------------------------------
+//
+// To add a new token:
+//   1. Add variant to ThemeToken enum
+//   2. Add `pub field_name: Rgba` to ChartTheme struct
+//   3. Add one line below: (Variant, field_name, "string_name")
+//
+// set_color, get_color, and parse_token are all generated from this table.
 
-impl ChartTheme {
-    /// Set a color by token at runtime (hot-swap).
-    pub fn set_color(&mut self, token: ThemeToken, color: Rgba) {
-        match token {
-            ThemeToken::Background => self.background = color,
-            ThemeToken::PaneBackground => self.pane_background = color,
-            ThemeToken::GridLine => self.grid_line = color,
-            ThemeToken::TextPrimary => self.text_primary = color,
-            ThemeToken::TextSecondary => self.text_secondary = color,
-            ThemeToken::PriceScaleBackground => self.price_scale_background = color,
-            ThemeToken::PriceScaleText => self.price_scale_text = color,
-            ThemeToken::PriceScaleBorder => self.price_scale_border = color,
-            ThemeToken::TimeScaleBackground => self.time_scale_background = color,
-            ThemeToken::TimeScaleText => self.time_scale_text = color,
-            ThemeToken::TimeScaleBorder => self.time_scale_border = color,
-            ThemeToken::Bullish => self.bullish = color,
-            ThemeToken::BullishFill => self.bullish_fill = color,
-            ThemeToken::Bearish => self.bearish = color,
-            ThemeToken::BearishFill => self.bearish_fill = color,
-            ThemeToken::LineColor => self.line_color = color,
-            ThemeToken::AreaFill => self.area_fill = color,
-            ThemeToken::VolumeBullish => self.volume_bullish = color,
-            ThemeToken::VolumeBearish => self.volume_bearish = color,
-            ThemeToken::CrosshairLine => self.crosshair_line = color,
-            ThemeToken::CrosshairLabelBg => self.crosshair_label_bg = color,
-            ThemeToken::CrosshairLabelText => self.crosshair_label_text = color,
-            ThemeToken::SelectionBorder => self.selection_border = color,
-            ThemeToken::SelectionFill => self.selection_fill = color,
-            ThemeToken::HoverBorder => self.hover_border = color,
-            ThemeToken::MarkerUp => self.marker_up = color,
-            ThemeToken::MarkerDown => self.marker_down = color,
-            ThemeToken::MarkerNeutral => self.marker_neutral = color,
-            ThemeToken::DrawingLine => self.drawing_line = color,
-            ThemeToken::DrawingFill => self.drawing_fill = color,
-            ThemeToken::DrawingText => self.drawing_text = color,
-            ThemeToken::Divider => self.divider = color,
-            ThemeToken::Watermark => self.watermark = color,
-        }
-    }
+macro_rules! theme_color_map {
+    ( $( ($variant:ident, $field:ident, $str:literal) ),* $(,)? ) => {
+        impl ChartTheme {
+            /// Set a color by token at runtime (hot-swap).
+            pub fn set_color(&mut self, token: ThemeToken, color: Rgba) {
+                match token {
+                    $(ThemeToken::$variant => self.$field = color,)*
+                }
+            }
 
-    /// Get a color by token.
-    pub fn get_color(&self, token: ThemeToken) -> Rgba {
-        match token {
-            ThemeToken::Background => self.background,
-            ThemeToken::PaneBackground => self.pane_background,
-            ThemeToken::GridLine => self.grid_line,
-            ThemeToken::TextPrimary => self.text_primary,
-            ThemeToken::TextSecondary => self.text_secondary,
-            ThemeToken::PriceScaleBackground => self.price_scale_background,
-            ThemeToken::PriceScaleText => self.price_scale_text,
-            ThemeToken::PriceScaleBorder => self.price_scale_border,
-            ThemeToken::TimeScaleBackground => self.time_scale_background,
-            ThemeToken::TimeScaleText => self.time_scale_text,
-            ThemeToken::TimeScaleBorder => self.time_scale_border,
-            ThemeToken::Bullish => self.bullish,
-            ThemeToken::BullishFill => self.bullish_fill,
-            ThemeToken::Bearish => self.bearish,
-            ThemeToken::BearishFill => self.bearish_fill,
-            ThemeToken::LineColor => self.line_color,
-            ThemeToken::AreaFill => self.area_fill,
-            ThemeToken::VolumeBullish => self.volume_bullish,
-            ThemeToken::VolumeBearish => self.volume_bearish,
-            ThemeToken::CrosshairLine => self.crosshair_line,
-            ThemeToken::CrosshairLabelBg => self.crosshair_label_bg,
-            ThemeToken::CrosshairLabelText => self.crosshair_label_text,
-            ThemeToken::SelectionBorder => self.selection_border,
-            ThemeToken::SelectionFill => self.selection_fill,
-            ThemeToken::HoverBorder => self.hover_border,
-            ThemeToken::MarkerUp => self.marker_up,
-            ThemeToken::MarkerDown => self.marker_down,
-            ThemeToken::MarkerNeutral => self.marker_neutral,
-            ThemeToken::DrawingLine => self.drawing_line,
-            ThemeToken::DrawingFill => self.drawing_fill,
-            ThemeToken::DrawingText => self.drawing_text,
-            ThemeToken::Divider => self.divider,
-            ThemeToken::Watermark => self.watermark,
-        }
-    }
+            /// Get a color by token.
+            pub fn get_color(&self, token: ThemeToken) -> Rgba {
+                match token {
+                    $(ThemeToken::$variant => self.$field,)*
+                }
+            }
 
-    /// Batch set multiple colors at once (hot-swap).
-    pub fn set_colors(&mut self, updates: &[(ThemeToken, Rgba)]) {
-        for &(token, color) in updates {
-            self.set_color(token, color);
+            /// Batch set multiple colors at once (hot-swap).
+            pub fn set_colors(&mut self, updates: &[(ThemeToken, Rgba)]) {
+                for &(token, color) in updates {
+                    self.set_color(token, color);
+                }
+            }
         }
-    }
+
+        /// Parse a token name string into a `ThemeToken`.
+        #[inline]
+        pub fn parse_token(name: &str) -> Option<ThemeToken> {
+            Some(match name {
+                $($str => ThemeToken::$variant,)*
+                _ => return None,
+            })
+        }
+    };
+}
+
+theme_color_map! {
+    (Background,       background,         "background"),
+    (PaneBackground,   pane_background,    "pane_background"),
+    (GridLine,         grid_line,          "grid_line"),
+    (TextPrimary,      text_primary,       "text_primary"),
+    (TextSecondary,    text_secondary,     "text_secondary"),
+    (PriceScaleBackground, price_scale_background, "price_scale_background"),
+    (PriceScaleText,   price_scale_text,   "price_scale_text"),
+    (PriceScaleBorder, price_scale_border, "price_scale_border"),
+    (TimeScaleBackground, time_scale_background, "time_scale_background"),
+    (TimeScaleText,    time_scale_text,    "time_scale_text"),
+    (TimeScaleBorder,  time_scale_border,  "time_scale_border"),
+    (Bullish,          bullish,            "bullish"),
+    (BullishFill,      bullish_fill,       "bullish_fill"),
+    (Bearish,          bearish,            "bearish"),
+    (BearishFill,      bearish_fill,       "bearish_fill"),
+    (LineColor,        line_color,         "line_color"),
+    (AreaFill,         area_fill,          "area_fill"),
+    (VolumeBullish,    volume_bullish,     "volume_bullish"),
+    (VolumeBearish,    volume_bearish,     "volume_bearish"),
+    (CrosshairLine,    crosshair_line,     "crosshair_line"),
+    (CrosshairLabelBg, crosshair_label_bg, "crosshair_label_bg"),
+    (CrosshairLabelText, crosshair_label_text, "crosshair_label_text"),
+    (SelectionBorder,  selection_border,   "selection_border"),
+    (SelectionFill,    selection_fill,     "selection_fill"),
+    (HoverBorder,      hover_border,       "hover_border"),
+    (MarkerUp,         marker_up,          "marker_up"),
+    (MarkerDown,       marker_down,        "marker_down"),
+    (MarkerNeutral,    marker_neutral,     "marker_neutral"),
+    (DrawingLine,      drawing_line,       "drawing_line"),
+    (DrawingFill,      drawing_fill,       "drawing_fill"),
+    (DrawingText,      drawing_text,       "drawing_text"),
+    (Divider,          divider,            "divider"),
+    (Watermark,        watermark,          "watermark"),
 }
 
 // ---------------------------------------------------------------------------
@@ -478,46 +458,26 @@ impl Default for ChartThemeBuilder {
     }
 }
 
-/// Parse a token name string into a `ThemeToken`.
-#[inline]
-pub fn parse_token(name: &str) -> Option<ThemeToken> {
-    Some(match name {
-        "background" => ThemeToken::Background,
-        "pane_background" => ThemeToken::PaneBackground,
-        "grid_line" => ThemeToken::GridLine,
-        "text_primary" => ThemeToken::TextPrimary,
-        "text_secondary" => ThemeToken::TextSecondary,
-        "price_scale_background" => ThemeToken::PriceScaleBackground,
-        "price_scale_text" => ThemeToken::PriceScaleText,
-        "price_scale_border" => ThemeToken::PriceScaleBorder,
-        "time_scale_background" => ThemeToken::TimeScaleBackground,
-        "time_scale_text" => ThemeToken::TimeScaleText,
-        "time_scale_border" => ThemeToken::TimeScaleBorder,
-        "bullish" => ThemeToken::Bullish,
-        "bullish_fill" => ThemeToken::BullishFill,
-        "bearish" => ThemeToken::Bearish,
-        "bearish_fill" => ThemeToken::BearishFill,
-        "line_color" => ThemeToken::LineColor,
-        "area_fill" => ThemeToken::AreaFill,
-        "volume_bullish" => ThemeToken::VolumeBullish,
-        "volume_bearish" => ThemeToken::VolumeBearish,
-        "crosshair_line" => ThemeToken::CrosshairLine,
-        "crosshair_label_bg" => ThemeToken::CrosshairLabelBg,
-        "crosshair_label_text" => ThemeToken::CrosshairLabelText,
-        "selection_border" => ThemeToken::SelectionBorder,
-        "selection_fill" => ThemeToken::SelectionFill,
-        "hover_border" => ThemeToken::HoverBorder,
-        "marker_up" => ThemeToken::MarkerUp,
-        "marker_down" => ThemeToken::MarkerDown,
-        "marker_neutral" => ThemeToken::MarkerNeutral,
-        "drawing_line" => ThemeToken::DrawingLine,
-        "drawing_fill" => ThemeToken::DrawingFill,
-        "drawing_text" => ThemeToken::DrawingText,
-        "divider" => ThemeToken::Divider,
-        "watermark" => ThemeToken::Watermark,
-        _ => return None,
-    })
+// ---------------------------------------------------------------------------
+// ThemeError
+// ---------------------------------------------------------------------------
+
+/// Errors that can occur when accessing a shared theme.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ThemeError {
+    /// The RwLock protecting the theme was poisoned (a holder panicked).
+    LockPoisoned,
 }
+
+impl std::fmt::Display for ThemeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ThemeError::LockPoisoned => write!(f, "theme lock poisoned"),
+        }
+    }
+}
+
+impl std::error::Error for ThemeError {}
 
 // ---------------------------------------------------------------------------
 // ThemeHandle — thread-safe shared theme for hot-swap
@@ -536,7 +496,7 @@ pub fn parse_token(name: &str) -> Option<ThemeToken> {
 /// // From UI thread — hot-swap a single color
 /// handle.set_color(ThemeToken::Bullish, Rgba::rgb(0.0, 1.0, 0.0));
 /// // From renderer — read the current theme
-/// let theme = handle.read();
+/// let theme = handle.read().unwrap();
 /// assert_eq!(theme.get_color(ThemeToken::Bullish), Rgba::rgb(0.0, 1.0, 0.0));
 /// ```
 pub struct ThemeHandle {
@@ -566,18 +526,27 @@ impl ThemeHandle {
     }
 
     /// Read the current theme (blocks if write in progress).
-    pub fn read(&self) -> RwLockReadGuard<'_, ChartTheme> {
-        self.inner.read().expect("theme lock poisoned")
+    ///
+    /// Returns an error if the lock is poisoned (a previous holder panicked
+    /// while holding the write guard).
+    pub fn read(&self) -> Result<RwLockReadGuard<'_, ChartTheme>, ThemeError> {
+        self.inner.read().map_err(|_| ThemeError::LockPoisoned)
     }
 
     /// Write access to the current theme.
-    pub fn write(&self) -> RwLockWriteGuard<'_, ChartTheme> {
-        self.inner.write().expect("theme lock poisoned")
+    ///
+    /// Returns an error if the lock is poisoned.
+    pub fn write(&self) -> Result<RwLockWriteGuard<'_, ChartTheme>, ThemeError> {
+        self.inner.write().map_err(|_| ThemeError::LockPoisoned)
     }
 
     /// Clone the current theme snapshot.
+    ///
+    /// Returns the default dark theme if the lock is poisoned.
     pub fn snapshot(&self) -> ChartTheme {
-        self.read().clone()
+        self.read()
+            .map(|guard| guard.clone())
+            .unwrap_or_else(|_| ChartTheme::dark())
     }
 }
 
@@ -597,6 +566,7 @@ impl std::fmt::Debug for ThemeHandle {
             .finish()
     }
 }
+
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -820,7 +790,7 @@ mod tests {
     fn handle_write_access() {
         let handle = ThemeHandle::new(ChartTheme::dark());
         {
-            let mut theme = handle.write();
+            let mut theme = handle.write().unwrap();
             theme.background = Rgba::rgb(0.0, 0.0, 0.0);
         }
         let snap = handle.snapshot();

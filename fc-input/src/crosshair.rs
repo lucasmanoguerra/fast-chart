@@ -113,14 +113,13 @@ impl CrosshairController {
             false
         };
 
-        let (time, price) = if snapped {
-            nearest_data_point.unwrap()
-        } else {
-            (time, price)
+        let (time, price) = match (snapped, nearest_data_point) {
+            (true, Some(pt)) => pt,
+            _ => (time, price),
         };
 
         self.position = Some(CrosshairPosition { time, price, snapped });
-        self.position.as_ref().expect("just set")
+        self.position.as_ref().unwrap()
     }
 
     /// Set custom position (for Custom mode).

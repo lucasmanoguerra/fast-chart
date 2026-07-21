@@ -1,8 +1,8 @@
-use fc_core::app::chart_controller::ChartController;
-use fc_core::FrameCounter;
-use fc_core::app::layout_manager::LayoutManager;
-use fc_core::ports::data_provider::DataProvider;
-use fc_core::ports::interaction::InteractionCommand;
+use fc_app::app::chart_controller::ChartController;
+use fc_app::FrameCounter;
+use fc_app::app::layout_manager::LayoutManager;
+use fc_app::ports::data_provider::DataProvider;
+use fc_app::ports::interaction::InteractionCommand;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use winit::application::ApplicationHandler;
@@ -17,6 +17,7 @@ mod examples;
 
 use adapters::data::simulated::SimulatedDataProvider;
 use adapters::gpu_renderer::GpuRenderer;
+use fc_render::coordinates::CoordinatePipeline;
 use adapters::input::handler::WinitInteractionHandler;
 use config::{ChartConfig, ConfigWatcher};
 
@@ -69,17 +70,20 @@ impl App {
         }
     }
 
-    /// Convert a screen x-position to a timestamp using the given viewport.
-    fn screen_x_to_timestamp(
-        viewport: &fc_core::Viewport,
-        screen_x: f64,
+    /// Build a coordinate pipeline from viewport + canvas dimensions.
+    fn viewport_pipeline(
+        viewport: &fc_domain::viewport::Viewport,
         canvas_width: f64,
-    ) -> f64 {
-        if canvas_width < 1.0 {
-            return viewport.time_start as f64;
-        }
-        let ratio = (screen_x / canvas_width).clamp(0.0, 1.0);
-        viewport.time_start as f64 + ratio * (viewport.time_end as f64 - viewport.time_start as f64)
+    ) -> CoordinatePipeline {
+        CoordinatePipeline::new(
+            (viewport.time_start as f64, viewport.time_end as f64),
+            (viewport.value_min, viewport.value_max),
+            0.0,
+            0.0,
+            canvas_width as f32,
+            0.0,
+            1.0,
+        )
     }
 
     /// Sync the layout's time range from the ChartController's viewport.
@@ -339,7 +343,8 @@ impl ApplicationHandler for App {
                         .and_then(|g| g.lock().ok())
                         .map(|r| r.canvas_width() as f64)
                         .unwrap_or(800.0);
-                    let timestamp = Self::screen_x_to_timestamp(vp, self.cursor_x, canvas_width);
+                    let pipeline = Self::viewport_pipeline(vp, canvas_width);
+                    let timestamp = pipeline.x_to_timestamp(self.cursor_x as f32) as f64;
                     // Pass timestamp as screen_x — viewport.zoom expects a timestamp center.
                     // The InteractionCommand parameter name is misleading but functionally correct.
                     ctrl.handle_input(InteractionCommand::ZoomAtCursor {

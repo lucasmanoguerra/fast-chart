@@ -1,6 +1,5 @@
-use fc_core::ports::data_provider::{DataProvider, DataEvent};
-use fc_core::Bar;
-use std::error::Error;
+use fc_app::ports::data_provider::{DataError, DataProvider, DataEvent};
+use fc_primitives::bar::Bar;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -117,7 +116,7 @@ impl SimulatedDataProvider {
 }
 
 impl DataProvider for SimulatedDataProvider {
-    fn start(&mut self) -> Result<(), Box<dyn Error>> {
+    fn start(&mut self) -> Result<(), DataError> {
         {
             let mut running = self.running.lock().unwrap();
             if *running {
@@ -158,7 +157,7 @@ impl DataProvider for SimulatedDataProvider {
         self.receiver.as_ref()
     }
 
-    fn stop(&mut self) -> Result<(), Box<dyn Error>> {
+    fn stop(&mut self) -> Result<(), DataError> {
         *self.running.lock().unwrap() = false;
         Ok(())
     }

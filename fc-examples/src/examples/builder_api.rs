@@ -3,8 +3,8 @@
 //! Demonstrates: builder chaining, theme selection, dimensions, titles,
 //! pane configuration, and runtime theme hot-swap via `theme_mut()`.
 
-use fc_core::builder::{ChartBuilder, PaneConfig};
-use fc_core::theme::{ChartTheme, Rgba, ThemeToken};
+use fc_app::builder::{ChartBuilder, PaneConfig};
+use fc_app::theme::{ChartTheme, Rgba, ThemeToken};
 
 pub fn run() {
     // Minimal builder — defaults to dark theme, 800×600

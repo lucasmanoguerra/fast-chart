@@ -3,7 +3,7 @@
 //! Demonstrates: `ChartTheme` presets, `ChartThemeBuilder`, token-based
 //! color overrides, and the `ThemeHandle` for thread-safe hot-swap.
 
-use fc_core::theme::{ChartTheme, ChartThemeBuilder, Rgba, ThemeHandle, ThemeToken};
+use fc_app::theme::{ChartTheme, ChartThemeBuilder, Rgba, ThemeHandle, ThemeToken};
 
 pub fn run() {
     // 1. Start from the dark preset

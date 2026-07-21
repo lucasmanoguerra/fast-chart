@@ -121,7 +121,9 @@ impl RenderPipeline {
             let pass = z_index_to_pass(cmd.z_index());
             match &mut current_pass {
                 Some(p) if *p == pass => {
-                    self.batches.last_mut().expect("batch must exist when current_pass is set").commands.push(cmd);
+                    if let Some(batch) = self.batches.last_mut() {
+                        batch.commands.push(cmd);
+                    }
                 }
                 _ => {
                     current_pass = Some(pass);
@@ -340,7 +342,7 @@ mod tests {
                 self.calls.push(format!("exec:{}", commands.len()));
             }
             fn resize(&mut self, _w: u32, _h: u32) {}
-            fn set_clip(&mut self, _r: crate::series_renderer::Rect) {}
+            fn set_clip(&mut self, _r: fc_primitives::Rect) {}
             fn clear_clip(&mut self) {}
             fn clear(&mut self, _c: [f32; 4]) {}
             fn width(&self) -> u32 { 800 }
@@ -374,7 +376,7 @@ mod tests {
                 self.calls.push(format!("exec:{}", commands.len()));
             }
             fn resize(&mut self, _w: u32, _h: u32) {}
-            fn set_clip(&mut self, _r: crate::series_renderer::Rect) {}
+            fn set_clip(&mut self, _r: fc_primitives::Rect) {}
             fn clear_clip(&mut self) {}
             fn clear(&mut self, _c: [f32; 4]) {}
             fn width(&self) -> u32 { 800 }

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use crate::cache::Cache;
 
 /// Cache key for indicator geometry.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -16,68 +16,36 @@ pub struct IndicatorEntry {
 }
 
 pub struct IndicatorCache {
-    entries: HashMap<IndicatorKey, IndicatorEntry>,
-    max_entries: usize,
-    hits: u64,
-    misses: u64,
+    inner: Cache<IndicatorKey, IndicatorEntry>,
 }
 
 impl IndicatorCache {
     pub fn new(max_entries: usize) -> Self {
-        Self {
-            entries: HashMap::with_capacity(max_entries),
-            max_entries,
-            hits: 0,
-            misses: 0,
-        }
+        Self { inner: Cache::new(max_entries) }
     }
 
     pub fn get(&mut self, key: &IndicatorKey) -> Option<&IndicatorEntry> {
-        if let Some(entry) = self.entries.get(key) {
-            self.hits += 1;
-            Some(entry)
-        } else {
-            self.misses += 1;
-            None
-        }
+        self.inner.get(key)
     }
 
     pub fn insert(&mut self, key: IndicatorKey, entry: IndicatorEntry) {
-        if self.entries.len() >= self.max_entries {
-            let keys_to_remove: Vec<IndicatorKey> = self
-                .entries
-                .keys()
-                .take(self.entries.len() - self.max_entries + 1)
-                .cloned()
-                .collect();
-            for k in keys_to_remove {
-                self.entries.remove(&k);
-            }
-        }
-        self.entries.insert(key, entry);
-    }
-
-    pub fn invalidate_indicator(&mut self, indicator_id: u32) {
-        self.entries.retain(|k, _| k.indicator_id != indicator_id);
+        self.inner.insert(key, entry);
     }
 
     pub fn clear(&mut self) {
-        self.entries.clear();
-        self.hits = 0;
-        self.misses = 0;
+        self.inner.clear();
     }
 
     pub fn hit_rate(&self) -> f64 {
-        let total = self.hits + self.misses;
-        if total == 0 {
-            0.0
-        } else {
-            self.hits as f64 / total as f64
-        }
+        self.inner.hit_rate()
     }
 
     pub fn len(&self) -> usize {
-        self.entries.len()
+        self.inner.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
     }
 }
 
@@ -85,31 +53,25 @@ impl IndicatorCache {
 mod tests {
     use super::*;
 
-    fn make_key(indicator_id: u32, data: u64, vp: u64) -> IndicatorKey {
-        IndicatorKey {
-            indicator_id,
-            data_hash: data,
-            viewport_hash: vp,
-        }
+    fn make_key(id: u32) -> IndicatorKey {
+        IndicatorKey { indicator_id: id, data_hash: 0, viewport_hash: 0 }
     }
 
     fn make_entry() -> IndicatorEntry {
-        IndicatorEntry {
-            vertices: vec![[0.0; 8]],
-            indices: vec![0, 1, 2],
-        }
+        IndicatorEntry { vertices: vec![[0.0; 8]], indices: vec![0, 1, 2] }
     }
 
     #[test]
     fn new_cache_is_empty() {
         let cache = IndicatorCache::new(16);
         assert_eq!(cache.len(), 0);
+        assert!(cache.is_empty());
     }
 
     #[test]
     fn insert_and_get() {
         let mut cache = IndicatorCache::new(16);
-        let key = make_key(1, 100, 200);
+        let key = make_key(1);
         cache.insert(key.clone(), make_entry());
         assert!(cache.get(&key).is_some());
         assert_eq!(cache.len(), 1);
@@ -118,26 +80,15 @@ mod tests {
     #[test]
     fn get_missing_returns_none() {
         let mut cache = IndicatorCache::new(16);
-        let key = make_key(1, 100, 200);
+        let key = make_key(99);
         assert!(cache.get(&key).is_none());
-    }
-
-    #[test]
-    fn invalidate_indicator_removes_all_for_id() {
-        let mut cache = IndicatorCache::new(16);
-        cache.insert(make_key(1, 1, 1), make_entry());
-        cache.insert(make_key(1, 2, 2), make_entry());
-        cache.insert(make_key(2, 1, 1), make_entry());
-        cache.invalidate_indicator(1);
-        assert_eq!(cache.len(), 1);
-        assert!(cache.get(&make_key(2, 1, 1)).is_some());
     }
 
     #[test]
     fn clear_empties_cache() {
         let mut cache = IndicatorCache::new(16);
-        cache.insert(make_key(1, 1, 1), make_entry());
-        let _ = cache.get(&make_key(99, 99, 99));
+        cache.insert(make_key(1), make_entry());
+        let _ = cache.get(&make_key(2));
         cache.clear();
         assert_eq!(cache.len(), 0);
         assert_eq!(cache.hit_rate(), 0.0);
@@ -146,19 +97,19 @@ mod tests {
     #[test]
     fn hit_rate_tracks_correctly() {
         let mut cache = IndicatorCache::new(16);
-        let key = make_key(1, 100, 200);
+        let key = make_key(1);
         cache.insert(key.clone(), make_entry());
-        let _ = cache.get(&key); // hit
-        let _ = cache.get(&make_key(2, 0, 0)); // miss
+        let _ = cache.get(&key);
+        let _ = cache.get(&make_key(2));
         assert!((cache.hit_rate() - 0.5).abs() < f64::EPSILON);
     }
 
     #[test]
     fn eviction_when_full() {
         let mut cache = IndicatorCache::new(2);
-        cache.insert(make_key(1, 1, 1), make_entry());
-        cache.insert(make_key(2, 2, 2), make_entry());
-        cache.insert(make_key(3, 3, 3), make_entry());
+        cache.insert(make_key(1), make_entry());
+        cache.insert(make_key(2), make_entry());
+        cache.insert(make_key(3), make_entry());
         assert_eq!(cache.len(), 2);
     }
 }

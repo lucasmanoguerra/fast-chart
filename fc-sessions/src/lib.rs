@@ -3,7 +3,7 @@
 //! Sessions define when a market is open. Session lines render as vertical
 //! lines on the chart at the configured times.
 
-use fc_types::color::Rgba;
+use fc_primitives::color::Rgba;
 
 /// A trading session definition.
 ///
@@ -168,7 +168,7 @@ pub struct SessionLine {
 ///
 /// ```
 /// use fc_sessions::{SessionLineConfig, SessionLineRenderer, Session};
-/// use fc_types::color::Rgba;
+/// use fc_primitives::color::Rgba;
 ///
 /// let session = Session::new("Regular", 14, 30, 21, 0);
 /// let config = SessionLineConfig {

@@ -1,5 +1,6 @@
-use fc_core::render::commands::DrawCommand;
-use fc_core::render::series_renderer::{Rect, SeriesHit, SeriesRenderer};
+use fc_render::commands::DrawCommand;
+use fc_primitives::Rect;
+use fc_render::series_renderer::{SeriesHit, SeriesRenderer};
 
 /// A text label data point in screen coordinates.
 #[derive(Debug, Clone)]

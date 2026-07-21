@@ -1,5 +1,6 @@
-use fc_core::render::commands::DrawCommand;
-use fc_core::render::series_renderer::{Rect, SeriesHit, SeriesRenderer};
+use fc_render::commands::DrawCommand;
+use fc_primitives::Rect;
+use fc_render::series_renderer::{SeriesHit, SeriesRenderer};
 
 /// A single data point for area rendering (screen coordinates).
 #[derive(Debug, Clone, Copy)]
@@ -38,8 +39,10 @@ impl AreaRenderer {
         // Fill polygon: line points + baseline at bottom
         let mut fill_points: Vec<[f32; 2]> = points.iter().map(|p| [p.x, p.y]).collect();
         // Close the polygon along the baseline
-        fill_points.push([points.last().unwrap().x, self.baseline_y]);
-        fill_points.push([points.first().unwrap().x, self.baseline_y]);
+        if let (Some(first), Some(last)) = (points.first(), points.last()) {
+            fill_points.push([last.x, self.baseline_y]);
+            fill_points.push([first.x, self.baseline_y]);
+        }
 
         commands.push(DrawCommand::filled_polygon(
             fill_points,

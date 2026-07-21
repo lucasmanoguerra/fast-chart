@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 use super::commands::DrawCommand;
-use super::series_renderer::Rect;
+use fc_primitives::Rect;
 
 /// The trait that a host application must implement to execute draw commands.
 ///

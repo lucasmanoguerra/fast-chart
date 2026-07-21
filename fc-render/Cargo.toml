@@ -8,7 +8,9 @@ license = "MIT"
 [dependencies]
 smallvec = "1"
 num-traits = "0.2"
-fc-types = { path = "../fc-types" }
+fc-domain = { path = "../fc-domain" }
+fc-primitives = { path = "../fc-primitives" }
+fc-drawing = { path = "../fc-drawing" }
 
 [dev-dependencies]
 approx = "0.5"

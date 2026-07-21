@@ -3,7 +3,10 @@
 //! Demonstrates: constructing drawing objects with builder-style chaining,
 //! reading level prices from Fibonacci, and the drawing API.
 
-use fc_core::{ChartPoint, FibonacciRetracement, HorizontalLine, LineStyle, VerticalLine};
+use fc_domain::{
+    ChartPoint, FibonacciRetracement, HorizontalLine, VerticalLine,
+};
+use fc_domain::price_line::LineStyle;
 
 pub fn run() {
     // Horizontal line at a support level

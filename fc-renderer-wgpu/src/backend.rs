@@ -1,6 +1,6 @@
-use fc_core::render::backend::RendererBackend;
-use fc_core::render::commands::DrawCommand;
-use fc_core::Rect;
+use fc_render::backend::RendererBackend;
+use fc_render::commands::DrawCommand;
+use fc_primitives::Rect;
 
 use crate::types::{Uniforms, Vertex};
 use crate::vertex_gen;

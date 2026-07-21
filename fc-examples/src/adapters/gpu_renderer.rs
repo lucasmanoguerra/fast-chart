@@ -1,8 +1,11 @@
-use fc_core::app::chart_controller::ChartState;
-use fc_core::app::layout_manager::LayoutManager;
-use fc_core::{
-    DefaultPriceFormatter, InvalidationLevel, PriceFormatter, Viewport,
+use fc_app::app::chart_controller::ChartState;
+use fc_app::app::layout_manager::LayoutManager;
+use fc_domain::{
+    DefaultPriceFormatter, Viewport,
 };
+use fc_domain::price_scale::PriceFormatter;
+use fc_primitives::invalidation::InvalidationLevel;
+use fc_render::coordinates::CoordinatePipeline;
 use winit::window::CursorIcon;
 
 use super::rendering::area_renderer::AreaRenderer;
@@ -17,6 +20,29 @@ use super::rendering::marker_renderer::MarkerRenderer;
 use super::rendering::price_line_renderer::PriceLineRenderer;
 use super::rendering::text_renderer::{GpuTextRenderer, PreparedTextArea};
 use super::rendering::types::{colors, Uniforms, Vertex};
+
+/// Build a CoordinatePipeline from a viewport and canvas dimensions.
+fn viewport_pipeline(viewport: &Viewport, width: f32, height: f32) -> CoordinatePipeline {
+    CoordinatePipeline::new(
+        (viewport.time_start as f64, viewport.time_end as f64),
+        (viewport.value_min, viewport.value_max),
+        0.0,
+        0.0,
+        width,
+        height,
+        1.0,
+    )
+}
+
+/// Reference to a pane's rendering context (pixel bounds within the canvas).
+#[allow(dead_code)]
+pub struct PaneRef {
+    pub index: usize,
+    /// Y offset from canvas top in pixels.
+    pub pixel_offset: u32,
+    /// Pane height in pixels.
+    pub pixel_height: u32,
+}
 
 pub struct GpuRenderer {
     window: winit::window::Window,
@@ -388,49 +414,53 @@ impl GpuRenderer {
                 ..Default::default()
             });
 
-            // Layer 1: Grid (low alpha, behind data)
-            self.grid_renderer.render(&mut render_pass);
-
-            // Layer 2: Candlestick series (world-space, GPU-projected)
-            self.candle_renderer.render(&mut render_pass);
-
-            // Layer 2.5: OHLC bar series (world-space, GPU-projected)
-            self.bar_renderer.render(&mut render_pass);
-
-            // Layer 3: Line series (NDC-space, CPU-projected)
-            self.line_renderer.render(&mut render_pass);
-
-            // Layer 3.5: Area fill (below line, alpha-blended)
-            self.area_renderer.render(&mut render_pass);
-
-            // Layer 3.7: Histogram bars (volume/oscillator)
-            self.histogram_renderer.render(&mut render_pass);
-
-            // Layer 3.9: Baseline fill (above/below midpoint)
-            self.baseline_renderer.render(&mut render_pass);
-
-            // Layer 4: Pane divider lines
-            self.render_dividers(&mut render_pass);
-
-            // Layer 5: Crosshair lines
-            self.crosshair_renderer.render(&mut render_pass);
-
-            // Layers 6–7: Markers + Price lines (per-pane scissor rects)
+            // Per-pane scissor clipping: each pane's renderers draw only
+            // within that pane's pixel bounds.
             let w = self.size.0;
             let h = self.size.1;
-            for pane_idx in 0..layout.panes.len() {
+            let pane_count = layout.panes.len();
+
+            for pane_idx in 0..pane_count {
                 let y_offset = layout.pane_pixel_offset(pane_idx, h as f64) as u32;
                 let y_height = layout.pane_pixel_height(pane_idx, h as f64) as u32;
                 render_pass.set_scissor_rect(0, y_offset, w, y_height.max(1));
 
+                // Grid (per-pane — each pane has its own grid lines)
+                self.grid_renderer.render(&mut render_pass);
+
+                // Candlestick series
+                self.candle_renderer.render(&mut render_pass);
+
+                // OHLC bar series
+                self.bar_renderer.render(&mut render_pass);
+
+                // Line series
+                self.line_renderer.render(&mut render_pass);
+
+                // Area fill
+                self.area_renderer.render(&mut render_pass);
+
+                // Histogram bars
+                self.histogram_renderer.render(&mut render_pass);
+
+                // Baseline fill
+                self.baseline_renderer.render(&mut render_pass);
+
+                // Markers + Price lines (per-pane)
                 self.pane_marker_renderers[pane_idx].render(&mut render_pass);
                 self.pane_price_line_renderers[pane_idx].render(&mut render_pass);
             }
 
-            // Reset scissor rect for text layer.
+            // Reset scissor rect for overlay layers that span the full canvas.
             render_pass.set_scissor_rect(0, 0, w, h);
 
-            // Layer 8: Text labels (axis + crosshair)
+            // Pane divider lines (overlay — not clipped)
+            self.render_dividers(&mut render_pass);
+
+            // Crosshair lines (overlay — not clipped)
+            self.crosshair_renderer.render(&mut render_pass);
+
+            // Text labels (axis + crosshair, overlay — not clipped)
             self.text_renderer.render(&mut render_pass);
         }
 
@@ -767,9 +797,9 @@ impl GpuRenderer {
         let mut vertices: Vec<Vertex> = Vec::new();
         let divider_color = [0.4, 0.4, 0.45, 0.8]; // subtle gray divider
 
-        for &divider_y_frac in &layout.dividers {
+        for divider in &layout.dividers {
             // Convert normalized y to NDC: y_frac=0 is top (NDC +1), y_frac=1 is bottom (NDC -1)
-            let y_ndc = 1.0 - 2.0 * divider_y_frac as f32;
+            let y_ndc = 1.0 - 2.0 * divider.position as f32;
             vertices.push(Vertex::new([-1.0, y_ndc], divider_color));
             vertices.push(Vertex::new([1.0, y_ndc], divider_color));
         }
@@ -888,15 +918,12 @@ impl GpuRenderer {
     fn find_bar_at_crosshair<'a>(
         &self,
         state: &'a ChartState,
-    ) -> Option<&'a fc_core::Bar> {
+    ) -> Option<&'a fc_primitives::bar::Bar> {
         if !self.crosshair_active {
             return None;
         }
-        let crosshair_time = screen_x_to_timestamp(
-            &state.viewport,
-            self.crosshair_x,
-            self.size.0 as f64,
-        );
+        let pipeline = viewport_pipeline(&state.viewport, self.size.0 as f32, self.size.1 as f32);
+        let crosshair_time = pipeline.x_to_timestamp(self.crosshair_x);
         state
             .time_series
             .iter()
@@ -954,16 +981,14 @@ impl GpuRenderer {
 
         let mut text = String::new();
 
+        let pipeline = viewport_pipeline(viewport, self.size.0 as f32, self.size.1 as f32);
+
         // Price at cursor Y
-        let price = screen_y_to_price(viewport, self.crosshair_y, self.size.1 as f64);
+        let price = pipeline.y_to_price(self.crosshair_y);
         text.push_str(&format!("{}\n", formatter.format_short(price)));
 
         // Time at cursor X
-        let timestamp = screen_x_to_timestamp(
-            viewport,
-            self.crosshair_x,
-            self.size.0 as f64,
-        );
+        let timestamp = pipeline.x_to_timestamp(self.crosshair_x);
         text.push_str(&format!("{}\n", format_timestamp(timestamp as u64)));
 
         // OHLC tooltip if hovering over a bar
@@ -1059,15 +1084,41 @@ impl GpuRenderer {
     }
 }
 
-impl fc_core::ports::render::ChartRenderer for GpuRenderer {
+impl fc_app::ports::render::ChartRenderer for GpuRenderer {
     fn resize(&mut self, width: u32, height: u32) {
         GpuRenderer::resize(self, width, height);
+    }
+
+    fn draw_frame(&mut self, _state: &fc_app::ports::render::FrameState) -> Result<(), fc_app::ports::render::RenderError> {
+        // GPU rendering is handled directly by GpuRenderer::draw()
+        // This port method is a no-op for the example adapter
+        Ok(())
+    }
+
+    fn present(&mut self) -> Result<(), fc_app::ports::render::RenderError> {
+        // Presentation is handled internally by the GPU surface
+        Ok(())
     }
 }
 
 // ---------------------------------------------------------------------------
 // Free functions — pure computations over ChartState, no &self needed.
 // ---------------------------------------------------------------------------
+
+/// Build per-pane rendering references from the layout and canvas height.
+#[allow(dead_code)]
+fn pane_refs(layout: &LayoutManager, canvas_height: f32) -> Vec<PaneRef> {
+    let h = canvas_height;
+    let mut refs = Vec::with_capacity(layout.panes.len());
+    for i in 0..layout.panes.len() {
+        refs.push(PaneRef {
+            index: i,
+            pixel_offset: layout.pane_pixel_offset(i, h as f64) as u32,
+            pixel_height: layout.pane_pixel_height(i, h as f64) as u32,
+        });
+    }
+    refs
+}
 
 /// Number of bars whose timestamps fall inside the viewport.
 fn visible_bar_count(state: &ChartState) -> usize {
@@ -1079,33 +1130,13 @@ fn visible_bar_count(state: &ChartState) -> usize {
 }
 
 /// Collect bars visible in the current viewport.
-fn collect_visible_bars(state: &ChartState) -> Vec<fc_core::Bar> {
+fn collect_visible_bars(state: &ChartState) -> Vec<fc_primitives::bar::Bar> {
     state
         .time_series
         .iter()
         .filter(|b| state.viewport.contains_time(b.timestamp))
         .copied()
         .collect()
-}
-
-/// Convert a screen x coordinate to a timestamp in the current viewport.
-fn screen_x_to_timestamp(viewport: &Viewport, screen_x: f32, canvas_width: f64) -> f64 {
-    if canvas_width < 1.0 {
-        return viewport.time_start as f64;
-    }
-    let ratio = (screen_x as f64 / canvas_width).clamp(0.0, 1.0);
-    viewport.time_start as f64
-        + ratio * (viewport.time_end as f64 - viewport.time_start as f64)
-}
-
-/// Convert a screen y coordinate to a price in the current viewport.
-fn screen_y_to_price(viewport: &Viewport, screen_y: f32, canvas_height: f64) -> f64 {
-    if canvas_height < 1.0 {
-        return viewport.value_min;
-    }
-    // Y is flipped: screen 0 = top = max price, screen h = bottom = min price
-    let ratio = (screen_y as f64 / canvas_height).clamp(0.0, 1.0);
-    viewport.value_max - ratio * (viewport.value_max - viewport.value_min)
 }
 
 /// Format a timestamp (milliseconds since epoch) to a short time string.

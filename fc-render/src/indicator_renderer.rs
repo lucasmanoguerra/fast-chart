@@ -3,7 +3,8 @@
 // ---------------------------------------------------------------------------
 
 use crate::commands::DrawCommand;
-use crate::series_renderer::{Rect, SeriesHit, SeriesRenderer};
+use fc_primitives::Rect;
+use crate::series_renderer::{SeriesHit, SeriesRenderer};
 
 /// A trait for rendering indicators, extending SeriesRenderer with
 /// overlay and separate-pane rendering modes.

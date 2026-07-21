@@ -1,5 +1,7 @@
 use super::types::{Uniforms, Vertex, colors};
-use fc_core::{Bar, TimeSeries, Viewport};
+use fc_primitives::bar::Bar;
+use fc_primitives::series::TimeSeries;
+use fc_domain::viewport::Viewport;
 
 /// GPU renderer for line series (e.g., close price line).
 ///

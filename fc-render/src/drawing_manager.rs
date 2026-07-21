@@ -2,13 +2,32 @@
 // DrawingManager — unified CRUD + hit-test + rendering for all drawing types
 // ---------------------------------------------------------------------------
 
-use fc_types::drawing::{
-    ChartPoint, DrawingId, DrawingSet,
+use fc_domain::drawing::{
+    ChartPoint, DrawingId, DrawingSet, TrendLine, Arrow, Ray, Segment, TextDrawing,
+    ImageDrawing, LabelDrawing, HorizontalLine, VerticalLine, Rectangle,
+    FibonacciRetracement, FibonacciExtension, Pitchfork, Ellipse, Path,
 };
 
 use crate::commands::DrawCommand;
 use crate::context::RenderContext;
-use crate::drawing::{Drawing, DrawingBounds, HitResult};
+use crate::renderable_drawing::RenderableDrawing;
+use fc_drawing::{Drawing, DrawingBounds, HitResult};
+
+/// Invoke `$macro` with all 15 concrete drawing types.
+macro_rules! all_drawing_types {
+    ($macro:ident) => {
+        $macro!(
+            TrendLine, Arrow, Ray, Segment, TextDrawing,
+            ImageDrawing, LabelDrawing, HorizontalLine, VerticalLine,
+            Rectangle, FibonacciRetracement, FibonacciExtension,
+            Pitchfork, Ellipse, Path,
+        );
+    };
+}
+
+// ---------------------------------------------------------------------------
+// DrawingManager
+// ---------------------------------------------------------------------------
 
 /// A unified manager for all drawing types in a pane.
 ///
@@ -94,95 +113,20 @@ impl DrawingManager {
 
     /// Hit-test all drawings at a point. Returns (id, HitResult) for the first hit.
     pub fn hit_test(&self, point: ChartPoint, tolerance: f32) -> Option<(DrawingId, HitResult)> {
-        for item in self.drawings.all_trend_lines() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
+        for item in self.drawings.all_raw() {
+            macro_rules! try_hit {
+                ($($ty:ty),+ $(,)?) => {
+                    $(
+                        if let Some(t) = item.as_any().downcast_ref::<$ty>() {
+                            let result = Drawing::hit_test(t, point, tolerance);
+                            if result != HitResult::Miss {
+                                return Some((Drawing::id(t).clone(), result));
+                            }
+                        }
+                    )+
+                };
             }
-        }
-        for item in self.drawings.all_arrows() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_rays() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_segments() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_text_drawings() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_image_drawings() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_label_drawings() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_horizontal_lines() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_vertical_lines() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_rectangles() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_fibonacci_retracements() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_fibonacci_extensions() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_pitchforks() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_ellipses() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
-        }
-        for item in self.drawings.all_paths() {
-            let result = Drawing::hit_test(item, point, tolerance);
-            if result != HitResult::Miss {
-                return Some((Drawing::id(item).clone(), result));
-            }
+            all_drawing_types!(try_hit);
         }
         None
     }
@@ -204,65 +148,21 @@ impl DrawingManager {
     pub fn bounds(&self) -> Option<DrawingBounds> {
         let mut result: Option<DrawingBounds> = None;
 
-        for item in self.drawings.all_trend_lines() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_arrows() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_rays() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_segments() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_text_drawings() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_image_drawings() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_label_drawings() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_horizontal_lines() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_vertical_lines() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_rectangles() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_fibonacci_retracements() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_fibonacci_extensions() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_pitchforks() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_ellipses() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
-        }
-        for item in self.drawings.all_paths() {
-            let b = Drawing::bounds(item);
-            result = Some(match result { Some(r) => r.combine(&b), None => b });
+        for item in self.drawings.all_raw() {
+            macro_rules! try_bounds {
+                ($($ty:ty),+ $(,)?) => {
+                    $(
+                        if let Some(t) = item.as_any().downcast_ref::<$ty>() {
+                            let b = Drawing::bounds(t);
+                            result = Some(match result {
+                                Some(r) => r.combine(&b),
+                                None => b,
+                            });
+                        }
+                    )+
+                };
+            }
+            all_drawing_types!(try_bounds);
         }
 
         result
@@ -274,50 +174,17 @@ impl DrawingManager {
     pub fn render(&self, ctx: &RenderContext) -> Vec<DrawCommand> {
         let mut cmds = Vec::new();
 
-        for item in self.drawings.all_trend_lines() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_arrows() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_rays() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_segments() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_text_drawings() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_image_drawings() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_label_drawings() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_horizontal_lines() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_vertical_lines() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_rectangles() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_fibonacci_retracements() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_fibonacci_extensions() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_pitchforks() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_ellipses() {
-            cmds.extend(Drawing::to_commands(item, ctx));
-        }
-        for item in self.drawings.all_paths() {
-            cmds.extend(Drawing::to_commands(item, ctx));
+        for item in self.drawings.all_raw() {
+            macro_rules! try_render {
+                ($($ty:ty),+ $(,)?) => {
+                    $(
+                        if let Some(t) = item.as_any().downcast_ref::<$ty>() {
+                            cmds.extend(RenderableDrawing::to_commands(t, ctx));
+                        }
+                    )+
+                };
+            }
+            all_drawing_types!(try_render);
         }
 
         // Sort by z_index
@@ -335,7 +202,10 @@ impl Default for DrawingManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fc_types::drawing::{TrendLine, HorizontalLine, VerticalLine, FibonacciRetracement, FibonacciExtension, Pitchfork, Arrow};
+    use fc_domain::drawing::{
+        TrendLine, HorizontalLine, VerticalLine, FibonacciRetracement,
+        FibonacciExtension, Pitchfork, Arrow,
+    };
 
     #[test]
     fn new_manager_is_empty() {
@@ -348,7 +218,11 @@ mod tests {
     #[test]
     fn add_and_remove_trend_line() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
         assert_eq!(mgr.len(), 1);
 
         let removed = mgr.remove(&DrawingId("tl1".to_string()));
@@ -359,7 +233,11 @@ mod tests {
     #[test]
     fn hit_test_finds_trend_line() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
         let hit = mgr.hit_test(ChartPoint::new(1500, 150.0), 50.0);
         assert!(hit.is_some());
@@ -375,7 +253,11 @@ mod tests {
     #[test]
     fn select_and_deselect() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
         let id = mgr.hit_test_and_select(ChartPoint::new(1500, 150.0), 50.0);
         assert!(id.is_some());
@@ -388,17 +270,22 @@ mod tests {
     #[test]
     fn render_produces_commands() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
         use crate::context::RenderContext;
         use crate::coordinates::CoordinatePipeline;
 
-        let pipeline = CoordinatePipeline::new(
-            (0.0, 3000.0),
-            (50.0, 200.0),
-            0.0, 0.0, 800.0, 400.0, 1.0,
+        let pipeline =
+            CoordinatePipeline::new((0.0, 3000.0), (50.0, 200.0), 0.0, 0.0, 800.0, 400.0, 1.0);
+        let ctx = RenderContext::from_pipeline(
+            pipeline,
+            fc_primitives::Rect::new(0.0, 0.0, 800.0, 400.0),
+            0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = mgr.render(&ctx);
         assert_eq!(cmds.len(), 1);
@@ -407,8 +294,16 @@ mod tests {
     #[test]
     fn combined_bounds() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
-        mgr.set_mut().add_arrow(Arrow::new("a1", ChartPoint::new(3000, 300.0), ChartPoint::new(4000, 400.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
+        mgr.set_mut().add_arrow(Arrow::new(
+            "a1",
+            ChartPoint::new(3000, 300.0),
+            ChartPoint::new(4000, 400.0),
+        ));
 
         let bounds = mgr.bounds();
         assert!(bounds.is_some());
@@ -420,14 +315,20 @@ mod tests {
     #[test]
     fn move_selected_drawing() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
         mgr.hit_test_and_select(ChartPoint::new(1500, 150.0), 50.0);
         let moved = mgr.move_selected(ChartPoint::new(100, 10.0));
         assert!(moved);
 
-        // Verify moved
-        let tl = mgr.set().get_trend_line(&DrawingId("tl1".to_string())).unwrap();
+        let tl = mgr
+            .set()
+            .get_trend_line(&DrawingId("tl1".to_string()))
+            .unwrap();
         assert_eq!(tl.start.timestamp, 1100);
         assert!((tl.start.price - 110.0).abs() < f64::EPSILON);
     }
@@ -435,21 +336,22 @@ mod tests {
     #[test]
     fn hit_test_miss() {
         let mgr = DrawingManager::new();
-        // No drawings — hit test should return None
         assert!(mgr.hit_test(ChartPoint::new(1500, 150.0), 50.0).is_none());
     }
 
     #[test]
     fn select_deselect_cycle() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
-        // Select by hitting
         let id = mgr.hit_test_and_select(ChartPoint::new(1500, 150.0), 50.0);
         assert!(id.is_some());
         assert_eq!(mgr.selected_id(), Some(&id.unwrap()));
 
-        // Deselect
         mgr.deselect_all();
         assert!(mgr.selected_id().is_none());
     }
@@ -457,19 +359,27 @@ mod tests {
     #[test]
     fn move_selected() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
-        mgr.set_mut().add_arrow(Arrow::new("a1", ChartPoint::new(3000, 300.0), ChartPoint::new(4000, 400.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
+        mgr.set_mut().add_arrow(Arrow::new(
+            "a1",
+            ChartPoint::new(3000, 300.0),
+            ChartPoint::new(4000, 400.0),
+        ));
 
-        // Select only one drawing
         mgr.hit_test_and_select(ChartPoint::new(1500, 150.0), 50.0);
         let moved = mgr.move_selected(ChartPoint::new(100, 10.0));
         assert!(moved);
 
-        // Only the selected one moved
-        let tl = mgr.set().get_trend_line(&DrawingId("tl1".to_string())).unwrap();
+        let tl = mgr
+            .set()
+            .get_trend_line(&DrawingId("tl1".to_string()))
+            .unwrap();
         assert_eq!(tl.start.timestamp, 1100);
 
-        // The other was not moved
         let ar = mgr.set().get_arrow(&DrawingId("a1".to_string())).unwrap();
         assert_eq!(ar.start.timestamp, 3000);
     }
@@ -477,7 +387,11 @@ mod tests {
     #[test]
     fn bounds_single() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
         let bounds = mgr.bounds();
         assert!(bounds.is_some());
@@ -489,17 +403,22 @@ mod tests {
     #[test]
     fn render_single() {
         let mut mgr = DrawingManager::new();
-        mgr.set_mut().add_trend_line(TrendLine::new("tl1", ChartPoint::new(1000, 100.0), ChartPoint::new(2000, 200.0)));
+        mgr.set_mut().add_trend_line(TrendLine::new(
+            "tl1",
+            ChartPoint::new(1000, 100.0),
+            ChartPoint::new(2000, 200.0),
+        ));
 
         use crate::context::RenderContext;
         use crate::coordinates::CoordinatePipeline;
 
-        let pipeline = CoordinatePipeline::new(
-            (0.0, 3000.0),
-            (50.0, 250.0),
-            0.0, 0.0, 800.0, 400.0, 1.0,
+        let pipeline =
+            CoordinatePipeline::new((0.0, 3000.0), (50.0, 250.0), 0.0, 0.0, 800.0, 400.0, 1.0);
+        let ctx = RenderContext::from_pipeline(
+            pipeline,
+            fc_primitives::Rect::new(0.0, 0.0, 800.0, 400.0),
+            0,
         );
-        let ctx = RenderContext::from_pipeline(pipeline, crate::Rect::new(0.0, 0.0, 800.0, 400.0), 0);
 
         let cmds = mgr.render(&ctx);
         assert_eq!(cmds.len(), 1);

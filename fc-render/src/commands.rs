@@ -4,6 +4,9 @@
 
 use std::fmt;
 
+// LineStyle canonical definition lives in fc-primitives.
+pub use fc_primitives::LineStyle;
+
 /// A single draw primitive that any renderer backend can execute.
 ///
 /// `DrawCommand` is the universal output of the rendering pipeline.
@@ -100,23 +103,6 @@ pub enum DrawCommand {
         opacity: f32,
         z_index: i32,
     },
-}
-
-/// Line drawing style.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LineStyle {
-    /// Solid line: `─────`
-    Solid,
-    /// Dashed line: `─ ─ ─`
-    Dashed,
-    /// Dotted line: `· · ·`
-    Dotted,
-}
-
-impl Default for LineStyle {
-    fn default() -> Self {
-        Self::Solid
-    }
 }
 
 // ---------------------------------------------------------------------------

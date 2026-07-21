@@ -1,0 +1,17 @@
+[package]
+name = "fc-primitives"
+version = "0.1.0"
+edition = "2021"
+description = "Pure domain primitives for the fast-chart trading library"
+license = "MIT"
+repository = "https://github.com/lucasmanoguerra/fast-chart"
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+thiserror = "2"
+
+[dev-dependencies]

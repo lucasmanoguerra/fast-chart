@@ -1,5 +1,6 @@
-use fc_core::render::commands::DrawCommand;
-use fc_core::render::series_renderer::{Rect, SeriesHit, SeriesRenderer};
+use fc_render::commands::DrawCommand;
+use fc_primitives::Rect;
+use fc_render::series_renderer::{SeriesHit, SeriesRenderer};
 
 /// A single data point for baseline rendering (screen coordinates).
 #[derive(Debug, Clone, Copy)]
@@ -52,9 +53,11 @@ impl BaselineRenderer {
         }
 
         if above_pts.len() >= 2 {
+            let first_x = above_pts[0][0];
+            let last_x = above_pts.last().unwrap()[0];
             let mut fill = above_pts;
-            fill.push([fill.last().unwrap()[0], self.baseline_y]);
-            fill.push([fill.first().unwrap()[0], self.baseline_y]);
+            fill.push([last_x, self.baseline_y]);
+            fill.push([first_x, self.baseline_y]);
             commands.push(DrawCommand::filled_polygon(
                 fill,
                 [self.above_color[0], self.above_color[1], self.above_color[2], 0.15],
@@ -63,9 +66,11 @@ impl BaselineRenderer {
         }
 
         if below_pts.len() >= 2 {
+            let first_x = below_pts[0][0];
+            let last_x = below_pts.last().unwrap()[0];
             let mut fill = below_pts;
-            fill.push([fill.last().unwrap()[0], self.baseline_y]);
-            fill.push([fill.first().unwrap()[0], self.baseline_y]);
+            fill.push([last_x, self.baseline_y]);
+            fill.push([first_x, self.baseline_y]);
             commands.push(DrawCommand::filled_polygon(
                 fill,
                 [self.below_color[0], self.below_color[1], self.below_color[2], 0.15],

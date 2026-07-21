@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 use super::coordinates::CoordinatePipeline;
-use super::series_renderer::Rect;
+use fc_primitives::Rect;
 
 /// The context passed to all series renderers during a frame.
 ///

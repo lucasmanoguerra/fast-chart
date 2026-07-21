@@ -1,0 +1,57 @@
+
+# openspecfig.yaml
+project:
+  language: rust
+  framework: cargo-workspaces
+sdd:
+  strict_tdd: true
+  rules:
+    hexagonal_architecture:
+      - "The domain crate exposes ONLY clean traits (Ports) and pure data structures (Domain Models)."
+      - "The application crate exposes the Use Cases (Services) that orchestrate the Ports."
+      - "The root library crate (if unified) or the public-facing facade crate must re-export only what is necessary using `pub use` syntax."
+    
+    library_api_design:
+      - "Goal: Simple, intentional, ergonomic, and highly readable Library API."
+      - "Encapsulation: Keep fields private by default. Use explicit getters or the builder pattern for complex struct initialization."
+      - "Type Safety: Enforce the 'Newtype' pattern for domain IDs or raw primitives (e.g., `pub struct UserId(String);`) to prevent type mixing."
+      - "Idiomatic Errors: Never return generic errors. Every crate must define its own domain-specific, strongly-typed Error enum (e.g., using `thiserror`)."
+      - "Exposed Surface: Keep the public API surface as small as possible. Use `pub(crate)` for internal utilities instead of `pub`."
+    
+    documentation:
+      - "Rule: 100% of public items (structs, enums, traits, methods) must be documented using standard `///` rustdoc."
+      - "Examples: Every public trait or service entrypoint must include a `# Examples` section with a fully compilable, working code snippet."
+    
+    testing:
+      - "Rule: Zero inline unit tests. All tests must be integration/black-box tests located in separate files within the `tests/` directory."
+      - "Testing the API: Tests in the `tests/` folder must consume the library exactly like an external user would (importing through the public API interface)."
+    
+    financial_data_integrity:
+      - "Rule: NEVER use f32 or f64 for currency, token balances, or prices."
+      - "Enforce: Use deterministic fixed-point decimals (e.g., `rust_decimal::Decimal`) or scaled integers (u128/i128 representing satoshis/pips)."
+      - "Validation: Financial calculations must explicitly handle overflow/underflow using checked arithmetic (`checked_add`, `checked_mul`)."
+      - "Time: Use UTC timestamps via the `chrono` crate for all events and domain structures. Store them strictly as `DateTime<Utc>`."
+    
+    concurrency_and_realtime:
+      - "Pattern: Strict Thread Safety. All core state managers must implement `Send + Sync`."
+      - "Async: Use idiomatic async/await (Tokio) for streaming market data (WebSockets) and chat feeds."
+      - "State: Guard shared state using lock-free structures or fine-grained asynchronous primitives (e.g., `tokio::sync::RwLock`). Avoid global Mutex blocks."
+    
+    audit_and_compliance:
+      - "Rule: Deterministic Audit Log. Every financial action, order placement, or high-value chat command must emit a structured log event using event serialization."
+      - "Logging: Use the `tracing` ecosystem. All financial events must include fields for metadata (e.g., `order_id`, `ticker`, `user_id`, `timestamp`)."
+      - "Secrecy: Enforce the use of the `secrecy` crate or `SecretString` for API Keys, Private Keys, and User Tokens to prevent leakages in logs."
+
+    resilience_and_fault_tolerance:
+      - "Rule: Outages are expected. All network calls, exchange API integrations, and LLM requests must have strict timeouts and circuit breakers."
+      - "Resilience Tools: Implement timeouts, retries, and circuit breakers strictly utilizing standard middleware or crates like `failsafe` or `tower::retry`."
+      - "Idempotency: Order submission APIs and database state adapters must enforce unique idempotency keys to prevent double-execution."
+
+    maintainability_and_evolution:
+      - "Rule: Backwards compatibility for the library API. Public structs must use `#[non_exhaustive]` on enums or variants that may grow over time."
+      - "SemVer: Breaking changes in domain types (like adding a new OrderType) must be isolated to major version bumps."
+
+    linter_enforcement:
+      - "Clippy: Prohibit float arithmetic via `#![deny(clippy::float_arithmetic)]` at crate roots."
+      - "Documentation: Prohibit missing documentation via `#![deny(missing_docs)]` in the facade crate."
+

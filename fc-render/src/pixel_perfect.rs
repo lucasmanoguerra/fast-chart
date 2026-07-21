@@ -107,7 +107,7 @@ impl PixelPerfect for f64 {
 /// Works with f32, f64, or any custom float type implementing `num_traits::Float`.
 #[inline]
 pub fn snap_generic<T: Float>(value: T) -> T {
-    value.floor() + T::from(0.5).unwrap()
+    value.floor() + T::from(0.5).expect("0.5 is always representable in any Float type")
 }
 
 // ---------------------------------------------------------------------------

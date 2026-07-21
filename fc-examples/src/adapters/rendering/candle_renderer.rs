@@ -1,4 +1,4 @@
-use fc_core::Bar;
+use fc_primitives::bar::Bar;
 
 use super::types::{Uniforms, Vertex, colors};
 

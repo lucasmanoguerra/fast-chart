@@ -1,6 +1,6 @@
 use crate::ports::data_provider::{DataError, DataEvent, DataProvider};
 use super::chart_state::ChartState;
-use fc_primitives::invalidation::{InvalidationLevel, InvalidationMask};
+use fc_primitives::invalidation::InvalidationLevel;
 
 /// Service that polls a [`DataProvider`] for new market events and
 /// pushes them into [`ChartState`]. Extracted from

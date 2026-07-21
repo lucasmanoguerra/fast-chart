@@ -9,15 +9,11 @@ use fc_primitives::kinetic::KineticScroll;
 /// respect the Single Responsibility Principle.
 pub(crate) struct ViewportInteractionService {
     interaction: Box<dyn InteractionHandler>,
-    kinetic: KineticScroll,
 }
 
 impl ViewportInteractionService {
     pub(crate) fn new(interaction: Box<dyn InteractionHandler>) -> Self {
-        Self {
-            interaction,
-            kinetic: KineticScroll::new(0.95),
-        }
+        Self { interaction }
     }
 
     /// Forward an interaction command to the handler and apply the
@@ -72,15 +68,6 @@ impl ViewportInteractionService {
         }
     }
 
-    /// Access the kinetic scroll state.
-    pub(crate) fn kinetic(&self) -> &KineticScroll {
-        &self.kinetic
-    }
-
-    /// Access the kinetic scroll state mutably.
-    pub(crate) fn kinetic_mut(&mut self) -> &mut KineticScroll {
-        &mut self.kinetic
-    }
 }
 
 #[cfg(test)]

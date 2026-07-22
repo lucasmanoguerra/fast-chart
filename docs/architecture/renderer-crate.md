@@ -1,8 +1,8 @@
-# Renderer Crate (`fast-chart-renderer-wgpu`)
+# Renderer Crate (`fc-renderer-wgpu`)
 
 ## Purpose
 
-`fast-chart-renderer-wgpu` provides the wgpu-based GPU rendering backend. It
+`fc-renderer-wgpu` provides the wgpu-based GPU rendering backend. It
 implements the `RendererBackend` trait from the library crate and translates
 `DrawCommand`s into GPU draw calls.
 

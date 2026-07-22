@@ -20,7 +20,7 @@ Chain strategy: feature-branch-chain
 
 | Unit | Goal | PR | Focused test | Runtime harness | Rollback boundary |
 |------|------|-----|-------------|-----------------|-------------------|
-| 1 | Domain crate + tests | PR#1 base=tracker | `cargo test -p fast-chart-domain` | N/A — pure lib | Revert `fast-chart-domain/` |
+| 1 | Domain crate + tests | PR#1 base=tracker | `cargo test -p fc-types` | N/A — pure lib | Revert `fc-types/` |
 | 2 | Core crate (ports+controller) | PR#2 base=PR#1 | `cargo test -p fast-chart-core` | N/A — pure lib | Revert `fast-chart-core/` |
 | 3 | App: winit+wgpu init | PR#3 base=PR#2 | `cargo check -p fast-chart-app` | Window appears | Revert `fast-chart-app/` |
 | 4 | SimulatedDataProvider | PR#4 base=PR#3 | `cargo test -p fast-chart-app -- data` | Log output of bars | Revert `adapters/data/` |
@@ -35,17 +35,17 @@ Chain strategy: feature-branch-chain
 
 ## Phase 1: Domain Crate
 
-- [x] 1.1 Create root `Cargo.toml` workspace + `fast-chart-domain/Cargo.toml` (zero deps)
-- [x] 1.2 Create `fast-chart-domain/src/bar.rs` — `Bar` struct, OHLCV validation, `Result` on invalid
-- [x] 1.3 Create `fast-chart-domain/src/tick.rs` — `Tick` struct (bid/ask/last/volume)
-- [x] 1.4 Create `fast-chart-domain/src/series_type.rs` — `SeriesType` enum (Candle/Bar/Line/Area/Baseline)
-- [x] 1.5 Create `fast-chart-domain/src/error.rs` — `ChartError` enum (InvalidPriceData/InsufficientData/OutOfRange)
-- [x] 1.6 Create `fast-chart-domain/src/viewport.rs` — time range + value range + zoom level
-- [x] 1.7 Create `fast-chart-domain/src/scale.rs` — `LinearScale` (price→y) + `TimeScale` (epoch→x)
-- [x] 1.8 Create `fast-chart-domain/src/crosshair.rs` — position + snap-to-bar lookup
-- [x] 1.9 Create `fast-chart-domain/src/indicator.rs` — `Indicator` trait (`calculate`, `name`)
-- [x] 1.10 Create `fast-chart-domain/src/series.rs` — `TimeSeries<T, N>` ring buffer with `MaybeUninit`
-- [x] 1.11 Create `fast-chart-domain/src/lib.rs` — module exports + unit tests for all types
+- [x] 1.1 Create root `Cargo.toml` workspace + `fc-types/Cargo.toml` (zero deps)
+- [x] 1.2 Create `fc-types/src/bar.rs` — `Bar` struct, OHLCV validation, `Result` on invalid
+- [x] 1.3 Create `fc-types/src/tick.rs` — `Tick` struct (bid/ask/last/volume)
+- [x] 1.4 Create `fc-types/src/series_type.rs` — `SeriesType` enum (Candle/Bar/Line/Area/Baseline)
+- [x] 1.5 Create `fc-types/src/error.rs` — `ChartError` enum (InvalidPriceData/InsufficientData/OutOfRange)
+- [x] 1.6 Create `fc-types/src/viewport.rs` — time range + value range + zoom level
+- [x] 1.7 Create `fc-types/src/scale.rs` — `LinearScale` (price→y) + `TimeScale` (epoch→x)
+- [x] 1.8 Create `fc-types/src/crosshair.rs` — position + snap-to-bar lookup
+- [x] 1.9 Create `fc-types/src/indicator.rs` — `Indicator` trait (`calculate`, `name`)
+- [x] 1.10 Create `fc-types/src/series.rs` — `TimeSeries<T, N>` ring buffer with `MaybeUninit`
+- [x] 1.11 Create `fc-types/src/lib.rs` — module exports + unit tests for all types
 
 ## Phase 2: Core Crate
 

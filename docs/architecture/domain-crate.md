@@ -1,8 +1,8 @@
-# Domain Crate (`fast-chart-domain`)
+# Domain Crate (`fc-types`)
 
 ## Purpose
 
-`fast-chart-domain` contains all pure domain types for financial charting.
+`fc-types` contains all pure domain types for financial charting.
 Zero external dependencies (except optional `serde`). This crate defines the
 vocabulary that the entire system speaks.
 

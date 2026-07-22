@@ -1,0 +1,9 @@
+[package]
+name = "fc-theme"
+version = "0.1.0"
+edition = "2021"
+description = "Chart theming system with design tokens for fast-chart"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+fc-primitives = { path = "../fc-primitives" }

@@ -43,15 +43,15 @@ jobs:
 
       - name: Library crate must have zero GPU deps
         run: |
-          echo "Checking fast-chart has no wgpu/winit dependencies..."
-          if cargo tree -p fast-chart 2>/dev/null | grep -E "wgpu|winit|softbuffer|raw-window-handle"; then
-            echo "ERROR: fast-chart depends on GPU/windowing crates!"
+          echo "Checking fc-app has no wgpu/winit dependencies..."
+          if cargo tree -p fc-app 2>/dev/null | grep -E "wgpu|winit|softbuffer|raw-window-handle"; then
+            echo "ERROR: fc-app depends on GPU/windowing crates!"
             exit 1
           fi
-          echo "✓ fast-chart has zero GPU deps"
+          echo "✓ fc-app has zero GPU deps"
 
       - name: Library builds without default features
-        run: cargo build -p fast-chart --no-default-features
+        run: cargo build -p fc-app --no-default-features
 
   build:
     name: Build (${{ matrix.os }})

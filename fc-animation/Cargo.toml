@@ -1,0 +1,9 @@
+[package]
+name = "fc-animation"
+version = "0.1.0"
+edition = "2021"
+description = "Easing functions and animation engine for smooth chart transitions"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Zero external dependencies — std only

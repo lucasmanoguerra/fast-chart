@@ -1,0 +1,16 @@
+[package]
+name = "fc-render"
+version = "0.1.0"
+edition = "2021"
+description = "Rendering engine for fast-chart financial charts"
+license = "MIT"
+
+[dependencies]
+smallvec = "1"
+num-traits = "0.2"
+fc-domain = { path = "../fc-domain" }
+fc-primitives = { path = "../fc-primitives" }
+fc-drawing = { path = "../fc-drawing" }
+
+[dev-dependencies]
+approx = "0.5"

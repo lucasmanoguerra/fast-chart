@@ -61,7 +61,7 @@ cargo test --workspace
 cargo test --workspace -- --nocapture
 
 # Run a specific test
-cargo test -p fast-chart-domain test_bar_creation
+cargo test -p fc-types test_bar_creation
 ```
 
 ### Test Guidelines
@@ -100,7 +100,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 | Scope | Description |
 |-------|-------------|
-| `domain` | fast-chart-domain |
+| `domain` | fc-types |
 | `core` | fast-chart-core |
 | `app` | fast-chart-app |
 | `render` | Rendering pipeline |
@@ -154,16 +154,16 @@ Before submitting a PR, ensure:
 
 Follow the hexagonal architecture rules:
 
-- **Domain** (`fast-chart-domain`): Zero dependencies. Pure types and logic.
+- **Domain** (`fc-types`): Zero dependencies. Pure types and logic.
 - **Core** (`fast-chart-core`): Depends only on Domain. Application logic.
 - **App** (`fast-chart-app`): Depends on Core. Adapters (GPU, input, config).
 
 ### Adding a New Indicator
 
-1. Create a new file in `fast-chart-domain/src/indicators/`
+1. Create a new file in `fc-types/src/indicators/`
 2. Implement the `Indicator` trait
 3. Add tests in the same file
-4. Register in `fast-chart-domain/src/indicators/mod.rs`
+4. Register in `fc-types/src/indicators/mod.rs`
 5. Add to the indicator list in `fast-chart-core/src/app/indicator_service.rs`
 
 ### Adding a New Renderer

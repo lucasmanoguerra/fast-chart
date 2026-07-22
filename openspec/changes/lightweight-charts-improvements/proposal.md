@@ -63,11 +63,11 @@ After 10 PRs and 187 tests building a GPU-accelerated trading chart, the archite
 
 | Area | Impact | Description |
 |------|--------|-------------|
-| `fast-chart-domain/src/scale.rs` | Modified | PriceScaleId, PriceFormatter trait |
-| `fast-chart-domain/src/viewport.rs` | Modified | Multiple price scales |
-| `fast-chart-domain/src/crosshair.rs` | Modified | Magnet snap logic |
-| `fast-chart-domain/src/price_line.rs` | New | PriceLine domain type |
-| `fast-chart-domain/src/marker.rs` | New | Marker domain type |
+| `fc-types/src/scale.rs` | Modified | PriceScaleId, PriceFormatter trait |
+| `fc-types/src/viewport.rs` | Modified | Multiple price scales |
+| `fc-types/src/crosshair.rs` | Modified | Magnet snap logic |
+| `fc-types/src/price_line.rs` | New | PriceLine domain type |
+| `fc-types/src/marker.rs` | New | Marker domain type |
 | `fast-chart-core/src/app/chart_controller.rs` | Modified | InvalidationMask, plugin registry |
 | `fast-chart-core/src/app/pane.rs` | Modified | Price scale refs, price lines |
 | `fast-chart-core/src/ports/plugin.rs` | New | Plugin traits |

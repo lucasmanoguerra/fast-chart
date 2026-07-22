@@ -1,0 +1,23 @@
+[package]
+name = "fc-renderer-wgpu"
+version = "0.1.0"
+edition = "2021"
+description = "WGPU rendering backend for fast-chart"
+
+[dependencies]
+fc-primitives = { path = "../fc-primitives" }
+fc-domain = { path = "../fc-domain" }
+fc-render = { path = "../fc-render" }
+wgpu = "25.0"
+bytemuck = { version = "1", features = ["derive"] }
+log = "0.4"
+
+[dev-dependencies]
+fc-sessions = { path = "../fc-sessions" }
+fc-theme = { path = "../fc-theme" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "render_benchmarks"
+harness = false

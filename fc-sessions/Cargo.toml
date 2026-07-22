@@ -1,0 +1,9 @@
+[package]
+name = "fc-sessions"
+version = "0.1.0"
+edition = "2021"
+description = "Trading session definitions and line rendering"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+fc-primitives = { path = "../fc-primitives" }

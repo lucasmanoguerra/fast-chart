@@ -2,7 +2,7 @@
 
 ## Technical Approach
 
-3-crate hexagonal Rust workspace enforcing architecture at compile time. `fast-chart-domain` (zero deps) defines pure types. `fast-chart-core` defines port traits + `ChartController` orchestration. `fast-chart-app` implements wgpu/winit/glyphon adapters. Data flows async (tokio mpsc) from providers into ring buffers; render loop is synchronous. Zoom/pan updates a projection uniform only — no vertex buffer rebuild. SIMD via `core::simd` for indicator math. See [proposal](../proposal.md) for scope, [exploration](../../design/exploration.md) for library decisions, and [specs](../../specs/) for requirements.
+3-crate hexagonal Rust workspace enforcing architecture at compile time. `fc-types` (zero deps) defines pure types. `fast-chart-core` defines port traits + `ChartController` orchestration. `fast-chart-app` implements wgpu/winit/glyphon adapters. Data flows async (tokio mpsc) from providers into ring buffers; render loop is synchronous. Zoom/pan updates a projection uniform only — no vertex buffer rebuild. SIMD via `core::simd` for indicator math. See [proposal](../proposal.md) for scope, [exploration](../../design/exploration.md) for library decisions, and [specs](../../specs/) for requirements.
 
 ## Architecture Decisions
 
@@ -155,17 +155,17 @@ DataProvider push → IndicatorService::calculate(indicators, series)
 
 | File | Action | Description |
 |------|--------|-------------|
-| `fast-chart-domain/src/lib.rs` | Create | Module exports |
-| `fast-chart-domain/src/bar.rs` | Create | `Bar` struct with validation |
-| `fast-chart-domain/src/tick.rs` | Create | `Tick` struct |
-| `fast-chart-domain/src/series.rs` | Create | `TimeSeries<T, N>` ring buffer |
-| `fast-chart-domain/src/indicator.rs` | Create | `Indicator` trait |
-| `fast-chart-domain/src/viewport.rs` | Create | Visible range + zoom |
-| `fast-chart-domain/src/scale.rs` | Create | Domain↔screen mapping |
-| `fast-chart-domain/src/crosshair.rs` | Create | Cursor position + snap |
-| `fast-chart-domain/src/series_type.rs` | Create | `SeriesType` enum |
-| `fast-chart-domain/src/error.rs` | Create | `ChartError` enum |
-| `fast-chart-domain/Cargo.toml` | Create | Zero external deps |
+| `fc-types/src/lib.rs` | Create | Module exports |
+| `fc-types/src/bar.rs` | Create | `Bar` struct with validation |
+| `fc-types/src/tick.rs` | Create | `Tick` struct |
+| `fc-types/src/series.rs` | Create | `TimeSeries<T, N>` ring buffer |
+| `fc-types/src/indicator.rs` | Create | `Indicator` trait |
+| `fc-types/src/viewport.rs` | Create | Visible range + zoom |
+| `fc-types/src/scale.rs` | Create | Domain↔screen mapping |
+| `fc-types/src/crosshair.rs` | Create | Cursor position + snap |
+| `fc-types/src/series_type.rs` | Create | `SeriesType` enum |
+| `fc-types/src/error.rs` | Create | `ChartError` enum |
+| `fc-types/Cargo.toml` | Create | Zero external deps |
 | `fast-chart-core/src/lib.rs` | Create | Module exports |
 | `fast-chart-core/src/ports/mod.rs` | Create | Port re-exports |
 | `fast-chart-core/src/ports/render.rs` | Create | `ChartRenderer` trait |
@@ -234,7 +234,7 @@ pub struct ChartController {
 
 | Layer | What | How |
 |-------|------|-----|
-| Domain | Bar/Tick validation, TimeSeries push/pop/drain, Scale mapping, Viewport zoom/pan, Crosshair snap, Indicator trait dispatch | Unit tests, `cargo test -p fast-chart-domain` |
+| Domain | Bar/Tick validation, TimeSeries push/pop/drain, Scale mapping, Viewport zoom/pan, Crosshair snap, Indicator trait dispatch | Unit tests, `cargo test -p fc-types` |
 | Core | ChartController orchestration with mocked ports, IndicatorService registration & calc dispatch, viewport management | Mock trait impls, `cargo test -p fast-chart-core` |
 | App | wgpu pipeline creation (smoke), glyphon text atlas init, SimulatedDataProvider generation correctness, config TOML round-trip | Integration tests, headless wgpu instance |
 | E2E | Full render pipeline, interaction sequences, multi-pane layout rendering | Manual window verification, screenshot comparison (future) |

@@ -1,5 +1,5 @@
 [workspace]
-members = ["fast-chart-domain", "fast-chart", "fast-chart-examples", "fast-chart-renderer-wgpu"]
+members = ["fc-primitives", "fc-domain", "fc-theme", "fc-cache", "fc-animation", "fc-sessions", "fc-input", "fc-drawing", "fc-render", "fc-app", "fc-examples", "fc-renderer-wgpu"]
 resolver = "2"
 
 [profile.release]

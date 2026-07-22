@@ -1,8 +1,8 @@
 use super::*;
 use crate::price_line::LineStyle;
 
-// ---- ChartPoint ----
 
+// Clasificación: determinística — verifica chart_point_new
 #[test]
 fn chart_point_new() {
     let p = ChartPoint::new(1000, 50.5);
@@ -10,8 +10,8 @@ fn chart_point_new() {
     assert_eq!(p.price, 50.5);
 }
 
-// ---- TrendLine ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn trend_line_new_defaults() {
     let start = ChartPoint::new(100, 10.0);
@@ -26,6 +26,7 @@ fn trend_line_new_defaults() {
     assert_eq!(tl.style, LineStyle::Solid);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn trend_line_builder() {
     let tl = TrendLine::new(
@@ -42,6 +43,7 @@ fn trend_line_builder() {
     assert_eq!(tl.style, LineStyle::Dashed);
 }
 
+// Clasificación: determinística — verifica trend_line_clone
 #[test]
 fn trend_line_clone() {
     let tl = TrendLine::new("c", ChartPoint::new(0, 0.0), ChartPoint::new(1, 1.0));
@@ -49,8 +51,8 @@ fn trend_line_clone() {
     assert_eq!(cloned.id, tl.id);
 }
 
-// ---- HorizontalLine ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn horizontal_line_new_defaults() {
     let hl = HorizontalLine::new("hl1", 150.0);
@@ -64,6 +66,7 @@ fn horizontal_line_new_defaults() {
     assert!(hl.extend_right);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn horizontal_line_builder() {
     let hl = HorizontalLine::new("hl2", 200.0)
@@ -80,8 +83,8 @@ fn horizontal_line_builder() {
     assert!(!hl.extend_right);
 }
 
-// ---- VerticalLine ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn vertical_line_new_defaults() {
     let vl = VerticalLine::new("vl1", 500);
@@ -93,6 +96,7 @@ fn vertical_line_new_defaults() {
     assert_eq!(vl.style, LineStyle::Solid);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn vertical_line_builder() {
     let vl = VerticalLine::new("vl2", 600)
@@ -105,8 +109,8 @@ fn vertical_line_builder() {
     assert_eq!(vl.style, LineStyle::Dashed);
 }
 
-// ---- Rectangle ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn rectangle_new_defaults() {
     let tl = ChartPoint::new(100, 200.0);
@@ -122,6 +126,7 @@ fn rectangle_new_defaults() {
     assert!(rect.fill_color.is_none());
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn rectangle_builder() {
     let rect = Rectangle::new(
@@ -140,6 +145,7 @@ fn rectangle_builder() {
     assert_eq!(rect.fill_color, Some([0.0, 1.0, 0.0, 0.3]));
 }
 
+// Clasificación: determinística — verifica rectangle_width_ts
 #[test]
 fn rectangle_width_ts() {
     let rect = Rectangle::new(
@@ -150,6 +156,7 @@ fn rectangle_width_ts() {
     assert_eq!(rect.width_ts(), 300);
 }
 
+// Clasificación: determinística — verifica rectangle_width_ts_reversed_corners
 #[test]
 fn rectangle_width_ts_reversed_corners() {
     // top_left has a later timestamp than bottom_right — should still work
@@ -161,6 +168,7 @@ fn rectangle_width_ts_reversed_corners() {
     assert_eq!(rect.width_ts(), 300);
 }
 
+// Clasificación: determinística — verifica rectangle_height_price
 #[test]
 fn rectangle_height_price() {
     let rect = Rectangle::new(
@@ -171,6 +179,7 @@ fn rectangle_height_price() {
     assert!((rect.height_price() - 70.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica rectangle_height_price_reversed_corners
 #[test]
 fn rectangle_height_price_reversed_corners() {
     let rect = Rectangle::new(
@@ -181,6 +190,7 @@ fn rectangle_height_price_reversed_corners() {
     assert!((rect.height_price() - 70.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica rectangle_zero_size
 #[test]
 fn rectangle_zero_size() {
     let rect = Rectangle::new("r7", ChartPoint::new(100, 50.0), ChartPoint::new(100, 50.0));
@@ -188,6 +198,7 @@ fn rectangle_zero_size() {
     assert!((rect.height_price()).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica rectangle_clone
 #[test]
 fn rectangle_clone() {
     let rect = Rectangle::new("rc", ChartPoint::new(0, 0.0), ChartPoint::new(1, 1.0));
@@ -195,8 +206,8 @@ fn rectangle_clone() {
     assert_eq!(cloned.id, rect.id);
 }
 
-// ---- FibonacciRetracement ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn fibonacci_new_defaults() {
     let start = ChartPoint::new(100, 100.0);
@@ -212,6 +223,7 @@ fn fibonacci_new_defaults() {
     assert_eq!(fib.style, LineStyle::Dashed);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn fibonacci_builder() {
     let fib = FibonacciRetracement::new(
@@ -230,6 +242,7 @@ fn fibonacci_builder() {
     assert_eq!(fib.levels, vec![0.0, 0.5, 1.0]);
 }
 
+// Clasificación: determinística — verifica fibonacci_price_at_level
 #[test]
 fn fibonacci_price_at_level() {
     let fib = FibonacciRetracement::new(
@@ -246,6 +259,7 @@ fn fibonacci_price_at_level() {
     assert!((fib.price_at_level(0.618) - 161.8).abs() < 1e-10);
 }
 
+// Clasificación: determinística — verifica fibonacci_price_at_level_downtrend
 #[test]
 fn fibonacci_price_at_level_downtrend() {
     // start price > end price (downtrend)
@@ -261,6 +275,7 @@ fn fibonacci_price_at_level_downtrend() {
     assert!((fib.price_at_level(1.0) - 100.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica fibonacci_level_prices_count
 #[test]
 fn fibonacci_level_prices_count() {
     let fib = FibonacciRetracement::new(
@@ -272,6 +287,7 @@ fn fibonacci_level_prices_count() {
     assert_eq!(prices.len(), 7); // default levels count
 }
 
+// Clasificación: determinística — verifica fibonacci_level_prices_custom
 #[test]
 fn fibonacci_level_prices_custom() {
     let fib = FibonacciRetracement::new(
@@ -288,6 +304,7 @@ fn fibonacci_level_prices_custom() {
     assert!((prices[2].1 - 150.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica fibonacci_zero_range
 #[test]
 fn fibonacci_zero_range() {
     let fib = FibonacciRetracement::new(
@@ -302,6 +319,7 @@ fn fibonacci_zero_range() {
     }
 }
 
+// Clasificación: determinística — verifica fibonacci_clone
 #[test]
 fn fibonacci_clone() {
     let fib = FibonacciRetracement::new(
@@ -314,8 +332,8 @@ fn fibonacci_clone() {
     assert_eq!(cloned.levels, fib.levels);
 }
 
-// ---- FibonacciExtension ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn fibonacci_extension_new_defaults() {
     let a = ChartPoint::new(100, 100.0);
@@ -336,6 +354,7 @@ fn fibonacci_extension_new_defaults() {
     assert_eq!(ext.style, LineStyle::Dashed);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn fibonacci_extension_builder() {
     let ext = FibonacciExtension::new(
@@ -355,6 +374,7 @@ fn fibonacci_extension_builder() {
     assert_eq!(ext.levels, vec![0.0, 0.5, 1.0, 1.618]);
 }
 
+// Clasificación: determinística — verifica fibonacci_extension_price_at_level
 #[test]
 fn fibonacci_extension_price_at_level() {
     // A=100, B=200, C=160 → ab_range=100
@@ -375,6 +395,7 @@ fn fibonacci_extension_price_at_level() {
     assert!((ext.price_at_level(1.618) - 321.8).abs() < 1e-10);
 }
 
+// Clasificación: determinística — verifica fibonacci_extension_price_at_level_downtrend
 #[test]
 fn fibonacci_extension_price_at_level_downtrend() {
     // A=200, B=100, C=140 → ab_range=-100
@@ -393,6 +414,7 @@ fn fibonacci_extension_price_at_level_downtrend() {
     assert!((ext.price_at_level(1.618) - (-21.8)).abs() < 1e-10);
 }
 
+// Clasificación: determinística — verifica fibonacci_extension_level_prices_count
 #[test]
 fn fibonacci_extension_level_prices_count() {
     let ext = FibonacciExtension::new(
@@ -405,6 +427,7 @@ fn fibonacci_extension_level_prices_count() {
     assert_eq!(prices.len(), 9); // default extension levels count
 }
 
+// Clasificación: determinística — verifica fibonacci_extension_level_prices_custom
 #[test]
 fn fibonacci_extension_level_prices_custom() {
     let ext = FibonacciExtension::new(
@@ -423,6 +446,7 @@ fn fibonacci_extension_level_prices_custom() {
     assert!((prices[2].1 - 261.8).abs() < 1e-10); // 100 + 100*1.618
 }
 
+// Clasificación: determinística — verifica fibonacci_extension_zero_range
 #[test]
 fn fibonacci_extension_zero_range() {
     let ext = FibonacciExtension::new(
@@ -438,6 +462,7 @@ fn fibonacci_extension_zero_range() {
     }
 }
 
+// Clasificación: determinística — verifica fibonacci_extension_clone
 #[test]
 fn fibonacci_extension_clone() {
     let ext = FibonacciExtension::new(
@@ -452,8 +477,8 @@ fn fibonacci_extension_clone() {
     assert_eq!(cloned.point_a, ext.point_a);
 }
 
-// ---- Pitchfork ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn pitchfork_new_defaults() {
     let a = ChartPoint::new(100, 100.0);
@@ -470,6 +495,7 @@ fn pitchfork_new_defaults() {
     assert_eq!(pf.style, LineStyle::Solid);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn pitchfork_builder() {
     let pf = Pitchfork::new(
@@ -487,6 +513,7 @@ fn pitchfork_builder() {
     assert_eq!(pf.style, LineStyle::Dashed);
 }
 
+// Clasificación: determinística — verifica pitchfork_median_at_a
 #[test]
 fn pitchfork_median_at_a() {
     // At A's timestamp, median should be A's price
@@ -499,6 +526,7 @@ fn pitchfork_median_at_a() {
     assert!((price - 100.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_median_at_midpoint
 #[test]
 fn pitchfork_median_at_midpoint() {
     // B and C both at timestamp 100 → midpoint ts = 100
@@ -512,6 +540,7 @@ fn pitchfork_median_at_midpoint() {
     assert!((price - 160.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_median_interpolation
 #[test]
 fn pitchfork_median_interpolation() {
     // Linear interpolation: at t=50 (halfway between 0 and 100),
@@ -525,6 +554,7 @@ fn pitchfork_median_interpolation() {
     assert!((price - 130.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_upper_at_a
 #[test]
 fn pitchfork_upper_at_a() {
     // At A's timestamp, upper = A.price + (B.price - midpoint)
@@ -539,6 +569,7 @@ fn pitchfork_upper_at_a() {
     assert!((price - 140.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_upper_at_midpoint
 #[test]
 fn pitchfork_upper_at_midpoint() {
     // At midpoint: median = 160, upper = 160 + 40 = 200
@@ -551,6 +582,7 @@ fn pitchfork_upper_at_midpoint() {
     assert!((price - 200.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_lower_at_a
 #[test]
 fn pitchfork_lower_at_a() {
     // At A's timestamp: lower = A.price + 0 + (C.price - midpoint)
@@ -565,6 +597,7 @@ fn pitchfork_lower_at_a() {
     assert!((price - 60.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_lower_at_midpoint
 #[test]
 fn pitchfork_lower_at_midpoint() {
     // At midpoint: lower = 160 + (-40) = 120
@@ -577,6 +610,7 @@ fn pitchfork_lower_at_midpoint() {
     assert!((price - 120.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_asymmetric_b_c
 #[test]
 fn pitchfork_asymmetric_b_c() {
     // B and C at different timestamps
@@ -600,6 +634,7 @@ fn pitchfork_asymmetric_b_c() {
     assert!((lower - 80.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_past_a
 #[test]
 fn pitchfork_past_a() {
     // Before A: saturating_sub clamps t to 0, factor = 0
@@ -613,6 +648,7 @@ fn pitchfork_past_a() {
     assert!((price - 100.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn pitchfork_zero_span() {
     // A and midpoint share the same timestamp → denominator = 0
@@ -626,6 +662,7 @@ fn pitchfork_zero_span() {
     assert!((price - 100.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica pitchfork_clone
 #[test]
 fn pitchfork_clone() {
     let pf = Pitchfork::new(
@@ -639,8 +676,8 @@ fn pitchfork_clone() {
     assert_eq!(cloned.point_a, pf.point_a);
 }
 
-// ---- DrawingSet ----
 
+// Clasificación: determinística — verifica drawing_set_starts_empty
 #[test]
 fn drawing_set_starts_empty() {
     let set = DrawingSet::new();
@@ -648,6 +685,7 @@ fn drawing_set_starts_empty() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_add_trend_line
 #[test]
 fn drawing_set_add_trend_line() {
     let mut set = DrawingSet::new();
@@ -661,6 +699,7 @@ fn drawing_set_add_trend_line() {
     assert!(set.get_trend_line(&DrawingId("t1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_add_horizontal_line
 #[test]
 fn drawing_set_add_horizontal_line() {
     let mut set = DrawingSet::new();
@@ -669,6 +708,7 @@ fn drawing_set_add_horizontal_line() {
     assert!(set.get_horizontal_line(&DrawingId("h1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_add_vertical_line
 #[test]
 fn drawing_set_add_vertical_line() {
     let mut set = DrawingSet::new();
@@ -677,6 +717,7 @@ fn drawing_set_add_vertical_line() {
     assert!(set.get_vertical_line(&DrawingId("v1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_trend_line
 #[test]
 fn drawing_set_remove_trend_line() {
     let mut set = DrawingSet::new();
@@ -690,6 +731,7 @@ fn drawing_set_remove_trend_line() {
     assert!(set.get_trend_line(&DrawingId("t1".to_string())).is_none());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_horizontal_line
 #[test]
 fn drawing_set_remove_horizontal_line() {
     let mut set = DrawingSet::new();
@@ -698,6 +740,7 @@ fn drawing_set_remove_horizontal_line() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_vertical_line
 #[test]
 fn drawing_set_remove_vertical_line() {
     let mut set = DrawingSet::new();
@@ -706,6 +749,7 @@ fn drawing_set_remove_vertical_line() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_nonexistent
 #[test]
 fn drawing_set_remove_nonexistent() {
     let mut set = DrawingSet::new();
@@ -714,6 +758,7 @@ fn drawing_set_remove_nonexistent() {
     assert_eq!(set.len(), 1);
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_from_mixed
 #[test]
 fn drawing_set_remove_from_mixed() {
     let mut set = DrawingSet::new();
@@ -733,6 +778,7 @@ fn drawing_set_remove_from_mixed() {
     assert!(set.get_vertical_line(&DrawingId("v1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica conteo de shortcuts registrado
 #[test]
 fn drawing_set_len_counts_all_types() {
     let mut set = DrawingSet::new();
@@ -757,6 +803,7 @@ fn drawing_set_len_counts_all_types() {
     assert_eq!(set.all_vertical_lines().len(), 1);
 }
 
+// Clasificación: determinística — verifica drawing_set_is_empty_after_removing_last
 #[test]
 fn drawing_set_is_empty_after_removing_last() {
     let mut set = DrawingSet::new();
@@ -766,8 +813,8 @@ fn drawing_set_is_empty_after_removing_last() {
     assert!(set.is_empty());
 }
 
-// ---- DrawingSet: Rectangle ----
 
+// Clasificación: determinística — verifica drawing_set_add_rectangle
 #[test]
 fn drawing_set_add_rectangle() {
     let mut set = DrawingSet::new();
@@ -780,6 +827,7 @@ fn drawing_set_add_rectangle() {
     assert!(set.get_rectangle(&DrawingId("r1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_rectangle
 #[test]
 fn drawing_set_remove_rectangle() {
     let mut set = DrawingSet::new();
@@ -792,6 +840,7 @@ fn drawing_set_remove_rectangle() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_rectangles
 #[test]
 fn drawing_set_all_rectangles() {
     let mut set = DrawingSet::new();
@@ -808,8 +857,8 @@ fn drawing_set_all_rectangles() {
     assert_eq!(set.all_rectangles().len(), 2);
 }
 
-// ---- DrawingSet: FibonacciRetracement ----
 
+// Clasificación: determinística — verifica cálculo de indicador
 #[test]
 fn drawing_set_add_fibonacci() {
     let mut set = DrawingSet::new();
@@ -824,6 +873,7 @@ fn drawing_set_add_fibonacci() {
         .is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_fibonacci
 #[test]
 fn drawing_set_remove_fibonacci() {
     let mut set = DrawingSet::new();
@@ -836,6 +886,7 @@ fn drawing_set_remove_fibonacci() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_mixed_with_new_types
 #[test]
 fn drawing_set_mixed_with_new_types() {
     let mut set = DrawingSet::new();
@@ -864,8 +915,8 @@ fn drawing_set_mixed_with_new_types() {
         .is_some());
 }
 
-// ---- DrawingSet: FibonacciExtension ----
 
+// Clasificación: determinística — verifica cálculo de indicador
 #[test]
 fn drawing_set_add_fibonacci_extension() {
     let mut set = DrawingSet::new();
@@ -881,6 +932,7 @@ fn drawing_set_add_fibonacci_extension() {
         .is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_fibonacci_extension
 #[test]
 fn drawing_set_remove_fibonacci_extension() {
     let mut set = DrawingSet::new();
@@ -894,6 +946,7 @@ fn drawing_set_remove_fibonacci_extension() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_fibonacci_extensions
 #[test]
 fn drawing_set_all_fibonacci_extensions() {
     let mut set = DrawingSet::new();
@@ -912,8 +965,8 @@ fn drawing_set_all_fibonacci_extensions() {
     assert_eq!(set.all_fibonacci_extensions().len(), 2);
 }
 
-// ---- DrawingSet: Pitchfork ----
 
+// Clasificación: determinística — verifica drawing_set_add_pitchfork
 #[test]
 fn drawing_set_add_pitchfork() {
     let mut set = DrawingSet::new();
@@ -929,6 +982,7 @@ fn drawing_set_add_pitchfork() {
         .is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_pitchfork
 #[test]
 fn drawing_set_remove_pitchfork() {
     let mut set = DrawingSet::new();
@@ -942,6 +996,7 @@ fn drawing_set_remove_pitchfork() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_pitchforks
 #[test]
 fn drawing_set_all_pitchforks() {
     let mut set = DrawingSet::new();
@@ -960,6 +1015,7 @@ fn drawing_set_all_pitchforks() {
     assert_eq!(set.all_pitchforks().len(), 2);
 }
 
+// Clasificación: determinística — verifica drawing_set_mixed_all_types
 #[test]
 fn drawing_set_mixed_all_types() {
     let mut set = DrawingSet::new();
@@ -990,8 +1046,8 @@ fn drawing_set_mixed_all_types() {
         .is_some());
 }
 
-// ---- Ellipse ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn ellipse_new_defaults() {
     let center = ChartPoint::new(500, 150.0);
@@ -1008,6 +1064,7 @@ fn ellipse_new_defaults() {
     assert!(e.fill_color.is_none());
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn ellipse_builder() {
     let e = Ellipse::new("e2", ChartPoint::new(100, 200.0), 30.0, 20.0)
@@ -1022,12 +1079,14 @@ fn ellipse_builder() {
     assert_eq!(e.fill_color, Some([0.0, 1.0, 0.0, 0.3]));
 }
 
+// Clasificación: determinística — verifica ellipse_contains_center
 #[test]
 fn ellipse_contains_center() {
     let e = Ellipse::new("e3", ChartPoint::new(100, 100.0), 50.0, 30.0);
     assert!(e.contains(ChartPoint::new(100, 100.0)));
 }
 
+// Clasificación: determinística — verifica ellipse_contains_inside
 #[test]
 fn ellipse_contains_inside() {
     let e = Ellipse::new("e4", ChartPoint::new(100, 100.0), 50.0, 30.0);
@@ -1035,6 +1094,7 @@ fn ellipse_contains_inside() {
     assert!(e.contains(ChartPoint::new(110, 105.0)));
 }
 
+// Clasificación: determinística — verifica ellipse_contains_outside
 #[test]
 fn ellipse_contains_outside() {
     let e = Ellipse::new("e5", ChartPoint::new(100, 100.0), 50.0, 30.0);
@@ -1042,6 +1102,7 @@ fn ellipse_contains_outside() {
     assert!(!e.contains(ChartPoint::new(200, 200.0)));
 }
 
+// Clasificación: determinística — verifica ellipse_contains_on_boundary
 #[test]
 fn ellipse_contains_on_boundary() {
     // point exactly on the boundary: (dx/rx)^2 + (dy/ry)^2 == 1
@@ -1052,6 +1113,7 @@ fn ellipse_contains_on_boundary() {
     assert!(e.contains(ChartPoint::new(100, 130.0)));
 }
 
+// Clasificación: determinística — verifica ellipse_contains_beyond_boundary
 #[test]
 fn ellipse_contains_beyond_boundary() {
     let e = Ellipse::new("e7", ChartPoint::new(100, 100.0), 50.0, 30.0);
@@ -1061,6 +1123,7 @@ fn ellipse_contains_beyond_boundary() {
     assert!(!e.contains(ChartPoint::new(100, 131.0)));
 }
 
+// Clasificación: determinística — verifica ellipse_bounding_box
 #[test]
 fn ellipse_bounding_box() {
     let e = Ellipse::new("e8", ChartPoint::new(500, 100.0), 200.0, 50.0);
@@ -1072,6 +1135,7 @@ fn ellipse_bounding_box() {
     assert!((max.price - 150.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica ellipse_bounding_box_center_at_zero
 #[test]
 fn ellipse_bounding_box_center_at_zero() {
     // saturating_sub prevents underflow
@@ -1080,6 +1144,7 @@ fn ellipse_bounding_box_center_at_zero() {
     assert_eq!(min.timestamp, 0); // saturating_sub: 10 - 100 -> 0
 }
 
+// Clasificación: determinística — verifica ellipse_zero_radii
 #[test]
 fn ellipse_zero_radii() {
     let e = Ellipse::new("e10", ChartPoint::new(100, 100.0), 0.0, 0.0);
@@ -1090,6 +1155,7 @@ fn ellipse_zero_radii() {
     assert_eq!(min, max);
 }
 
+// Clasificación: determinística — verifica ellipse_clone
 #[test]
 fn ellipse_clone() {
     let e = Ellipse::new("ec", ChartPoint::new(100, 100.0), 50.0, 30.0);
@@ -1099,8 +1165,8 @@ fn ellipse_clone() {
     assert_eq!(cloned.radius_x, e.radius_x);
 }
 
-// ---- Path ----
 
+// Clasificación: determinística — verifica constructor con valores por defecto
 #[test]
 fn path_new_defaults() {
     let points = vec![ChartPoint::new(0, 0.0), ChartPoint::new(10, 20.0)];
@@ -1114,6 +1180,7 @@ fn path_new_defaults() {
     assert!(!p.closed);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn path_builder() {
     let p = Path::new("p2", vec![ChartPoint::new(0, 0.0), ChartPoint::new(1, 1.0)])
@@ -1128,6 +1195,7 @@ fn path_builder() {
     assert!(p.closed);
 }
 
+// Clasificación: determinística — verifica path_push
 #[test]
 fn path_push() {
     let mut p = Path::new("p3", vec![ChartPoint::new(0, 0.0)]);
@@ -1136,6 +1204,7 @@ fn path_push() {
     assert_eq!(p.points.len(), 3);
 }
 
+// Clasificación: determinística — verifica path_segment_count_open
 #[test]
 fn path_segment_count_open() {
     let p = Path::new(
@@ -1149,6 +1218,7 @@ fn path_segment_count_open() {
     assert_eq!(p.segment_count(), 2); // n - 1
 }
 
+// Clasificación: determinística — verifica path_segment_count_closed
 #[test]
 fn path_segment_count_closed() {
     let p = Path::new(
@@ -1163,18 +1233,21 @@ fn path_segment_count_closed() {
     assert_eq!(p.segment_count(), 3); // n
 }
 
+// Clasificación: determinística — verifica path_segment_count_empty
 #[test]
 fn path_segment_count_empty() {
     let p = Path::new("p6", vec![]);
     assert_eq!(p.segment_count(), 0);
 }
 
+// Clasificación: determinística — verifica path_segment_count_single
 #[test]
 fn path_segment_count_single() {
     let p = Path::new("p7", vec![ChartPoint::new(0, 0.0)]);
     assert_eq!(p.segment_count(), 0);
 }
 
+// Clasificación: determinística — verifica conteo de shortcuts registrado
 #[test]
 fn path_total_length_open() {
     // horizontal segment: length = 3
@@ -1190,6 +1263,7 @@ fn path_total_length_open() {
     assert!((p.total_length() - 7.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica conteo de shortcuts registrado
 #[test]
 fn path_total_length_closed() {
     // triangle: (0,0) -> (3,0) -> (3,4) -> close to (0,0)
@@ -1206,18 +1280,21 @@ fn path_total_length_closed() {
     assert!((p.total_length() - 12.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica conteo de shortcuts registrado
 #[test]
 fn path_total_length_empty() {
     let p = Path::new("p10", vec![]);
     assert!((p.total_length()).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica conteo de shortcuts registrado
 #[test]
 fn path_total_length_single_point() {
     let p = Path::new("p11", vec![ChartPoint::new(0, 0.0)]);
     assert!((p.total_length()).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica path_point_access
 #[test]
 fn path_point_access() {
     let points = vec![
@@ -1232,6 +1309,7 @@ fn path_point_access() {
     assert!(p.point(5).is_none());
 }
 
+// Clasificación: determinística — verifica path_clone
 #[test]
 fn path_clone() {
     let p = Path::new("pc", vec![ChartPoint::new(0, 0.0), ChartPoint::new(1, 1.0)]);
@@ -1240,8 +1318,8 @@ fn path_clone() {
     assert_eq!(cloned.points.len(), p.points.len());
 }
 
-// ---- DrawingSet: Ellipse ----
 
+// Clasificación: determinística — verifica drawing_set_add_ellipse
 #[test]
 fn drawing_set_add_ellipse() {
     let mut set = DrawingSet::new();
@@ -1255,6 +1333,7 @@ fn drawing_set_add_ellipse() {
     assert!(set.get_ellipse(&DrawingId("e1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_ellipse
 #[test]
 fn drawing_set_remove_ellipse() {
     let mut set = DrawingSet::new();
@@ -1268,6 +1347,7 @@ fn drawing_set_remove_ellipse() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_ellipses
 #[test]
 fn drawing_set_all_ellipses() {
     let mut set = DrawingSet::new();
@@ -1286,8 +1366,8 @@ fn drawing_set_all_ellipses() {
     assert_eq!(set.all_ellipses().len(), 2);
 }
 
-// ---- DrawingSet: Path ----
 
+// Clasificación: determinística — verifica drawing_set_add_path
 #[test]
 fn drawing_set_add_path() {
     let mut set = DrawingSet::new();
@@ -1299,6 +1379,7 @@ fn drawing_set_add_path() {
     assert!(set.get_path(&DrawingId("p1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_path
 #[test]
 fn drawing_set_remove_path() {
     let mut set = DrawingSet::new();
@@ -1310,6 +1391,7 @@ fn drawing_set_remove_path() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_paths
 #[test]
 fn drawing_set_all_paths() {
     let mut set = DrawingSet::new();
@@ -1324,6 +1406,7 @@ fn drawing_set_all_paths() {
     assert_eq!(set.all_paths().len(), 2);
 }
 
+// Clasificación: determinística — verifica drawing_set_mixed_with_ellipse_and_path
 #[test]
 fn drawing_set_mixed_with_ellipse_and_path() {
     let mut set = DrawingSet::new();
@@ -1350,6 +1433,7 @@ fn drawing_set_mixed_with_ellipse_and_path() {
     assert!(set.get_path(&DrawingId("p1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_add_arrow
 #[test]
 fn drawing_set_add_arrow() {
     let mut set = DrawingSet::new();
@@ -1362,6 +1446,7 @@ fn drawing_set_add_arrow() {
     assert!(set.get_arrow(&DrawingId("a1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_arrow
 #[test]
 fn drawing_set_remove_arrow() {
     let mut set = DrawingSet::new();
@@ -1374,6 +1459,7 @@ fn drawing_set_remove_arrow() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_arrows
 #[test]
 fn drawing_set_all_arrows() {
     let mut set = DrawingSet::new();
@@ -1390,6 +1476,7 @@ fn drawing_set_all_arrows() {
     assert_eq!(set.all_arrows().len(), 2);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn arrow_builder_methods() {
     let arrow = Arrow::new("a1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
@@ -1403,6 +1490,7 @@ fn arrow_builder_methods() {
     assert_eq!(arrow.arrowhead_size, 16.0);
 }
 
+// Clasificación: determinística — verifica drawing_set_add_ray
 #[test]
 fn drawing_set_add_ray() {
     let mut set = DrawingSet::new();
@@ -1415,6 +1503,7 @@ fn drawing_set_add_ray() {
     assert!(set.get_ray(&DrawingId("r1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_ray
 #[test]
 fn drawing_set_remove_ray() {
     let mut set = DrawingSet::new();
@@ -1427,6 +1516,7 @@ fn drawing_set_remove_ray() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_rays
 #[test]
 fn drawing_set_all_rays() {
     let mut set = DrawingSet::new();
@@ -1435,6 +1525,7 @@ fn drawing_set_all_rays() {
     assert_eq!(set.all_rays().len(), 2);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn ray_builder_methods() {
     let ray = Ray::new("r1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
@@ -1446,6 +1537,7 @@ fn ray_builder_methods() {
     assert_eq!(ray.style, LineStyle::Dotted);
 }
 
+// Clasificación: determinística — verifica drawing_set_add_segment
 #[test]
 fn drawing_set_add_segment() {
     let mut set = DrawingSet::new();
@@ -1458,6 +1550,7 @@ fn drawing_set_add_segment() {
     assert!(set.get_segment(&DrawingId("s1".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica drawing_set_remove_segment
 #[test]
 fn drawing_set_remove_segment() {
     let mut set = DrawingSet::new();
@@ -1470,6 +1563,7 @@ fn drawing_set_remove_segment() {
     assert_eq!(set.len(), 0);
 }
 
+// Clasificación: determinística — verifica drawing_set_all_segments
 #[test]
 fn drawing_set_all_segments() {
     let mut set = DrawingSet::new();
@@ -1478,6 +1572,7 @@ fn drawing_set_all_segments() {
     assert_eq!(set.all_segments().len(), 2);
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn segment_builder_methods() {
     let seg = Segment::new("s1", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
@@ -1489,8 +1584,8 @@ fn segment_builder_methods() {
     assert_eq!(seg.style, LineStyle::Dotted);
 }
 
-// ---- move_drawing correctness tests ----
 
+// Clasificación: frágil — depende de concurrencia/orden de ejecución
 #[test]
 fn move_fibonacci_retracement() {
     let mut set = DrawingSet::new();
@@ -1505,6 +1600,7 @@ fn move_fibonacci_retracement() {
     assert_eq!(fib.end, ChartPoint::new(210, 205.0));
 }
 
+// Clasificación: determinística — verifica move_fibonacci_extension
 #[test]
 fn move_fibonacci_extension() {
     let mut set = DrawingSet::new();
@@ -1520,6 +1616,7 @@ fn move_fibonacci_extension() {
     assert_eq!(ext.point_c, ChartPoint::new(155, 160.0));
 }
 
+// Clasificación: determinística — verifica move_pitchfork
 #[test]
 fn move_pitchfork() {
     let mut set = DrawingSet::new();
@@ -1535,6 +1632,7 @@ fn move_pitchfork() {
     assert_eq!(pf.point_c, ChartPoint::new(220, 45.0));
 }
 
+// Clasificación: determinística — verifica move_ellipse
 #[test]
 fn move_ellipse() {
     let mut set = DrawingSet::new();
@@ -1550,6 +1648,7 @@ fn move_ellipse() {
     assert_eq!(el.radius_y, 50.0);
 }
 
+// Clasificación: determinística — verifica move_nonexistent_returns_false
 #[test]
 fn move_nonexistent_returns_false() {
     let mut set = DrawingSet::new();
@@ -1564,6 +1663,7 @@ mod serde_tests {
     use super::*;
     use serde_json;
 
+    // Clasificación: determinística — verifica roundtrip_chart_point
     #[test]
     fn roundtrip_chart_point() {
         let p = ChartPoint::new(1000, 50.5);
@@ -1572,6 +1672,7 @@ mod serde_tests {
         assert_eq!(p, back);
     }
 
+    // Clasificación: determinística — verifica roundtrip_drawing_id
     #[test]
     fn roundtrip_drawing_id() {
         let id = DrawingId("test-id".to_string());
@@ -1580,6 +1681,7 @@ mod serde_tests {
         assert_eq!(id, back);
     }
 
+    // Clasificación: determinística — verifica que variantes de LineStyle son distinguibles
     #[test]
     fn roundtrip_line_style() {
         for style in [LineStyle::Solid, LineStyle::Dashed, LineStyle::Dotted] {
@@ -1589,6 +1691,7 @@ mod serde_tests {
         }
     }
 
+    // Clasificación: determinística — verifica roundtrip_trend_line
     #[test]
     fn roundtrip_trend_line() {
         let tl = TrendLine::new("tl", ChartPoint::new(100, 10.0), ChartPoint::new(200, 20.0))
@@ -1603,6 +1706,7 @@ mod serde_tests {
         assert_eq!(tl.width, back.width);
     }
 
+    // Clasificación: determinística — verifica roundtrip_horizontal_line
     #[test]
     fn roundtrip_horizontal_line() {
         let hl = HorizontalLine::new("hl", 150.0).with_extend_left(false);
@@ -1613,6 +1717,7 @@ mod serde_tests {
         assert!(!back.extend_left);
     }
 
+    // Clasificación: determinística — verifica roundtrip_vertical_line
     #[test]
     fn roundtrip_vertical_line() {
         let vl = VerticalLine::new("vl", 500).with_color([0.0, 1.0, 0.0, 1.0]);
@@ -1622,6 +1727,7 @@ mod serde_tests {
         assert_eq!(vl.color, back.color);
     }
 
+    // Clasificación: determinística — verifica roundtrip_rectangle
     #[test]
     fn roundtrip_rectangle() {
         let rect = Rectangle::new("r", ChartPoint::new(100, 200.0), ChartPoint::new(300, 100.0))
@@ -1632,6 +1738,7 @@ mod serde_tests {
         assert_eq!(rect.fill_color, back.fill_color);
     }
 
+    // Clasificación: determinística — verifica roundtrip_arrow
     #[test]
     fn roundtrip_arrow() {
         let a = Arrow::new("a", ChartPoint::new(0, 0.0), ChartPoint::new(100, 50.0))
@@ -1641,6 +1748,7 @@ mod serde_tests {
         assert_eq!(a.arrowhead_size, back.arrowhead_size);
     }
 
+    // Clasificación: determinística — verifica roundtrip_fibonacci_retracement
     #[test]
     fn roundtrip_fibonacci_retracement() {
         let fib = FibonacciRetracement::new(
@@ -1655,6 +1763,7 @@ mod serde_tests {
         assert_eq!(fib.levels, back.levels);
     }
 
+    // Clasificación: determinística — verifica roundtrip_fibonacci_extension
     #[test]
     fn roundtrip_fibonacci_extension() {
         let ext = FibonacciExtension::new(
@@ -1671,6 +1780,7 @@ mod serde_tests {
         assert_eq!(ext.levels, back.levels);
     }
 
+    // Clasificación: determinística — verifica roundtrip_pitchfork
     #[test]
     fn roundtrip_pitchfork() {
         let pf = Pitchfork::new(
@@ -1684,6 +1794,7 @@ mod serde_tests {
         assert_eq!(pf.point_a, back.point_a);
     }
 
+    // Clasificación: determinística — verifica roundtrip_ellipse
     #[test]
     fn roundtrip_ellipse() {
         let e = Ellipse::new("e", ChartPoint::new(500, 150.0), 100.0, 50.0)
@@ -1695,6 +1806,7 @@ mod serde_tests {
         assert_eq!(e.fill_color, back.fill_color);
     }
 
+    // Clasificación: determinística — verifica roundtrip_path
     #[test]
     fn roundtrip_path() {
         let p = Path::new(
@@ -1710,6 +1822,7 @@ mod serde_tests {
         assert!(back.fill_color.is_some());
     }
 
+    // Clasificación: determinística — verifica roundtrip_segment
     #[test]
     fn roundtrip_segment() {
         let seg = Segment::new("seg", ChartPoint::new(0, 0.0), ChartPoint::new(100, 100.0));
@@ -1719,6 +1832,7 @@ mod serde_tests {
         assert_eq!(seg.end, back.end);
     }
 
+    // Clasificación: determinística — verifica roundtrip_ray
     #[test]
     fn roundtrip_ray() {
         let ray = Ray::new("ray", ChartPoint::new(0, 0.0), ChartPoint::new(100, 100.0));
@@ -1728,6 +1842,7 @@ mod serde_tests {
         assert_eq!(ray.direction, back.direction);
     }
 
+    // Clasificación: determinística — verifica roundtrip_text_drawing
     #[test]
     fn roundtrip_text_drawing() {
         let td = TextDrawing::new("td", ChartPoint::new(100, 50.0), "Hello")
@@ -1739,6 +1854,7 @@ mod serde_tests {
         assert_eq!(td.font_size, back.font_size);
     }
 
+    // Clasificación: determinística — verifica roundtrip_image_drawing
     #[test]
     fn roundtrip_image_drawing() {
         let img = ImageDrawing::new("img", ChartPoint::new(0, 0.0), "logo.png")
@@ -1750,6 +1866,7 @@ mod serde_tests {
         assert_eq!(img.opacity, back.opacity);
     }
 
+    // Clasificación: determinística — verifica roundtrip_label_drawing
     #[test]
     fn roundtrip_label_drawing() {
         let label = LabelDrawing::new("lbl", ChartPoint::new(100, 100.0), "Buy")

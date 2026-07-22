@@ -104,12 +104,14 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica indicator_name
     #[test]
     fn indicator_name() {
         let ind = DummyIndicator;
         assert_eq!(ind.name(), "DummyIndicator");
     }
 
+    // Clasificación: determinística — verifica indicator_calculate_returns_empty
     #[test]
     fn indicator_calculate_returns_empty() {
         let ind = DummyIndicator;
@@ -118,24 +120,28 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica sincronización entre crosshairs del mismo grupo
     #[test]
     fn trait_is_send_sync() {
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<DummyIndicator>();
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn default_overlay_mode_is_overlay_on_pane_0() {
         let ind = DummyIndicator;
         assert_eq!(ind.overlay_mode(), OverlayMode::OverlayOnPane(0));
     }
 
+    // Clasificación: determinística — verifica default_preferred_scale_is_normal
     #[test]
     fn default_preferred_scale_is_normal() {
         let ind = DummyIndicator;
         assert_eq!(ind.preferred_scale(), PriceScaleMode::Normal);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn separate_pane_indicator() {
         let ind = SeparatePaneIndicator;
@@ -143,18 +149,21 @@ mod tests {
         assert_eq!(ind.preferred_scale(), PriceScaleMode::Normal);
     }
 
+    // Clasificación: determinística — verifica log_indicator_preferred_scale
     #[test]
     fn log_indicator_preferred_scale() {
         let ind = LogIndicator;
         assert_eq!(ind.preferred_scale(), PriceScaleMode::Logarithmic);
     }
 
+    // Clasificación: determinística — verifica overlay_mode_debug
     #[test]
     fn overlay_mode_debug() {
         let m = OverlayMode::OverlayOnPane(2);
         let _dbg = format!("{:?}", m);
     }
 
+    // Clasificación: determinística — verifica overlay_mode_clone
     #[test]
     fn overlay_mode_clone() {
         let m = OverlayMode::SeparatePane;

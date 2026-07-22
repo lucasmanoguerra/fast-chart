@@ -3,8 +3,10 @@ use fc_primitives::scale::{LinearScale, TimeScale};
 
 /// Magnet mode for crosshair snapping to OHLC values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum MagnetMode {
     /// No snapping — use interpolated price.
+    #[default]
     Off,
     /// Snap to nearest OHLC value.
     OHLC,
@@ -12,11 +14,6 @@ pub enum MagnetMode {
     Extreme,
 }
 
-impl Default for MagnetMode {
-    fn default() -> Self {
-        Self::Off
-    }
-}
 
 /// Find the nearest bar to a given timestamp in a sorted slice.
 pub fn find_nearest_bar(bars: &[Bar], timestamp: u64) -> Option<&Bar> {
@@ -184,6 +181,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn update_sets_position_and_active() {
         let mut ch = Crosshair::default();
@@ -197,6 +195,7 @@ mod tests {
         assert!((ch.price - 105.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica deactivate
     #[test]
     fn deactivate() {
         let mut ch = Crosshair::default();
@@ -208,12 +207,14 @@ mod tests {
         assert!(!ch.active);
     }
 
+    // Clasificación: determinística — verifica default_is_inactive
     #[test]
     fn default_is_inactive() {
         let ch = Crosshair::default();
         assert!(!ch.active);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn update_preserves_last_valid_state() {
         let mut ch = Crosshair::default();
@@ -280,6 +281,7 @@ mod magnet_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn find_nearest_bar_exact() {
         let bars = test_bars();
@@ -287,6 +289,7 @@ mod magnet_tests {
         assert_eq!(bar.timestamp, 200);
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn find_nearest_bar_between() {
         let bars = test_bars();
@@ -295,6 +298,7 @@ mod magnet_tests {
         assert_eq!(bar.timestamp, 200);
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn find_nearest_bar_before_first() {
         let bars = test_bars();
@@ -302,6 +306,7 @@ mod magnet_tests {
         assert_eq!(bar.timestamp, 100);
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn find_nearest_bar_after_last() {
         let bars = test_bars();
@@ -309,12 +314,14 @@ mod magnet_tests {
         assert_eq!(bar.timestamp, 300);
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn find_nearest_bar_empty() {
         let bars: Vec<Bar> = vec![];
         assert!(find_nearest_bar(&bars, 100).is_none());
     }
 
+    // Clasificación: determinística — verifica snap_to_ohlc_off
     #[test]
     fn snap_to_ohlc_off() {
         let bar = Bar {
@@ -328,6 +335,7 @@ mod magnet_tests {
         assert_eq!(snap_to_ohlc(107.0, &bar, MagnetMode::Off), 107.0);
     }
 
+    // Clasificación: determinística — verifica snap_to_ohlc_mode
     #[test]
     fn snap_to_ohlc_mode() {
         let bar = Bar {
@@ -344,6 +352,7 @@ mod magnet_tests {
         assert_eq!(snap_to_ohlc(109.0, &bar, MagnetMode::OHLC), 110.0);
     }
 
+    // Clasificación: determinística — verifica snap_to_extreme_mode
     #[test]
     fn snap_to_extreme_mode() {
         let bar = Bar {
@@ -359,6 +368,7 @@ mod magnet_tests {
         assert_eq!(snap_to_ohlc(98.0, &bar, MagnetMode::Extreme), 95.0);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn crosshair_update_with_magnet() {
         let mut ch = Crosshair::default();

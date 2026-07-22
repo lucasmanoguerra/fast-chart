@@ -114,10 +114,8 @@ fn make_controller_with_handler() -> (ChartController, mpsc::Sender<DataEvent>, 
     (ChartController::new(provider, Box::new(handler)), sender, handler_for_push)
 }
 
-// ---------------------------------------------------------------------------
-// Marker Integration Tests
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica markers_added_to_series_and_retrieved
 #[test]
 fn markers_added_to_series_and_retrieved() {
     let mut markers = MarkerSet::new();
@@ -143,6 +141,7 @@ fn markers_added_to_series_and_retrieved() {
     assert_eq!(in_range[0].id.0, "buy");
 }
 
+// Clasificación: determinística — verifica markers_filtered_by_scale
 #[test]
 fn markers_filtered_by_scale() {
     let mut markers = MarkerSet::new();
@@ -160,6 +159,7 @@ fn markers_filtered_by_scale() {
     assert_eq!(left_markers[0].id.0, "rsi");
 }
 
+// Clasificación: determinística — verifica markers_remove_by_id
 #[test]
 fn markers_remove_by_id() {
     let mut markers = MarkerSet::new();
@@ -172,6 +172,7 @@ fn markers_remove_by_id() {
     assert!(markers.get(&fc_domain::marker::MarkerId("b".to_string())).is_some());
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn markers_builder_chaining() {
     let marker = Marker::new("signal", 5000, 200.0)
@@ -190,10 +191,8 @@ fn markers_builder_chaining() {
     assert_eq!(marker.scale_id, PriceScaleId::Left);
 }
 
-// ---------------------------------------------------------------------------
-// Price Line Integration Tests
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica price_lines_added_and_retrieved
 #[test]
 fn price_lines_added_and_retrieved() {
     let mut price_lines = PriceLineSet::new();
@@ -222,6 +221,7 @@ fn price_lines_added_and_retrieved() {
     assert_eq!(resistance.unwrap().price, 120.0);
 }
 
+// Clasificación: determinística — verifica price_lines_filtered_by_scale
 #[test]
 fn price_lines_filtered_by_scale() {
     let mut price_lines = PriceLineSet::new();
@@ -239,6 +239,7 @@ fn price_lines_filtered_by_scale() {
     assert_eq!(left_lines[0].id.0, "rsi_line");
 }
 
+// Clasificación: determinística — verifica price_lines_remove_by_id
 #[test]
 fn price_lines_remove_by_id() {
     let mut price_lines = PriceLineSet::new();
@@ -250,6 +251,7 @@ fn price_lines_remove_by_id() {
     assert!(price_lines.get(&PriceLineId("a".to_string())).is_none());
 }
 
+// Clasificación: determinística — verifica que build() produce tema completo sin NaN
 #[test]
 fn price_lines_builder_chaining() {
     let line = PriceLine::new("entry", 150.0)
@@ -266,10 +268,8 @@ fn price_lines_builder_chaining() {
     assert_eq!(line.label, Some("Entry".to_string()));
 }
 
-// ---------------------------------------------------------------------------
-// Kinetic Scroll Integration Tests
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn kinetic_scroll_start_and_update() {
     let mut kinetic = KineticScroll::new(0.9);
@@ -285,6 +285,7 @@ fn kinetic_scroll_start_and_update() {
     assert!((kinetic.velocity() - 90.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica kinetic_scroll_stops_at_threshold
 #[test]
 fn kinetic_scroll_stops_at_threshold() {
     let mut kinetic = KineticScroll::new(0.5);
@@ -300,6 +301,7 @@ fn kinetic_scroll_stops_at_threshold() {
     assert!(frames < 50);
 }
 
+// Clasificación: determinística — verifica kinetic_scroll_stop
 #[test]
 fn kinetic_scroll_stop() {
     let mut kinetic = KineticScroll::new(0.9);
@@ -310,6 +312,7 @@ fn kinetic_scroll_stop() {
     assert_eq!(kinetic.velocity(), 0.0);
 }
 
+// Clasificación: determinística — verifica kinetic_scroll_custom_friction
 #[test]
 fn kinetic_scroll_custom_friction() {
     // High friction = fast stop
@@ -327,6 +330,7 @@ fn kinetic_scroll_custom_friction() {
     assert!((slow.velocity() - 99.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica kinetic_scroll_negative_velocity
 #[test]
 fn kinetic_scroll_negative_velocity() {
     let mut kinetic = KineticScroll::new(0.9);
@@ -338,10 +342,8 @@ fn kinetic_scroll_negative_velocity() {
     assert!((kinetic.velocity() - (-45.0)).abs() < f64::EPSILON);
 }
 
-// ---------------------------------------------------------------------------
-// Price Formatter Integration Tests
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica price_formatter_format_price
 #[test]
 fn price_formatter_format_price() {
     let formatter = DefaultPriceFormatter::new(None);
@@ -354,6 +356,7 @@ fn price_formatter_format_price() {
     assert_eq!(formatter.format(0.5), "0.5000");
 }
 
+// Clasificación: determinística — verifica price_formatter_format_short
 #[test]
 fn price_formatter_format_short() {
     let formatter = DefaultPriceFormatter::new(None);
@@ -366,12 +369,14 @@ fn price_formatter_format_short() {
     assert_eq!(formatter.format_short(50.0), "50.00");
 }
 
+// Clasificación: determinística — verifica price_formatter_explicit_decimals
 #[test]
 fn price_formatter_explicit_decimals() {
     let formatter = DefaultPriceFormatter::new(Some(4));
     assert_eq!(formatter.format(105.2), "105.2000");
 }
 
+// Clasificación: determinística — verifica price_formatter_nan_and_infinity
 #[test]
 fn price_formatter_nan_and_infinity() {
     let formatter = DefaultPriceFormatter::new(None);
@@ -381,10 +386,8 @@ fn price_formatter_nan_and_infinity() {
     assert_eq!(formatter.format_short(f64::NAN), "NaN");
 }
 
-// ---------------------------------------------------------------------------
-// Chart Controller Integration Tests — Kinetic
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn chart_controller_kinetic_update() {
     let (mut ctrl, _tx, handler) = make_controller_with_handler();
@@ -398,6 +401,7 @@ fn chart_controller_kinetic_update() {
     assert!(should_redraw);
 }
 
+// Clasificación: determinística — verifica chart_controller_kinetic_stop_on_zoom
 #[test]
 fn chart_controller_kinetic_stop_on_zoom() {
     let (mut ctrl, _tx, handler) = make_controller_with_handler();
@@ -422,6 +426,7 @@ fn chart_controller_kinetic_stop_on_zoom() {
     assert!(!ctrl.update_kinetic());
 }
 
+// Clasificación: determinística — verifica chart_controller_kinetic_decelerates
 #[test]
 fn chart_controller_kinetic_decelerates() {
     let (mut ctrl, _tx, handler) = make_controller_with_handler();
@@ -442,10 +447,8 @@ fn chart_controller_kinetic_decelerates() {
     assert!(frames < 200, "kinetic should stop within 200 frames");
 }
 
-// ---------------------------------------------------------------------------
-// Chart Controller Integration Tests — Data Pipeline
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica chart_controller_tick_processes_bars
 #[test]
 fn chart_controller_tick_processes_bars() {
     let (mut ctrl, tx) = make_controller();
@@ -467,6 +470,7 @@ fn chart_controller_tick_processes_bars() {
     assert_eq!(ctrl.state().time_series.len(), 10);
 }
 
+// Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
 #[test]
 fn chart_controller_tick_updates_viewport_on_first_data() {
     let (mut ctrl, tx) = make_controller();
@@ -484,6 +488,7 @@ fn chart_controller_tick_updates_viewport_on_first_data() {
     assert_eq!(ctrl.state().viewport.time_end, 5000);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn chart_controller_pan_and_zoom() {
     let (mut ctrl, tx, handler) = make_controller_with_handler();
@@ -514,6 +519,7 @@ fn chart_controller_pan_and_zoom() {
     assert!(ctrl.state().viewport.zoom_level < 1.0);
 }
 
+// Clasificación: determinística — verifica chart_controller_crosshair_lifecycle
 #[test]
 fn chart_controller_crosshair_lifecycle() {
     let (mut ctrl, _tx, handler) = make_controller_with_handler();
@@ -540,10 +546,8 @@ fn chart_controller_crosshair_lifecycle() {
     assert!(!ctrl.state().crosshair.active);
 }
 
-// ---------------------------------------------------------------------------
-// Layout Manager Integration Tests
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn layout_manager_default_pane_structure() {
     let layout = LayoutManager::new();
@@ -551,6 +555,7 @@ fn layout_manager_default_pane_structure() {
     assert!((layout.total_height() - 1.0).abs() < 0.001);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn layout_manager_add_remove_pane() {
     let mut layout = LayoutManager::new();
@@ -563,6 +568,7 @@ fn layout_manager_add_remove_pane() {
     assert!((layout.total_height() - 1.0).abs() < 0.001);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn layout_manager_sync_time_across_panes() {
     let mut layout = LayoutManager::new();
@@ -574,6 +580,7 @@ fn layout_manager_sync_time_across_panes() {
     }
 }
 
+// Clasificación: determinística — verifica layout_manager_divider_drag
 #[test]
 fn layout_manager_divider_drag() {
     let mut layout = LayoutManager::new();
@@ -587,6 +594,7 @@ fn layout_manager_divider_drag() {
     assert!((layout.total_height() - 1.0).abs() < 0.001);
 }
 
+// Clasificación: determinística — verifica layout_manager_min_height_enforced
 #[test]
 fn layout_manager_min_height_enforced() {
     let mut layout = LayoutManager::new();
@@ -596,6 +604,7 @@ fn layout_manager_min_height_enforced() {
     assert!(layout.panes[0].height >= layout.min_pane_height() - 0.001);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn layout_manager_pane_with_markers_and_lines() {
     let mut layout = LayoutManager::new();
@@ -614,10 +623,8 @@ fn layout_manager_pane_with_markers_and_lines() {
     assert_eq!(layout.panes[0].price_lines().len(), 1);
 }
 
-// ---------------------------------------------------------------------------
-// Full Pipeline Integration Test
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica full_pipeline_data_to_render
 #[test]
 fn full_pipeline_data_to_render() {
     let (mut ctrl, tx, handler) = make_controller_with_handler();
@@ -666,6 +673,7 @@ fn full_pipeline_data_to_render() {
     assert!(ctrl.update_kinetic());
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn full_pipeline_domain_sets_on_pane() {
     let mut layout = LayoutManager::new();
@@ -704,6 +712,7 @@ fn full_pipeline_domain_sets_on_pane() {
     assert_eq!(formatted, "105.20");
 }
 
+// Clasificación: determinística — verifica full_pipeline_kinetic_then_render
 #[test]
 fn full_pipeline_kinetic_then_render() {
     let (mut ctrl, _tx, handler) = make_controller_with_handler();
@@ -732,8 +741,8 @@ fn full_pipeline_kinetic_then_render() {
 use fc_domain::price_scale::{PriceScale, PriceScaleId as PSId, PriceScaleOptions};
 use fc_primitives::scale::{LinearScale, TimeScale};
 
-// --- Multi-pane layout ---
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn multi_pane_vertical_stack_rects() {
     let layout = VerticalStack::new();
@@ -756,6 +765,7 @@ fn multi_pane_vertical_stack_rects() {
     assert!((rects[2].y - 400.0_f32).abs() < f32::EPSILON);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn multi_pane_proportional_heights() {
     let layout = VerticalStack::with_heights(vec![0.6, 0.4]);
@@ -771,6 +781,7 @@ fn multi_pane_proportional_heights() {
     assert!((rects[1].height - 200.0_f32).abs() < 0.1);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn multi_pane_with_gap() {
     let layout = VerticalStack {
@@ -794,8 +805,8 @@ fn multi_pane_with_gap() {
     assert!(rects[1].y > rects[0].y + rects[0].height - 0.1);
 }
 
-// --- Divider drag -> pane resize ---
 
+// Clasificación: determinística — verifica divider_drag_resize_integration
 #[test]
 fn divider_drag_resize_integration() {
     let mut bus = PaneEventBus::new();
@@ -833,8 +844,8 @@ fn divider_drag_resize_integration() {
     }
 }
 
-// --- Viewport sync across panes ---
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn viewport_time_range_sync_across_panes() {
     // All panes share the same time range (TimeScale)
@@ -874,8 +885,8 @@ fn viewport_time_range_sync_across_panes() {
     assert_ne!(y1, y2);
 }
 
-// --- Time scale infinite scroll ---
 
+// Clasificación: determinística — verifica time_scale_scroll_to_end_integration
 #[test]
 fn time_scale_scroll_to_end_integration() {
     let mut ts = TimeScale {
@@ -897,8 +908,8 @@ fn time_scale_scroll_to_end_integration() {
     assert_eq!(last2, 999);
 }
 
-// --- Price scale auto-fit with margins ---
 
+// Clasificación: determinística — verifica transformación de escala de precio
 #[test]
 fn price_scale_auto_fit_with_margins_integration() {
     let mut ps = PriceScale::new(PSId::Right, PriceScaleOptions::default());
@@ -913,6 +924,7 @@ fn price_scale_auto_fit_with_margins_integration() {
     assert!((ps.value_max - 225.0).abs() < f64::EPSILON);
 }
 
+// Clasificación: determinística — verifica price_scale_locked_no_autofit_integration
 #[test]
 fn price_scale_locked_no_autofit_integration() {
     let mut ps = PriceScale::new(
@@ -932,8 +944,8 @@ fn price_scale_locked_no_autofit_integration() {
     assert!((ps.value_max - 150.0).abs() < f64::EPSILON);
 }
 
-// --- Pane add/remove events ---
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn pane_add_remove_roundtrip() {
     let mut bus = PaneEventBus::new();
@@ -965,8 +977,8 @@ use fc_app::series::{
 use fc_app::render::series_renderer::SeriesRenderer as _;
 use fc_domain::Indicator as _;
 
-// --- StepLineSeries ---
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn stepline_set_data_and_update() {
     let mut s = StepLineSeries::new();
@@ -980,6 +992,7 @@ fn stepline_set_data_and_update() {
     assert_eq!(cmds.len(), 4);
 }
 
+// Clasificación: determinística — test genérico del comportamiento
 #[test]
 fn stepline_hit_test_bounds() {
     let mut s = StepLineSeries::new();
@@ -993,6 +1006,7 @@ fn stepline_hit_test_bounds() {
     assert_eq!(hit.unwrap().index, 0);
 }
 
+// Clasificación: determinística — verifica stepline_empty_data
 #[test]
 fn stepline_empty_data() {
     let s = StepLineSeries::new();
@@ -1000,8 +1014,8 @@ fn stepline_empty_data() {
     assert!(hit.is_none());
 }
 
-// --- VolumeSeries ---
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn volume_set_data_and_update() {
     let mut v = VolumeSeries::new();
@@ -1013,6 +1027,7 @@ fn volume_set_data_and_update() {
     assert_eq!(cmds.len(), 2);
 }
 
+// Clasificación: determinística — verifica volume_z_index_is_500
 #[test]
 fn volume_z_index_is_500() {
     let mut v = VolumeSeries::new();
@@ -1025,6 +1040,7 @@ fn volume_z_index_is_500() {
     }
 }
 
+// Clasificación: determinística — verifica volume_max_volume
 #[test]
 fn volume_max_volume() {
     let mut v = VolumeSeries::new();
@@ -1036,8 +1052,8 @@ fn volume_max_volume() {
     assert!((v.max_volume() - 5000.0).abs() < f64::EPSILON);
 }
 
-// --- PointFigureSeries ---
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn point_figure_set_columns_and_update() {
     let mut pf = PointFigureSeries::new(5.0, 3);
@@ -1050,6 +1066,7 @@ fn point_figure_set_columns_and_update() {
     assert!(!cmds.is_empty());
 }
 
+// Clasificación: determinística — verifica point_figure_build_from_prices
 #[test]
 fn point_figure_build_from_prices() {
     let prices: Vec<(f64, f64)> = vec![
@@ -1064,6 +1081,7 @@ fn point_figure_build_from_prices() {
     }
 }
 
+// Clasificación: determinística — verifica point_figure_column_types
 #[test]
 fn point_figure_column_types() {
     let rise = PfColumn::Rise { boxes: 3 };
@@ -1076,8 +1094,8 @@ fn point_figure_column_types() {
     assert_eq!(fall.boxes(), 2);
 }
 
-// --- LineBreakSeries ---
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn linebreak_set_blocks_and_update() {
     let mut lb = LineBreakSeries::new(3);
@@ -1090,6 +1108,7 @@ fn linebreak_set_blocks_and_update() {
     assert!(!cmds.is_empty());
 }
 
+// Clasificación: determinística — verifica linebreak_build_from_bars
 #[test]
 fn linebreak_build_from_bars() {
     let bars: Vec<(f64, f64, f64)> = vec![
@@ -1105,6 +1124,7 @@ fn linebreak_build_from_bars() {
     }
 }
 
+// Clasificación: determinística — verifica linebreak_block_methods
 #[test]
 fn linebreak_block_methods() {
     let up = LineBreakBlock::new(true, 100.0, 110.0);
@@ -1115,8 +1135,8 @@ fn linebreak_block_methods() {
     assert!(((down.open - down.close) - 5.0).abs() < f64::EPSILON);
 }
 
-// --- RangeSeries ---
 
+// Clasificación: determinística — verifica avance de tiempo e interpolación
 #[test]
 fn range_set_data_and_update() {
     let mut r = RangeSeries::new(5.0);
@@ -1129,6 +1149,7 @@ fn range_set_data_and_update() {
     assert_eq!(cmds.len(), 3);
 }
 
+// Clasificación: determinística — verifica range_build_from_bars
 #[test]
 fn range_build_from_bars() {
     let bars: Vec<(f64, f64, f64)> = vec![
@@ -1143,6 +1164,7 @@ fn range_build_from_bars() {
     }
 }
 
+// Clasificación: determinística — verifica range_custom_colors
 #[test]
 fn range_custom_colors() {
     let mut r = RangeSeries::new(5.0);
@@ -1156,13 +1178,14 @@ fn range_custom_colors() {
     assert_eq!(cmds.len(), 2);
 }
 
-// --- SeriesType enum integration ---
 
+// Clasificación: determinística — verifica seriestype_all_count_matches_impl_count
 #[test]
 fn seriestype_all_count_matches_impl_count() {
     assert_eq!(fc_primitives::SeriesType::ALL.len(), 10);
 }
 
+// Clasificación: determinística — verifica seriestype_all_display_names_are_unique
 #[test]
 fn seriestype_all_display_names_are_unique() {
     let names: Vec<_> = fc_primitives::SeriesType::ALL
@@ -1214,6 +1237,7 @@ impl IndicatorRenderer for MockIndicator {
     }
 }
 
+// Clasificación: determinística — verifica indicator_renderer_overlay_integration
 #[test]
 fn indicator_renderer_overlay_integration() {
     let ind = MockIndicator;
@@ -1222,6 +1246,7 @@ fn indicator_renderer_overlay_integration() {
     assert_eq!(ind.indicator_z_index(), 700);
 }
 
+// Clasificación: determinística — verifica indicator_renderer_separate_integration
 #[test]
 fn indicator_renderer_separate_integration() {
     let ind = MockIndicator;
@@ -1234,10 +1259,11 @@ fn indicator_renderer_separate_integration() {
     }
 }
 
-// --- OverlayMode integration ---
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn overlay_mode_default_overlay_on_pane_0() {
+    #[allow(clippy::upper_case_acronyms)]
     struct SMA;
     impl fc_domain::Indicator<100> for SMA {
         fn calculate(&self, _: &fc_primitives::series::TimeSeries<fc_primitives::Bar, 100>) -> fc_primitives::series::TimeSeries<f64, 100> {
@@ -1250,8 +1276,10 @@ fn overlay_mode_default_overlay_on_pane_0() {
     assert_eq!(sma.preferred_scale(), fc_domain::price_scale::PriceScaleMode::Normal);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn overlay_mode_separate_pane_integration() {
+    #[allow(clippy::upper_case_acronyms)]
     struct RSI;
     impl fc_domain::Indicator<100> for RSI {
         fn calculate(&self, _: &fc_primitives::series::TimeSeries<fc_primitives::Bar, 100>) -> fc_primitives::series::TimeSeries<f64, 100> {

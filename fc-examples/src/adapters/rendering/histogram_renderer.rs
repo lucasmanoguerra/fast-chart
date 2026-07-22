@@ -76,6 +76,7 @@ impl HistogramRenderer {
     ///
     /// Each bar generates 4 vertices (quad) + 6 indices (2 triangles).
     /// The bar width is 80% of the available slot width per bar.
+    #[allow(clippy::too_many_arguments)]
     pub fn update_histogram(
         &mut self,
         queue: &wgpu::Queue,

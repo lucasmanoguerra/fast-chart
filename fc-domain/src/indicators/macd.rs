@@ -85,8 +85,8 @@ fn compute_ema(bars: &[&Bar], period: usize) -> Vec<f64> {
     let first_sma: f64 = bars[..period].iter().map(|b| b.close).sum::<f64>() / period as f64;
     let mut result = vec![first_sma];
     let mut prev = first_sma;
-    for i in period..bars.len() {
-        let ema = alpha * bars[i].close + (1.0 - alpha) * prev;
+    for bar in bars.iter().skip(period) {
+        let ema = alpha * bar.close + (1.0 - alpha) * prev;
         result.push(ema);
         prev = ema;
     }
@@ -102,8 +102,8 @@ fn compute_ema_from_values(values: &[f64], period: usize) -> TimeSeries<f64, MAX
     let first_sma: f64 = values[..period].iter().sum::<f64>() / period as f64;
     result.push(first_sma);
     let mut prev = first_sma;
-    for i in period..values.len() {
-        let ema = alpha * values[i] + (1.0 - alpha) * prev;
+    for val in values.iter().skip(period) {
+        let ema = alpha * val + (1.0 - alpha) * prev;
         result.push(ema);
         prev = ema;
     }
@@ -131,12 +131,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica macd_name
     #[test]
     fn macd_name() {
         let macd = Macd::default();
         assert_eq!(macd.name(), "MACD");
     }
 
+    // Clasificación: determinística — verifica macd_insufficient_data
     #[test]
     fn macd_insufficient_data() {
         let bars = make_bars(10);
@@ -145,6 +147,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica macd_default_params
     #[test]
     fn macd_default_params() {
         let macd = Macd::default();
@@ -153,14 +156,16 @@ mod tests {
         assert_eq!(macd.signal, 9);
     }
 
+    // Clasificación: determinística — verifica macd_histogram
     #[test]
     fn macd_histogram() {
         let bars = make_bars(100);
         let macd = Macd::default();
         let result = macd.calculate(&bars);
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica macd_full_result_consistency
     #[test]
     fn macd_full_result_consistency() {
         let bars = make_bars(100);

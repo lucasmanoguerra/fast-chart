@@ -6,8 +6,10 @@
 /// Line rendering style.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Default)]
 pub enum LineStyle {
     /// Solid line: `─────`
+    #[default]
     Solid,
     /// Dashed line: `─ ─ ─`
     Dashed,
@@ -15,21 +17,18 @@ pub enum LineStyle {
     Dotted,
 }
 
-impl Default for LineStyle {
-    fn default() -> Self {
-        Self::Solid
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica default_is_solid
     #[test]
     fn default_is_solid() {
         assert_eq!(LineStyle::default(), LineStyle::Solid);
     }
 
+    // Clasificación: determinística — verifica all_variants_distinct
     #[test]
     fn all_variants_distinct() {
         assert_ne!(LineStyle::Solid, LineStyle::Dashed);
@@ -38,6 +37,7 @@ mod tests {
     }
 
     #[cfg(feature = "serde")]
+    // Clasificación: determinística — verifica serde_roundtrip
     #[test]
     fn serde_roundtrip() {
         let json = serde_json::to_string(&LineStyle::Dashed).unwrap();

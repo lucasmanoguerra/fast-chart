@@ -78,6 +78,7 @@ impl AreaRenderer {
     /// - Top edge follows the close price line
     /// - Bottom edge follows the baseline
     /// - Each quad uses the fill color with alpha blending
+    #[allow(clippy::too_many_arguments)]
     pub fn update_area(
         &mut self,
         queue: &wgpu::Queue,

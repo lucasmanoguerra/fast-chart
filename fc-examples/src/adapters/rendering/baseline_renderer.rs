@@ -77,6 +77,7 @@ impl BaselineRenderer {
     /// Each bar generates two vertices: one at close, one at baseline.
     /// Color is determined by whether close is above or below baseline.
     /// Consecutive bar pairs form quads via index buffers.
+    #[allow(clippy::too_many_arguments)]
     pub fn update_baseline(
         &mut self,
         queue: &wgpu::Queue,

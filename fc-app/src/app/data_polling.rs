@@ -36,9 +36,9 @@ impl DataPollingService {
 
         // Auto-fit viewport on first data
         if state.invalidation.contains(InvalidationLevel::Full)
-            && state.time_series.len() > 0
+            && !state.time_series.is_empty()
             && state.viewport.time_start == 0
-            && state.viewport.time_end == 3600_000
+            && state.viewport.time_end == 3_600_000
         {
             if let Some(first) = state.time_series.get(0) {
                 if let Some(last) = state.time_series.latest() {
@@ -111,6 +111,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica poll_processes_bar_closed
     #[test]
     fn poll_processes_bar_closed() {
         let mock = MockDataProvider::new();
@@ -126,6 +127,7 @@ mod tests {
         assert!(state.time_series.latest().unwrap().timestamp == 1000);
     }
 
+    // Clasificación: determinística — verifica poll_marks_dirty
     #[test]
     fn poll_marks_dirty() {
         let mock = MockDataProvider::new();
@@ -140,6 +142,7 @@ mod tests {
         assert!(state.invalidation.level() > InvalidationLevel::Nothing);
     }
 
+    // Clasificación: determinística — verifica poll_no_data_no_dirty
     #[test]
     fn poll_no_data_no_dirty() {
         let mock = MockDataProvider::new();
@@ -150,6 +153,7 @@ mod tests {
         assert!(state.invalidation.is_empty());
     }
 
+    // Clasificación: determinística — verifica poll_processes_multiple_events
     #[test]
     fn poll_processes_multiple_events() {
         let mock = MockDataProvider::new();
@@ -166,6 +170,7 @@ mod tests {
         assert_eq!(state.time_series.len(), 5);
     }
 
+    // Clasificación: determinística — verifica start_stop_delegates_to_provider
     #[test]
     fn start_stop_delegates_to_provider() {
         let mock = MockDataProvider::new();

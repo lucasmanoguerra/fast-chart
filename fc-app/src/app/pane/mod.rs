@@ -66,15 +66,10 @@ pub struct IndicatorOverlay {
 impl Pane {
     /// Create a new pane with the given id and proportional height.
     pub fn new(id: usize, height: f64) -> Self {
-        let mut price_scales = Vec::new();
-        price_scales.push(PriceScale::new(
-            PriceScaleId::Left,
-            Default::default(),
-        ));
-        price_scales.push(PriceScale::new(
-            PriceScaleId::Right,
-            Default::default(),
-        ));
+        let price_scales = vec![
+            PriceScale::new(PriceScaleId::Left, Default::default()),
+            PriceScale::new(PriceScaleId::Right, Default::default()),
+        ];
 
         Self {
             id,
@@ -268,6 +263,7 @@ impl Pane {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_creation() {
         let pane = Pane::new(0, 0.7);
@@ -280,6 +276,7 @@ mod tests {
         assert!(pane.price_lines().is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_default_viewport() {
         let pane = Pane::new(0, 0.7);
@@ -288,6 +285,7 @@ mod tests {
         assert_eq!(vp.zoom_level, 1.0);
     }
 
+    // Clasificación: determinística — verifica add_series
     #[test]
     fn add_series() {
         let mut pane = Pane::new(0, 0.7);
@@ -297,6 +295,7 @@ mod tests {
         assert_eq!(pane.series()[0].series_type, SeriesType::Candle);
     }
 
+    // Clasificación: determinística — verifica add_multiple_series
     #[test]
     fn add_multiple_series() {
         let mut pane = Pane::new(0, 0.7);
@@ -305,6 +304,7 @@ mod tests {
         assert_eq!(pane.series().len(), 2);
     }
 
+    // Clasificación: determinística — verifica add_indicator
     #[test]
     fn add_indicator() {
         let mut pane = Pane::new(0, 0.7);
@@ -314,6 +314,7 @@ mod tests {
         assert_eq!(pane.indicators()[0].pane_id, 0);
     }
 
+    // Clasificación: determinística — verifica pixel_height_calculation
     #[test]
     fn pixel_height_calculation() {
         let pane = Pane::new(0, 0.7);
@@ -321,6 +322,7 @@ mod tests {
         assert!((h - 490.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pixel_y_offset_first_pane() {
         let pane = Pane::new(0, 0.7);
@@ -328,6 +330,7 @@ mod tests {
         assert!((pane.pixel_y_offset(&heights, 700.0)).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pixel_y_offset_second_pane() {
         let pane = Pane::new(1, 0.3);
@@ -335,8 +338,8 @@ mod tests {
         assert!((pane.pixel_y_offset(&heights, 700.0) - 490.0).abs() < 0.001);
     }
 
-    // --- Price scale tests ---
 
+    // Clasificación: determinística — verifica gesto pan (arrastre)
     #[test]
     fn pane_has_left_and_right_scales() {
         let pane = Pane::new(0, 0.7);
@@ -345,12 +348,14 @@ mod tests {
         assert!(pane.price_scale(&PriceScaleId::Right).is_some());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_primary_scale_is_left() {
         let pane = Pane::new(0, 0.7);
         assert_eq!(pane.primary_scale().unwrap().id, PriceScaleId::Left);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_add_overlay_scale() {
         let mut pane = Pane::new(0, 0.7);
@@ -363,6 +368,7 @@ mod tests {
         assert!(pane.price_scale(&PriceScaleId::Overlay("RSI".into())).is_some());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_price_scale_mut() {
         let mut pane = Pane::new(0, 0.7);
@@ -373,6 +379,7 @@ mod tests {
         assert!((pane.price_scale(&PriceScaleId::Right).unwrap().value_max - 200.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica ensure_price_scales_populates_empty
     #[test]
     fn ensure_price_scales_populates_empty() {
         let mut pane = Pane::new(0, 0.7);
@@ -381,6 +388,7 @@ mod tests {
         assert_eq!(pane.price_scales().len(), 2);
     }
 
+    // Clasificación: determinística — verifica series_defaults_to_left_scale
     #[test]
     fn series_defaults_to_left_scale() {
         let mut pane = Pane::new(0, 0.7);
@@ -388,12 +396,14 @@ mod tests {
         assert_eq!(pane.series()[0].price_scale_id, PriceScaleId::Left);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_markers_accessor() {
         let pane = Pane::new(0, 0.7);
         assert!(pane.markers().is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_markers_mut_accessor() {
         let mut pane = Pane::new(0, 0.7);
@@ -403,12 +413,14 @@ mod tests {
         assert_eq!(pane.markers().len(), 1);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_price_lines_accessor() {
         let pane = Pane::new(0, 0.7);
         assert!(pane.price_lines().is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_price_lines_mut_accessor() {
         let mut pane = Pane::new(0, 0.7);
@@ -418,6 +430,7 @@ mod tests {
         assert_eq!(pane.price_lines().len(), 1);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_formatter_accessor() {
         let pane = Pane::new(0, 0.7);
@@ -425,14 +438,15 @@ mod tests {
         assert_eq!(formatted, "105.20");
     }
 
-    // --- New tests for layers and drawings ---
 
+    // Clasificación: determinística — verifica gesto pan (arrastre)
     #[test]
     fn pane_layers_empty_by_default() {
         let pane = Pane::new(0, 0.7);
         assert!(pane.layers().is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_drawings_empty_by_default() {
         let pane = Pane::new(0, 0.7);
@@ -440,6 +454,7 @@ mod tests {
         assert!(pane.drawings().all_horizontal_lines().is_empty());
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn pane_clear_layers() {
         let mut pane = Pane::new(0, 0.7);

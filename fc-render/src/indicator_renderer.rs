@@ -4,7 +4,7 @@
 
 use crate::commands::DrawCommand;
 use fc_primitives::Rect;
-use crate::series_renderer::{SeriesHit, SeriesRenderer};
+use crate::series_renderer::SeriesRenderer;
 
 /// A trait for rendering indicators, extending SeriesRenderer with
 /// overlay and separate-pane rendering modes.
@@ -39,6 +39,7 @@ pub trait IndicatorRenderer: SeriesRenderer + Send + Sync {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::SeriesHit;
 
     /// A simple test indicator for verifying the trait.
     struct TestIndicator {
@@ -96,6 +97,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica indicator_renderer_overlay
     #[test]
     fn indicator_renderer_overlay() {
         let ind = TestIndicator { color: [0.0, 1.0, 0.0, 1.0] };
@@ -104,6 +106,7 @@ mod tests {
         assert_eq!(cmds.len(), 1);
     }
 
+    // Clasificación: determinística — verifica indicator_renderer_separate
     #[test]
     fn indicator_renderer_separate() {
         let ind = TestIndicator { color: [1.0, 0.0, 0.0, 1.0] };
@@ -119,12 +122,14 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica indicator_renderer_z_index
     #[test]
     fn indicator_renderer_z_index() {
         let ind = TestIndicator { color: [1.0, 1.0, 1.0, 1.0] };
         assert_eq!(ind.indicator_z_index(), 700);
     }
 
+    // Clasificación: determinística — verifica sincronización entre crosshairs del mismo grupo
     #[test]
     fn trait_is_send_sync() {
         fn assert_send_sync<T: Send + Sync>() {}

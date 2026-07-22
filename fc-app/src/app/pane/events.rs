@@ -1,13 +1,11 @@
-/// Events emitted by pane interactions.
-///
-/// Pane events capture state changes caused by user interaction (divider
-/// drags, resize, add/remove) so higher-level controllers can react
-/// without polling.
-
+// Events emitted by pane interactions.
+//
+// Pane events capture state changes caused by user interaction (divider
+// drags, resize, add/remove) so higher-level controllers can react
+// without polling.
 // ---------------------------------------------------------------------------
 // PaneEvent
 // ---------------------------------------------------------------------------
-
 /// An event describing a pane state change.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PaneEvent {
@@ -85,6 +83,7 @@ impl PaneEventBus {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica divider_dragged
     #[test]
     fn divider_dragged() {
         let e = PaneEvent::DividerDragged {
@@ -100,6 +99,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_resized() {
         let e = PaneEvent::PaneResized {
@@ -115,6 +115,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_added_and_removed() {
         let a = PaneEvent::PaneAdded { id: 5 };
@@ -122,8 +123,8 @@ mod tests {
         assert_ne!(a, r);
     }
 
-    // --- PaneEventBus ---
 
+    // Clasificación: determinística — verifica bus_starts_empty
     #[test]
     fn bus_starts_empty() {
         let bus = PaneEventBus::new();
@@ -131,6 +132,7 @@ mod tests {
         assert_eq!(bus.len(), 0);
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn push_increments_len() {
         let mut bus = PaneEventBus::new();
@@ -140,6 +142,7 @@ mod tests {
         assert!(!bus.is_empty());
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn drain_returns_all_and_clears() {
         let mut bus = PaneEventBus::new();
@@ -159,6 +162,7 @@ mod tests {
         assert!(bus.is_empty());
     }
 
+    // Clasificación: determinística — verifica drain_on_empty_bus
     #[test]
     fn drain_on_empty_bus() {
         let mut bus = PaneEventBus::new();
@@ -166,6 +170,7 @@ mod tests {
         assert!(events.is_empty());
     }
 
+    // Clasificación: determinística — verifica clone_and_debug
     #[test]
     fn clone_and_debug() {
         let e = PaneEvent::PaneAdded { id: 3 };

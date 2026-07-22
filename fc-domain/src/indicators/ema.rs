@@ -21,8 +21,8 @@ impl Indicator<MAX_SERIES_LEN> for Ema {
         result.push(first_sma);
 
         let mut prev = first_sma;
-        for i in self.period..bars.len() {
-            let ema = alpha * bars[i].close + (1.0 - alpha) * prev;
+        for bar in bars.iter().skip(self.period) {
+            let ema = alpha * bar.close + (1.0 - alpha) * prev;
             result.push(ema);
             prev = ema;
         }
@@ -55,12 +55,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica ema_name
     #[test]
     fn ema_name() {
         let ema = Ema { period: 12 };
         assert_eq!(ema.name(), "EMA");
     }
 
+    // Clasificación: determinística — verifica ema_insufficient_data
     #[test]
     fn ema_insufficient_data() {
         let bars = make_bars(5);
@@ -69,6 +71,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica ema_basic
     #[test]
     fn ema_basic() {
         let bars = make_bars(100);
@@ -78,6 +81,7 @@ mod tests {
         assert!(result.iter().all(|v| *v > 0.0));
     }
 
+    // Clasificación: determinística — verifica ema_first_value_matches_sma
     #[test]
     fn ema_first_value_matches_sma() {
         let bars = make_bars(30);
@@ -89,6 +93,7 @@ mod tests {
         assert!((result.get(0).unwrap() - sma_val).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica ema_converges_to_constant_input
     #[test]
     fn ema_converges_to_constant_input() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();

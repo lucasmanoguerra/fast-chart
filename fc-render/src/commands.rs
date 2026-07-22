@@ -204,6 +204,7 @@ impl DrawCommand {
     }
 
     /// Draw a filled triangle with no stroke.
+    #[allow(clippy::too_many_arguments)]
     pub fn filled_triangle(
         x0: f32,
         y0: f32,
@@ -311,8 +312,8 @@ impl fmt::Display for DrawCommand {
 mod tests {
     use super::*;
 
-    // ---- DrawCommand construction ----
 
+    // Clasificación: determinística — verifica line_creates_draw_line
     #[test]
     fn line_creates_draw_line() {
         let cmd = DrawCommand::line(0.0, 0.0, 100.0, 50.0, [1.0; 4], 2.0, 5);
@@ -339,6 +340,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica dashed_line_uses_dashed_style
     #[test]
     fn dashed_line_uses_dashed_style() {
         let cmd = DrawCommand::dashed_line(0.0, 0.0, 10.0, 10.0, [1.0; 4], 1.0, 0);
@@ -348,6 +350,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica filled_rect_has_fill_no_stroke
     #[test]
     fn filled_rect_has_fill_no_stroke() {
         let cmd = DrawCommand::filled_rect(0.0, 0.0, 50.0, 30.0, [1.0, 0.0, 0.0, 1.0], 3);
@@ -366,6 +369,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica stroked_rect_has_stroke_no_fill
     #[test]
     fn stroked_rect_has_stroke_no_fill() {
         let cmd = DrawCommand::stroked_rect(0.0, 0.0, 50.0, 30.0, [0.0; 4], 1.5, 2);
@@ -384,6 +388,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica filled_circle_has_fill_no_stroke
     #[test]
     fn filled_circle_has_fill_no_stroke() {
         let cmd = DrawCommand::filled_circle(100.0, 100.0, 5.0, [0.0, 1.0, 0.0, 1.0], 10);
@@ -398,6 +403,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica filled_triangle_has_fill_no_stroke
     #[test]
     fn filled_triangle_has_fill_no_stroke() {
         let cmd = DrawCommand::filled_triangle(0.0, 0.0, 10.0, 0.0, 5.0, 10.0, [1.0; 4], 7);
@@ -413,6 +419,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica polyline_is_open_no_fill
     #[test]
     fn polyline_is_open_no_fill() {
         let pts = vec![[0.0, 0.0], [10.0, 5.0], [20.0, 0.0]];
@@ -432,6 +439,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica filled_polygon_is_closed_with_fill
     #[test]
     fn filled_polygon_is_closed_with_fill() {
         let pts = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]];
@@ -453,6 +461,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica text_label
     #[test]
     fn text_label() {
         let cmd = DrawCommand::text(10.0, 20.0, "BTC", [1.0; 4], 14.0, 20);
@@ -479,31 +488,30 @@ mod tests {
         }
     }
 
-    // ---- z_index accessor ----
 
+    // Clasificación: determinística — verifica z_index_accessor
     #[test]
     fn z_index_accessor() {
-        let cmds = vec![
-            DrawCommand::line(0.0, 0.0, 1.0, 1.0, [1.0; 4], 1.0, 3),
+        let cmds = [DrawCommand::line(0.0, 0.0, 1.0, 1.0, [1.0; 4], 1.0, 3),
             DrawCommand::filled_rect(0.0, 0.0, 1.0, 1.0, [1.0; 4], 7),
             DrawCommand::filled_circle(0.0, 0.0, 1.0, [1.0; 4], 11),
             DrawCommand::filled_triangle(0.0, 0.0, 1.0, 0.0, 0.5, 1.0, [1.0; 4], 5),
             DrawCommand::polyline(vec![[0.0, 0.0]], [1.0; 4], 1.0, 9),
-            DrawCommand::text(0.0, 0.0, "t", [1.0; 4], 12.0, 15),
-        ];
+            DrawCommand::text(0.0, 0.0, "t", [1.0; 4], 12.0, 15)];
         let expected = [3, 7, 11, 5, 9, 15];
         for (cmd, &exp) in cmds.iter().zip(&expected) {
             assert_eq!(cmd.z_index(), exp, "z_index mismatch for {cmd}");
         }
     }
 
-    // ---- LineStyle ----
 
+    // Clasificación: determinística — verifica line_style_default_is_solid
     #[test]
     fn line_style_default_is_solid() {
         assert_eq!(LineStyle::default(), LineStyle::Solid);
     }
 
+    // Clasificación: determinística — verifica que variantes de LineStyle son distinguibles
     #[test]
     fn line_style_equality() {
         assert_eq!(LineStyle::Solid, LineStyle::Solid);
@@ -511,8 +519,8 @@ mod tests {
         assert_ne!(LineStyle::Dashed, LineStyle::Dotted);
     }
 
-    // ---- Display ----
 
+    // Clasificación: determinística — verifica display_format
     #[test]
     fn display_format() {
         let line = DrawCommand::line(0.0, 0.0, 1.0, 1.0, [1.0; 4], 1.0, 0);
@@ -534,8 +542,8 @@ mod tests {
         assert_eq!(txt.to_string(), "Text(\"hello\")");
     }
 
-    // ---- Clone ----
 
+    // Clasificación: determinística — verifica draw_command_clone
     #[test]
     fn draw_command_clone() {
         let cmd = DrawCommand::line(0.0, 0.0, 100.0, 50.0, [1.0; 4], 2.0, 5);
@@ -543,6 +551,7 @@ mod tests {
         assert_eq!(cloned.z_index(), 5);
     }
 
+    // Clasificación: determinística — verifica path_clone_preserves_points
     #[test]
     fn path_clone_preserves_points() {
         let pts = vec![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
@@ -554,8 +563,8 @@ mod tests {
         }
     }
 
-    // ---- Debug ----
 
+    // Clasificación: determinística — verifica draw_command_debug
     #[test]
     fn draw_command_debug() {
         let cmd = DrawCommand::line(0.0, 0.0, 1.0, 1.0, [1.0; 4], 1.0, 0);

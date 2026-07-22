@@ -169,6 +169,7 @@ impl BarRenderer {
     }
 
     /// Update the viewport uniform so the shader maps world coords → NDC.
+    #[allow(clippy::too_many_arguments)]
     pub fn update_uniforms(
         &self,
         queue: &wgpu::Queue,
@@ -204,6 +205,7 @@ mod tests {
         Bar::new(timestamp, open, high, low, close, 1000).unwrap()
     }
 
+    // Clasificación: determinística — verifica vertex_count_per_bar
     #[test]
     fn vertex_count_per_bar() {
         // Each bar = 3 line segments × 2 vertices = 6 vertices
@@ -216,6 +218,7 @@ mod tests {
         assert_eq!(renderer.vertex_count, 12); // 2 bars × 6 vertices
     }
 
+    // Clasificación: determinística — verifica empty_bars_produces_zero_vertices
     #[test]
     fn empty_bars_produces_zero_vertices() {
         let mut renderer = create_renderer_for_test();
@@ -223,21 +226,24 @@ mod tests {
         assert_eq!(renderer.vertex_count, 0);
     }
 
+    // Clasificación: determinística — verifica bullish_bar_uses_green_color
     #[test]
     fn bullish_bar_uses_green_color() {
         let bar = test_bar(1000, 100.0, 105.0, 99.0, 102.0);
         assert!(bar.is_bullish());
         // Verify the color constant is green-ish
-        assert!(colors::BULLISH[1] > colors::BULLISH[0]); // green > red
+        const { assert!(colors::BULLISH[1] > colors::BULLISH[0]) }; // green > red
     }
 
+    // Clasificación: determinística — verifica bearish_bar_uses_red_color
     #[test]
     fn bearish_bar_uses_red_color() {
         let bar = test_bar(1000, 102.0, 105.0, 99.0, 100.0);
         assert!(!bar.is_bullish());
-        assert!(colors::BEARISH[0] > colors::BEARISH[1]); // red > green
+        const { assert!(colors::BEARISH[0] > colors::BEARISH[1]) }; // red > green
     }
 
+    // Clasificación: determinística — verifica open_tick_is_horizontal
     #[test]
     fn open_tick_is_horizontal() {
         // For a bullish bar: open=100, the open tick vertices should both have y=100
@@ -252,6 +258,7 @@ mod tests {
         assert_eq!(left.position[1], right.position[1]);
     }
 
+    // Clasificación: determinística — verifica high_low_is_vertical
     #[test]
     fn high_low_is_vertical() {
         let bar = test_bar(1000, 100.0, 105.0, 99.0, 102.0);
@@ -267,6 +274,7 @@ mod tests {
         assert!(top.position[1] > bottom.position[1]);
     }
 
+    // Clasificación: determinística — verifica close_tick_is_horizontal
     #[test]
     fn close_tick_is_horizontal() {
         let bar = test_bar(1000, 100.0, 105.0, 99.0, 102.0);
@@ -279,6 +287,7 @@ mod tests {
         assert_eq!(left.position[1], right.position[1]);
     }
 
+    // Clasificación: determinística — verifica tick_width_is_40_percent_of_bar_width
     #[test]
     fn tick_width_is_40_percent_of_bar_width() {
         let bar_width = 10.0f32;

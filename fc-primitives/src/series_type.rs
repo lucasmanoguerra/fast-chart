@@ -1,5 +1,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum SeriesType {
+    #[default]
     Candle,
     Bar,
     Line,
@@ -12,11 +14,6 @@ pub enum SeriesType {
     Range,
 }
 
-impl Default for SeriesType {
-    fn default() -> Self {
-        Self::Candle
-    }
-}
 
 impl SeriesType {
     /// All built-in series types.
@@ -64,21 +61,25 @@ impl SeriesType {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica default_is_candle
     #[test]
     fn default_is_candle() {
         assert_eq!(SeriesType::default(), SeriesType::Candle);
     }
 
+    // Clasificación: determinística — verifica all_ten_variants
     #[test]
     fn all_ten_variants() {
         assert_eq!(SeriesType::ALL.len(), 10);
     }
 
+    // Clasificación: determinística — verifica debug_format
     #[test]
     fn debug_format() {
         assert_eq!(format!("{:?}", SeriesType::Line), "Line");
     }
 
+    // Clasificación: determinística — verifica clone_and_eq
     #[test]
     fn clone_and_eq() {
         let a = SeriesType::Area;
@@ -86,6 +87,7 @@ mod tests {
         assert_eq!(a, b);
     }
 
+    // Clasificación: determinística — verifica display_names
     #[test]
     fn display_names() {
         assert_eq!(SeriesType::Candle.display_name(), "Candlestick");
@@ -96,6 +98,7 @@ mod tests {
         assert_eq!(SeriesType::Volume.display_name(), "Volume");
     }
 
+    // Clasificación: determinística — verifica is_volume
     #[test]
     fn is_volume() {
         assert!(SeriesType::Volume.is_volume());
@@ -103,6 +106,7 @@ mod tests {
         assert!(!SeriesType::Line.is_volume());
     }
 
+    // Clasificación: determinística — verifica is_breakout_pattern
     #[test]
     fn is_breakout_pattern() {
         assert!(SeriesType::PointFigure.is_breakout_pattern());
@@ -112,6 +116,7 @@ mod tests {
         assert!(!SeriesType::Line.is_breakout_pattern());
     }
 
+    // Clasificación: determinística — verifica new_variants_are_distinct
     #[test]
     fn new_variants_are_distinct() {
         let new_types = [

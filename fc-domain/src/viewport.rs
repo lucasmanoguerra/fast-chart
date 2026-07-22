@@ -100,7 +100,7 @@ impl Default for Viewport {
     fn default() -> Self {
         Self {
             time_start: 0,
-            time_end: 3600_000,
+            time_end: 3_600_000,
             value_min: 0.0,
             value_max: 100.0,
             zoom_level: 1.0,
@@ -122,12 +122,14 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica contains_time_inside
     #[test]
     fn contains_time_inside() {
         let vp = test_viewport();
         assert!(vp.contains_time(1500));
     }
 
+    // Clasificación: determinística — verifica contains_time_at_boundary
     #[test]
     fn contains_time_at_boundary() {
         let vp = test_viewport();
@@ -135,6 +137,7 @@ mod tests {
         assert!(vp.contains_time(2000));
     }
 
+    // Clasificación: determinística — verifica contains_time_outside
     #[test]
     fn contains_time_outside() {
         let vp = test_viewport();
@@ -142,6 +145,7 @@ mod tests {
         assert!(!vp.contains_time(2001));
     }
 
+    // Clasificación: determinística — verifica zoom_in
     #[test]
     fn zoom_in() {
         let mut vp = test_viewport();
@@ -151,6 +155,7 @@ mod tests {
         assert_eq!(vp.zoom_level, 2.0);
     }
 
+    // Clasificación: determinística — verifica zoom_out
     #[test]
     fn zoom_out() {
         let mut vp = test_viewport();
@@ -158,6 +163,7 @@ mod tests {
         assert_eq!(vp.zoom_level, 0.5);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pan_forward() {
         let mut vp = test_viewport();
@@ -166,6 +172,7 @@ mod tests {
         assert_eq!(vp.time_end, 2500);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pan_backward() {
         let mut vp = test_viewport();
@@ -174,6 +181,7 @@ mod tests {
         assert_eq!(vp.time_end, 1500);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pan_saturate_at_zero() {
         let mut vp = test_viewport();
@@ -181,6 +189,7 @@ mod tests {
         assert_eq!(vp.time_start, 0);
     }
 
+    // Clasificación: determinística — verifica default_viewport
     #[test]
     fn default_viewport() {
         let vp = Viewport::default();
@@ -203,6 +212,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica price_to_y_midpoint
     #[test]
     fn price_to_y_midpoint() {
         let vp = Viewport::default();
@@ -211,6 +221,7 @@ mod tests {
         assert!((y - 200.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica price_to_y_top
     #[test]
     fn price_to_y_top() {
         let vp = Viewport::default();
@@ -219,6 +230,7 @@ mod tests {
         assert!((y - 0.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica price_to_y_bottom
     #[test]
     fn price_to_y_bottom() {
         let vp = Viewport::default();
@@ -227,6 +239,7 @@ mod tests {
         assert!((y - 400.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica y_to_price_roundtrip
     #[test]
     fn y_to_price_roundtrip() {
         let vp = Viewport::default();
@@ -237,6 +250,7 @@ mod tests {
         assert!((back - price).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica price_to_y_zero_range
     #[test]
     fn price_to_y_zero_range() {
         let vp = Viewport::default();
@@ -245,6 +259,7 @@ mod tests {
         assert!((y - 200.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica price_to_y_clamps_above
     #[test]
     fn price_to_y_clamps_above() {
         let vp = Viewport::default();
@@ -254,6 +269,7 @@ mod tests {
         assert!((y - 0.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica price_to_y_clamps_below
     #[test]
     fn price_to_y_clamps_below() {
         let vp = Viewport::default();
@@ -263,6 +279,7 @@ mod tests {
         assert!((y - 400.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica y_to_price_zero_height
     #[test]
     fn y_to_price_zero_height() {
         let vp = Viewport::default();

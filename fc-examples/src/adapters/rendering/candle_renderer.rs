@@ -188,6 +188,7 @@ impl CandleRenderer {
     }
 
     /// Update the viewport uniform so the shader maps world coords → NDC.
+    #[allow(clippy::too_many_arguments)]
     pub fn update_uniforms(
         &self,
         queue: &wgpu::Queue,

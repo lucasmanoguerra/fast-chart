@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod area_renderer_tests {
+mod tests {
     use fc_primitives::bar::Bar;
 
     fn test_bars() -> Vec<Bar> {
@@ -10,6 +10,7 @@ mod area_renderer_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica area_vertex_count_for_n_bars
     #[test]
     fn area_vertex_count_for_n_bars() {
         let bars = test_bars();
@@ -18,6 +19,7 @@ mod area_renderer_tests {
         assert_eq!(expected, 6);
     }
 
+    // Clasificación: determinística — verifica area_index_count_for_n_bars
     #[test]
     fn area_index_count_for_n_bars() {
         let bars = test_bars();
@@ -26,6 +28,7 @@ mod area_renderer_tests {
         assert_eq!(expected, 12);
     }
 
+    // Clasificación: determinística — verifica area_x_coordinate_within_canvas
     #[test]
     fn area_x_coordinate_within_canvas() {
         let bars = test_bars();
@@ -41,6 +44,7 @@ mod area_renderer_tests {
         }
     }
 
+    // Clasificación: determinística — verifica area_y_close_within_canvas
     #[test]
     fn area_y_close_within_canvas() {
         let bars = test_bars();
@@ -56,6 +60,7 @@ mod area_renderer_tests {
         }
     }
 
+    // Clasificación: determinística — verifica area_empty_bars
     #[test]
     fn area_empty_bars() {
         let bars: Vec<Bar> = vec![];
@@ -64,14 +69,16 @@ mod area_renderer_tests {
         assert_eq!((bars.len().saturating_sub(1)) * 6, 0);
     }
 
+    // Clasificación: determinística — verifica area_single_bar_no_indices
     #[test]
     fn area_single_bar_no_indices() {
-        let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
+        let bars = [Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
         // Single bar: 2 vertices but 0 quads (need at least 2 bars).
         let index_count = (bars.len() - 1) * 6;
         assert_eq!(index_count, 0);
     }
 
+    // Clasificación: determinística — verifica area_zero_range_produces_nothing
     #[test]
     fn area_zero_range_produces_nothing() {
         let _bars = test_bars();
@@ -94,6 +101,7 @@ mod baseline_renderer_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica baseline_color_selection
     #[test]
     fn baseline_color_selection() {
         let baseline_price = 105.0;
@@ -127,18 +135,21 @@ mod baseline_renderer_tests {
         assert_eq!(color_2, below_color);
     }
 
+    // Clasificación: determinística — verifica baseline_vertex_count_for_n_bars
     #[test]
     fn baseline_vertex_count_for_n_bars() {
         let bars = test_bars();
         assert_eq!(bars.len() * 2, 6);
     }
 
+    // Clasificación: determinística — verifica baseline_index_count_for_n_bars
     #[test]
     fn baseline_index_count_for_n_bars() {
         let bars = test_bars();
         assert_eq!((bars.len() - 1) * 6, 12);
     }
 
+    // Clasificación: determinística — verifica baseline_empty_bars
     #[test]
     fn baseline_empty_bars() {
         let bars: Vec<Bar> = vec![];
@@ -158,6 +169,7 @@ mod histogram_renderer_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica histogram_quad_generation
     #[test]
     fn histogram_quad_generation() {
         let bars = test_bars();
@@ -169,6 +181,7 @@ mod histogram_renderer_tests {
         assert_eq!(expected_indices, 18);
     }
 
+    // Clasificación: determinística — verifica histogram_baseline_color
     #[test]
     fn histogram_baseline_color() {
         let baseline = 100.0;
@@ -193,6 +206,7 @@ mod histogram_renderer_tests {
         assert_eq!(color_below, negative_color);
     }
 
+    // Clasificación: determinística — verifica histogram_bar_width_calculation
     #[test]
     fn histogram_bar_width_calculation() {
         let canvas_width = 800.0_f64;
@@ -201,6 +215,7 @@ mod histogram_renderer_tests {
         assert!((bar_width - 64.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica histogram_empty_bars
     #[test]
     fn histogram_empty_bars() {
         let bars: Vec<Bar> = vec![];
@@ -209,13 +224,15 @@ mod histogram_renderer_tests {
         assert_eq!(bars.len() * 6, 0);
     }
 
+    // Clasificación: determinística — verifica histogram_single_bar
     #[test]
     fn histogram_single_bar() {
-        let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
+        let bars = [Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
         assert_eq!(bars.len() * 4, 4);
         assert_eq!(bars.len() * 6, 6);
     }
 
+    // Clasificación: determinística — verifica histogram_y_baseline_above_value
     #[test]
     fn histogram_y_baseline_above_value() {
         // When close > baseline, y_baseline < y_value in screen coords
@@ -235,6 +252,7 @@ mod histogram_renderer_tests {
         assert!(y_value < y_baseline);
     }
 
+    // Clasificación: determinística — verifica histogram_y_baseline_below_value
     #[test]
     fn histogram_y_baseline_below_value() {
         // When close < baseline, y_value > y_baseline in screen coords.
@@ -269,6 +287,7 @@ mod area_update_from_state_tests {
     }
 
     /// Simulates the area vertex generation from visible bars.
+    #[allow(clippy::too_many_arguments)]
     fn compute_area_vertices(
         bars: &[Bar],
         canvas_width: f32,
@@ -314,6 +333,7 @@ mod area_update_from_state_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica area_initialized_with_correct_vertex_index_counts
     #[test]
     fn area_initialized_with_correct_vertex_index_counts() {
         // AreaRenderer pre-allocates for 100k bars.
@@ -323,6 +343,7 @@ mod area_update_from_state_tests {
         assert_eq!(index_capacity, 600_000);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn area_update_produces_correct_vertex_and_index_counts() {
         let bars = test_bars();
@@ -334,8 +355,9 @@ mod area_update_from_state_tests {
         assert_eq!(indices, 12);
     }
 
+    // Clasificación: determinística — verifica area_empty_series_produces_nothing
     #[test]
-    fn area_empty_seriesProduces_nothing() {
+    fn area_empty_series_produces_nothing() {
         let bars: Vec<Bar> = vec![];
         let (verts, indices) = compute_area_vertices(
             &bars, 800.0, 600.0, 0.0, 400.0, 90.0, 125.0, 90.0,
@@ -344,6 +366,7 @@ mod area_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica area_single_bar_produces_no_indices
     #[test]
     fn area_single_bar_produces_no_indices() {
         let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
@@ -355,6 +378,7 @@ mod area_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica area_zero_time_range_produces_nothing
     #[test]
     fn area_zero_time_range_produces_nothing() {
         let bars = test_bars();
@@ -365,6 +389,7 @@ mod area_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica area_zero_value_range_produces_nothing
     #[test]
     fn area_zero_value_range_produces_nothing() {
         let bars = test_bars();
@@ -375,6 +400,7 @@ mod area_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn area_visible_bar_filtering() {
         let bars = test_bars();
@@ -392,6 +418,7 @@ mod area_update_from_state_tests {
         assert_eq!(visible.len(), 0);
     }
 
+    // Clasificación: determinística — verifica area_baseline_at_value_min_fills_to_bottom
     #[test]
     fn area_baseline_at_value_min_fills_to_bottom() {
         // When baseline == value_min, y_baseline should be at canvas bottom (max y).
@@ -405,6 +432,7 @@ mod area_update_from_state_tests {
         assert!((y_baseline - 600.0).abs() < f32::EPSILON);
     }
 
+    // Clasificación: determinística — verifica area_close_vertex_is_above_baseline_when_price_above_min
     #[test]
     fn area_close_vertex_is_above_baseline_when_price_above_min() {
         let value_min = 90.0;
@@ -437,6 +465,7 @@ mod histogram_update_from_state_tests {
 
     /// Simulates the histogram vertex/index generation from visible bars.
     /// Each bar produces 4 vertices (quad) + 6 indices (2 triangles).
+    #[allow(clippy::too_many_arguments)]
     fn compute_histogram_vertices(
         bars: &[Bar],
         canvas_width: f32,
@@ -491,6 +520,7 @@ mod histogram_update_from_state_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica histogram_initialized_with_correct_capacity
     #[test]
     fn histogram_initialized_with_correct_capacity() {
         // HistogramRenderer pre-allocates for 100k bars: 4 verts + 6 indices each.
@@ -500,6 +530,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(index_capacity, 600_000);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn histogram_update_produces_correct_vertex_and_index_counts() {
         let bars = test_bars();
@@ -511,6 +542,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(indices, 18);
     }
 
+    // Clasificación: determinística — verifica histogram_empty_series_produces_nothing
     #[test]
     fn histogram_empty_series_produces_nothing() {
         let bars: Vec<Bar> = vec![];
@@ -521,6 +553,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica histogram_single_bar_produces_quad
     #[test]
     fn histogram_single_bar_produces_quad() {
         let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
@@ -532,6 +565,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(indices, 6);
     }
 
+    // Clasificación: determinística — verifica histogram_zero_time_range_produces_nothing
     #[test]
     fn histogram_zero_time_range_produces_nothing() {
         let bars = test_bars();
@@ -542,6 +576,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica histogram_zero_value_range_produces_nothing
     #[test]
     fn histogram_zero_value_range_produces_nothing() {
         let bars = test_bars();
@@ -552,6 +587,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn histogram_visible_bar_filtering() {
         let bars = test_bars();
@@ -569,6 +605,7 @@ mod histogram_update_from_state_tests {
         assert_eq!(visible.len(), 0);
     }
 
+    // Clasificación: determinística — verifica histogram_baseline_color_above
     #[test]
     fn histogram_baseline_color_above() {
         let baseline_price = 100.0;
@@ -577,6 +614,7 @@ mod histogram_update_from_state_tests {
         assert!(bar.close >= baseline_price);
     }
 
+    // Clasificación: determinística — verifica histogram_baseline_color_below
     #[test]
     fn histogram_baseline_color_below() {
         let baseline_price = 105.0;
@@ -585,6 +623,7 @@ mod histogram_update_from_state_tests {
         assert!(bar.close < baseline_price);
     }
 
+    // Clasificación: determinística — verifica histogram_baseline_at_zero
     #[test]
     fn histogram_baseline_at_zero() {
         // Default baseline is 0.0. All positive close values should be above.
@@ -593,6 +632,7 @@ mod histogram_update_from_state_tests {
         assert!(bar.close >= baseline_price);
     }
 
+    // Clasificación: determinística — verifica histogram_y_baseline_above_value_when_positive
     #[test]
     fn histogram_y_baseline_above_value_when_positive() {
         // When close > baseline, y_baseline > y_value in screen coords
@@ -613,6 +653,7 @@ mod histogram_update_from_state_tests {
         assert!(y_value < y_baseline);
     }
 
+    // Clasificación: determinística — verifica histogram_y_baseline_below_value_when_negative
     #[test]
     fn histogram_y_baseline_below_value_when_negative() {
         // When close < baseline, y_value > y_baseline in screen coords.
@@ -649,6 +690,7 @@ mod baseline_update_from_state_tests {
 
     /// Simulates the baseline vertex/index generation from visible bars.
     /// Mirrors `BaselineRenderer::update_baseline` logic exactly.
+    #[allow(clippy::too_many_arguments)]
     fn compute_baseline_vertices(
         bars: &[Bar],
         canvas_width: f32,
@@ -698,6 +740,7 @@ mod baseline_update_from_state_tests {
         ]
     }
 
+    // Clasificación: determinística — verifica baseline_initialized_with_correct_capacity
     #[test]
     fn baseline_initialized_with_correct_capacity() {
         // BaselineRenderer pre-allocates for 100k bars: 2 verts per bar, 6 indices per pair.
@@ -707,6 +750,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(index_capacity, 600_000);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn baseline_update_produces_correct_vertex_and_index_counts() {
         let bars = test_bars();
@@ -725,6 +769,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(indices, 12);
     }
 
+    // Clasificación: determinística — verifica baseline_empty_series_produces_nothing
     #[test]
     fn baseline_empty_series_produces_nothing() {
         let bars: Vec<Bar> = vec![];
@@ -742,6 +787,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica baseline_single_bar_produces_nothing
     #[test]
     fn baseline_single_bar_produces_nothing() {
         let bars = vec![Bar::new(100, 100.0, 110.0, 95.0, 105.0, 1000).unwrap()];
@@ -760,6 +806,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica baseline_zero_time_range_produces_nothing
     #[test]
     fn baseline_zero_time_range_produces_nothing() {
         let bars = test_bars();
@@ -777,6 +824,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica baseline_zero_value_range_produces_nothing
     #[test]
     fn baseline_zero_value_range_produces_nothing() {
         let bars = test_bars();
@@ -794,6 +842,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(indices, 0);
     }
 
+    // Clasificación: determinística — verifica baseline_midpoint_at_viewport_center
     #[test]
     fn baseline_midpoint_at_viewport_center() {
         let value_min: f64 = 90.0;
@@ -802,6 +851,7 @@ mod baseline_update_from_state_tests {
         assert!((baseline_price - 107.5).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica baseline_color_selection_above
     #[test]
     fn baseline_color_selection_above() {
         let baseline_price = 107.5;
@@ -810,6 +860,7 @@ mod baseline_update_from_state_tests {
         assert!(bar.close >= baseline_price);
     }
 
+    // Clasificación: determinística — verifica baseline_color_selection_below
     #[test]
     fn baseline_color_selection_below() {
         let baseline_price = 107.5;
@@ -818,6 +869,7 @@ mod baseline_update_from_state_tests {
         assert!(bar.close < baseline_price);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn baseline_visible_bar_filtering() {
         let bars = test_bars();
@@ -835,6 +887,7 @@ mod baseline_update_from_state_tests {
         assert_eq!(visible.len(), 0);
     }
 
+    // Clasificación: determinística — verifica baseline_y_screen_coords_flipped
     #[test]
     fn baseline_y_screen_coords_flipped() {
         // Higher price → lower screen y (flipped coordinate system).

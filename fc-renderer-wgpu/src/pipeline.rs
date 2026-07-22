@@ -4,6 +4,7 @@
 /// issue draw commands against the GPU.
 #[derive(Debug)]
 pub struct RenderPipeline {
+    #[allow(dead_code)]
     pipeline: Option<wgpu::RenderPipeline>,
 }
 

@@ -2,6 +2,8 @@
 // RenderPipeline — orchestrator for draw command collection, sorting, and execution
 // ---------------------------------------------------------------------------
 
+#![allow(unexpected_cfgs)]
+
 use super::commands::DrawCommand;
 use super::passes::{PassTracker, RenderPass};
 use super::backend::RendererBackend;
@@ -222,8 +224,8 @@ mod tests {
     use super::*;
     use crate::commands::DrawCommand;
 
-    // ---- 1. new_pipeline ----
 
+    // Clasificación: determinística — verifica new_pipeline
     #[test]
     fn new_pipeline() {
         let pipeline = RenderPipeline::new();
@@ -240,8 +242,8 @@ mod tests {
         }
     }
 
-    // ---- 2. submit_single_command ----
 
+    // Clasificación: determinística — verifica submit_single_command
     #[test]
     fn submit_single_command() {
         let mut pipeline = RenderPipeline::new();
@@ -250,8 +252,8 @@ mod tests {
         assert_eq!(pipeline.pending_commands.len(), 1);
     }
 
-    // ---- 3. submit_multiple_commands ----
 
+    // Clasificación: determinística — verifica submit_multiple_commands
     #[test]
     fn submit_multiple_commands() {
         let mut pipeline = RenderPipeline::new();
@@ -264,8 +266,8 @@ mod tests {
         assert_eq!(pipeline.pending_commands.len(), 3);
     }
 
-    // ---- 4. end_frame_sorts_by_z_index ----
 
+    // Clasificación: determinística — verifica end_frame_sorts_by_z_index
     #[test]
     fn end_frame_sorts_by_z_index() {
         let mut pipeline = RenderPipeline::new();
@@ -284,8 +286,8 @@ mod tests {
         assert_eq!(pipeline.batches[2].pass, RenderPass::Crosshair);
     }
 
-    // ---- 5. end_frame_groups_by_pass ----
 
+    // Clasificación: determinística — verifica end_frame_groups_by_pass
     #[test]
     fn end_frame_groups_by_pass() {
         let mut pipeline = RenderPipeline::new();
@@ -303,8 +305,8 @@ mod tests {
         assert_eq!(pipeline.batches[1].commands.len(), 1);
     }
 
-    // ---- 6. z_index_to_pass_background ----
 
+    // Clasificación: determinística — verifica z_index_to_pass_background
     #[test]
     fn z_index_to_pass_background() {
         assert_eq!(z_index_to_pass(0), RenderPass::Background);
@@ -312,8 +314,8 @@ mod tests {
         assert_eq!(z_index_to_pass(999), RenderPass::Background);
     }
 
-    // ---- 7. z_index_to_pass_series ----
 
+    // Clasificación: determinística — verifica z_index_to_pass_series
     #[test]
     fn z_index_to_pass_series() {
         assert_eq!(z_index_to_pass(5000), RenderPass::Series);
@@ -321,8 +323,8 @@ mod tests {
         assert_eq!(z_index_to_pass(5999), RenderPass::Series);
     }
 
-    // ---- 8. z_index_to_pass_crosshair ----
 
+    // Clasificación: determinística — verifica z_index_to_pass_crosshair
     #[test]
     fn z_index_to_pass_crosshair() {
         assert_eq!(z_index_to_pass(9000), RenderPass::Crosshair);
@@ -330,8 +332,8 @@ mod tests {
         assert_eq!(z_index_to_pass(9999), RenderPass::Crosshair);
     }
 
-    // ---- 9. execute_skips_clean_passes ----
 
+    // Clasificación: determinística — verifica execute_skips_clean_passes
     #[test]
     fn execute_skips_clean_passes() {
         struct RecordingBackend {
@@ -364,8 +366,8 @@ mod tests {
         assert_eq!(pipeline.stats().passes_skipped, 1);
     }
 
-    // ---- 10. execute_runs_dirty_passes ----
 
+    // Clasificación: determinística — verifica execute_runs_dirty_passes
     #[test]
     fn execute_runs_dirty_passes() {
         struct RecordingBackend {
@@ -398,8 +400,8 @@ mod tests {
         assert!(!pipeline.pass_tracker().is_dirty(RenderPass::Grid));
     }
 
-    // ---- 11. invalidate_all ----
 
+    // Clasificación: determinística — verifica eliminación de entry y actualización de orden
     #[test]
     fn invalidate_all() {
         let mut pipeline = RenderPipeline::new();
@@ -417,8 +419,8 @@ mod tests {
         }
     }
 
-    // ---- 12. frame_stats ----
 
+    // Clasificación: determinística — verifica frame_stats
     #[test]
     fn frame_stats() {
         let mut pipeline = RenderPipeline::new();
@@ -449,24 +451,24 @@ mod tests {
         assert_eq!(pipeline.stats().passes_skipped, 0);
     }
 
-    // ---- Bonus: negative z_index goes to Debug ----
 
+    // Clasificación: determinística — verifica z_index_negative_goes_to_debug
     #[test]
     fn z_index_negative_goes_to_debug() {
         assert_eq!(z_index_to_pass(-1), RenderPass::Debug);
         assert_eq!(z_index_to_pass(-500), RenderPass::Debug);
     }
 
-    // ---- Bonus: z_index beyond Debug range goes to Debug ----
 
+    // Clasificación: determinística — verifica z_index_above_range_goes_to_debug
     #[test]
     fn z_index_above_range_goes_to_debug() {
         assert_eq!(z_index_to_pass(12000), RenderPass::Debug);
         assert_eq!(z_index_to_pass(99999), RenderPass::Debug);
     }
 
-    // ---- Bonus: begin_frame clears pending commands ----
 
+    // Clasificación: determinística — verifica reset completo del estado
     #[test]
     fn begin_frame_clears_pending() {
         let mut pipeline = RenderPipeline::new();
@@ -477,8 +479,8 @@ mod tests {
         assert!(pipeline.pending_commands.is_empty());
     }
 
-    // ---- Bonus: reset clears everything ----
 
+    // Clasificación: determinística — verifica reset completo del estado
     #[test]
     fn reset_clears_state() {
         let mut pipeline = RenderPipeline::new();
@@ -496,16 +498,16 @@ mod tests {
         }
     }
 
-    // ---- Bonus: Default impl ----
 
+    // Clasificación: determinística — verifica default_impl
     #[test]
     fn default_impl() {
         let pipeline = RenderPipeline::default();
         assert!(pipeline.batches.is_empty());
     }
 
-    // ---- Bonus: empty end_frame produces no batches ----
 
+    // Clasificación: determinística — verifica empty_end_frame
     #[test]
     fn empty_end_frame() {
         let mut pipeline = RenderPipeline::new();

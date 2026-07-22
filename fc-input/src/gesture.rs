@@ -318,6 +318,7 @@ impl GestureDetector {
         Some(Gesture::Pan { dx, dy, velocity_x, velocity_y })
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn evaluate_end_gesture(
         &mut self,
         elapsed_ms: u64,
@@ -418,6 +419,7 @@ mod tests {
     use super::*;
     use std::time::Duration;
 
+    // Clasificación: determinística — verifica default_config
     #[test]
     fn default_config() {
         let config = GestureConfig::default();
@@ -430,6 +432,7 @@ mod tests {
         assert_eq!(config.pinch_touch_count, 2);
     }
 
+    // Clasificación: determinística — verifica detección de toque simple
     #[test]
     fn single_tap() {
         let mut det = GestureDetector::with_default_config();
@@ -438,6 +441,7 @@ mod tests {
         assert_eq!(gesture, Some(Gesture::Tap { x: 100.0, y: 200.0 }));
     }
 
+    // Clasificación: determinística — edge case: toque fuera de umbrales
     #[test]
     fn tap_too_long() {
         let config = GestureConfig { tap_max_duration_ms: 200, ..GestureConfig::default() };
@@ -449,6 +453,7 @@ mod tests {
         assert_eq!(lp, None);
     }
 
+    // Clasificación: determinística — edge case: toque fuera de umbrales
     #[test]
     fn tap_too_far() {
         let config = GestureConfig { tap_max_distance: 5.0, ..GestureConfig::default() };
@@ -460,6 +465,7 @@ mod tests {
         assert!(!matches!(gesture, Some(Gesture::Tap { .. })));
     }
 
+    // Clasificación: determinística — verifica detección de doble toque dentro del intervalo configurado
     #[test]
     fn double_tap() {
         let config = GestureConfig { double_tap_max_interval_ms: 300, tap_max_duration_ms: 300, tap_max_distance: 10.0, ..GestureConfig::default() };
@@ -472,6 +478,7 @@ mod tests {
         assert_eq!(g2, Some(Gesture::DoubleTap { x: 105.0, y: 205.0 }));
     }
 
+    // Clasificación: determinística — edge case: intervalo entre taps excedido — no debe detectar double tap
     #[test]
     fn double_tap_too_slow() {
         let make = || GestureConfig { double_tap_max_interval_ms: 100, tap_max_duration_ms: 300, tap_max_distance: 10.0, ..GestureConfig::default() };
@@ -485,6 +492,7 @@ mod tests {
         assert_eq!(g2, Some(Gesture::Tap { x: 100.0, y: 200.0 }));
     }
 
+    // Clasificación: determinística — verifica detección de press prolongado tras umbral de tiempo
     #[test]
     fn long_press() {
         let mut det = GestureDetector::with_default_config();
@@ -502,6 +510,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — edge case: long press con movimiento leve dentro del umbral de distancia
     #[test]
     fn long_press_with_movement() {
         let config = GestureConfig { tap_max_distance: 5.0, ..GestureConfig::default() };
@@ -513,6 +522,7 @@ mod tests {
         assert!(matches!(gesture, Some(Gesture::LongPress { .. })));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pan_start() {
         let config = GestureConfig { pan_min_distance: 5.0, ..GestureConfig::default() };
@@ -523,6 +533,7 @@ mod tests {
         assert!(det.is_tracking());
     }
 
+    // Clasificación: determinística — edge case: movimiento insuficiente no inicia pan
     #[test]
     fn pan_not_started() {
         let config = GestureConfig { pan_min_distance: 50.0, ..GestureConfig::default() };
@@ -532,6 +543,7 @@ mod tests {
         assert_eq!(gesture, None);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pinch con dos dedos
     #[test]
     fn pinch_two_fingers() {
         let mut det = GestureDetector::with_default_config();
@@ -544,6 +556,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica pinch-to-zoom: dedos separándose producen scale > 1.0
     #[test]
     fn pinch_spread() {
         let mut det = GestureDetector::with_default_config();
@@ -558,6 +571,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica pinch-to-zoom: dedos acercándose producen scale < 1.0
     #[test]
     fn pinch_compress() {
         let mut det = GestureDetector::with_default_config();
@@ -572,6 +586,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica detección de flick rápido (swipe con inercia)
     #[test]
     fn flick_fast() {
         let mut det = GestureDetector::with_default_config();
@@ -582,6 +597,7 @@ mod tests {
         assert!(det.touch_count() == 0);
     }
 
+    // Clasificación: determinística — verifica mapeo de velocidad a dirección cardinal del flick
     #[test]
     fn flick_direction() {
         assert_eq!(flick_direction_from_velocity(100.0, 0.0), FlickDirection::Right);
@@ -594,6 +610,7 @@ mod tests {
         assert_eq!(flick_direction_from_velocity(-50.0, -100.0), FlickDirection::Up);
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn reset_clears() {
         let mut det = GestureDetector::with_default_config();
@@ -606,6 +623,7 @@ mod tests {
         assert_eq!(det.touch_count(), 0);
     }
 
+    // Clasificación: determinística — edge case: touch con ID no registrado retorna None sin panic
     #[test]
     fn touch_move_unknown_id_returns_none() {
         let mut det = GestureDetector::with_default_config();
@@ -614,6 +632,7 @@ mod tests {
         assert_eq!(gesture, None);
     }
 
+    // Clasificación: determinística — edge case: touch con ID no registrado retorna None sin panic
     #[test]
     fn touch_end_unknown_id_returns_none() {
         let mut det = GestureDetector::with_default_config();
@@ -622,6 +641,7 @@ mod tests {
         assert_eq!(gesture, None);
     }
 
+    // Clasificación: determinística — verifica acceso de solo lectura a la configuración del detector
     #[test]
     fn config_getter() {
         let config = GestureConfig::default();
@@ -629,6 +649,7 @@ mod tests {
         assert_eq!(det.config().tap_max_duration_ms, 300);
     }
 
+    // Clasificación: determinística — verifica acumulación de deltas en múltiples movimientos de pan
     #[test]
     fn multiple_pan_movements() {
         let config = GestureConfig { pan_min_distance: 5.0, ..GestureConfig::default() };
@@ -640,6 +661,7 @@ mod tests {
         assert!(matches!(g2, Some(Gesture::Pan { dx: 40.0, .. })));
     }
 
+    // Clasificación: determinística — verifica detección de flick rápido (swipe con inercia)
     #[test]
     fn pan_end_without_flick() {
         let config = GestureConfig { pan_min_distance: 5.0, flick_min_velocity: f64::MAX, ..GestureConfig::default() };

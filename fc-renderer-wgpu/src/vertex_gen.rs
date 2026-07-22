@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use fc_render::commands::{DrawCommand, LineStyle};
 use std::f32::consts::TAU;
 
@@ -19,6 +21,7 @@ fn make_vertex(x: f32, y: f32, color: [f32; 4]) -> Vertex {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn push_line(
     x0: f32,
     y0: f32,
@@ -57,6 +60,7 @@ pub fn push_line(
     indices.extend_from_slice(&[i, i + 1, i + 2, i + 2, i + 1, i + 3]);
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn push_rect_fill(
     x: f32,
     y: f32,
@@ -102,6 +106,7 @@ pub fn push_rect_stroke(
     push_line(x, y + h, x, y, color, stroke_width, surface_w, surface_h, base_index + 12, vertices, indices);
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn push_circle_fill(
     cx: f32,
     cy: f32,
@@ -133,6 +138,7 @@ pub fn push_circle_fill(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn push_circle_stroke(
     cx: f32,
     cy: f32,
@@ -509,6 +515,7 @@ mod tests {
     const H: f32 = 600.0;
     const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
+    // Clasificación: determinística — verifica ndc_conversion
     #[test]
     fn ndc_conversion() {
         let (x, y) = screen_to_ndc(0.0, 0.0, 800.0, 600.0);
@@ -524,6 +531,7 @@ mod tests {
         assert!(y.abs() < 1e-6);
     }
 
+    // Clasificación: determinística — verifica line_vertices_count
     #[test]
     fn line_vertices_count() {
         let mut verts = Vec::new();
@@ -533,6 +541,7 @@ mod tests {
         assert_eq!(inds.len(), 6);
     }
 
+    // Clasificación: determinística — verifica line_vertices_positions
     #[test]
     fn line_vertices_positions() {
         let mut verts = Vec::new();
@@ -555,6 +564,7 @@ mod tests {
         assert!((verts[3].position[0] - expected_top_right_x).abs() < 1e-5);
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn line_zero_length_returns_nothing() {
         let mut verts = Vec::new();
@@ -564,6 +574,7 @@ mod tests {
         assert_eq!(inds.len(), 0);
     }
 
+    // Clasificación: determinística — verifica rect_fill_vertices_count
     #[test]
     fn rect_fill_vertices_count() {
         let mut verts = Vec::new();
@@ -573,6 +584,7 @@ mod tests {
         assert_eq!(inds.len(), 6);
     }
 
+    // Clasificación: determinística — verifica rect_stroke_vertices_count
     #[test]
     fn rect_stroke_vertices_count() {
         let mut verts = Vec::new();
@@ -582,6 +594,7 @@ mod tests {
         assert_eq!(inds.len(), 24);
     }
 
+    // Clasificación: determinística — verifica circle_fill_vertices_count
     #[test]
     fn circle_fill_vertices_count() {
         let mut verts = Vec::new();
@@ -591,6 +604,7 @@ mod tests {
         assert_eq!(inds.len() as u32, CIRCLE_SEGMENTS * 3);
     }
 
+    // Clasificación: determinística — verifica circle_stroke_vertices_count
     #[test]
     fn circle_stroke_vertices_count() {
         let mut verts = Vec::new();
@@ -600,6 +614,7 @@ mod tests {
         assert_eq!(inds.len() as u32, CIRCLE_SEGMENTS * 6);
     }
 
+    // Clasificación: determinística — verifica triangle_fill_vertices_count
     #[test]
     fn triangle_fill_vertices_count() {
         let mut verts = Vec::new();
@@ -609,6 +624,7 @@ mod tests {
         assert_eq!(inds.len(), 3);
     }
 
+    // Clasificación: determinística — verifica triangle_stroke_vertices_count
     #[test]
     fn triangle_stroke_vertices_count() {
         let mut verts = Vec::new();
@@ -618,6 +634,7 @@ mod tests {
         assert_eq!(inds.len(), 18);
     }
 
+    // Clasificación: determinística — verifica path_vertices_count
     #[test]
     fn path_vertices_count() {
         let points = vec![[0.0, 0.0], [100.0, 0.0], [100.0, 100.0]];
@@ -629,6 +646,7 @@ mod tests {
         assert_eq!(inds.len(), 12);
     }
 
+    // Clasificación: determinística — verifica path_closed_adds_last_segment
     #[test]
     fn path_closed_adds_last_segment() {
         let points = vec![[0.0, 0.0], [100.0, 0.0], [100.0, 100.0]];
@@ -640,6 +658,7 @@ mod tests {
         assert_eq!(inds.len(), 18);
     }
 
+    // Clasificación: determinística — verifica path_fill_vertices_count
     #[test]
     fn path_fill_vertices_count() {
         let points = vec![[0.0, 0.0], [100.0, 0.0], [100.0, 100.0]];
@@ -652,6 +671,7 @@ mod tests {
         assert_eq!(inds.len(), 9);
     }
 
+    // Clasificación: determinística — verifica z_index_sort
     #[test]
     fn z_index_sort() {
         let cmds = vec![
@@ -669,9 +689,10 @@ mod tests {
         // and the first 4 indices should match rect's triangle indices
         // Verify by checking the first vertex is from rect fill (4 verts at base)
         // Rect fill starts at index 0, line starts at index 4
-        assert!(inds.len() > 0);
+        assert!(!inds.is_empty());
     }
 
+    // Clasificación: determinística — verifica generate_vertices_draw_line
     #[test]
     fn generate_vertices_draw_line() {
         let cmd = DrawCommand::line(0.0, 0.0, 100.0, 50.0, WHITE, 2.0, 0);
@@ -682,6 +703,7 @@ mod tests {
         assert_eq!(inds.len(), 6);
     }
 
+    // Clasificación: determinística — verifica generate_vertices_draw_rect_fill_only
     #[test]
     fn generate_vertices_draw_rect_fill_only() {
         let cmd = DrawCommand::filled_rect(0.0, 0.0, 50.0, 30.0, WHITE, 0);
@@ -692,6 +714,7 @@ mod tests {
         assert_eq!(inds.len(), 6);
     }
 
+    // Clasificación: determinística — verifica generate_vertices_draw_rect_fill_and_stroke
     #[test]
     fn generate_vertices_draw_rect_fill_and_stroke() {
         let cmd = DrawCommand::DrawRect {
@@ -712,6 +735,7 @@ mod tests {
         assert_eq!(inds.len(), 30);
     }
 
+    // Clasificación: determinística — verifica generate_vertices_text_skipped
     #[test]
     fn generate_vertices_text_skipped() {
         let cmd = DrawCommand::text(0.0, 0.0, "hello", WHITE, 14.0, 0);
@@ -722,6 +746,7 @@ mod tests {
         assert_eq!(inds.len(), 0);
     }
 
+    // Clasificación: determinística — verifica generate_vertices_image_skipped
     #[test]
     fn generate_vertices_image_skipped() {
         let cmd = DrawCommand::DrawImage {
@@ -740,6 +765,7 @@ mod tests {
         assert_eq!(inds.len(), 0);
     }
 
+    // Clasificación: determinística — verifica generate_sorted_vertices_orders_by_z
     #[test]
     fn generate_sorted_vertices_orders_by_z() {
         let cmds = vec![

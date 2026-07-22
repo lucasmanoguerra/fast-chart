@@ -1,13 +1,11 @@
-/// Price scale types for per-pane coordinate mapping.
-///
-/// Each pane can hold multiple price scales (Left, Right, named Overlays),
-/// each maintaining its own value range and formatter for independent
-/// price-to-pixel mapping.
-
+// Price scale types for per-pane coordinate mapping.
+//
+// Each pane can hold multiple price scales (Left, Right, named Overlays),
+// each maintaining its own value range and formatter for independent
+// price-to-pixel mapping.
 // ---------------------------------------------------------------------------
 // PriceScaleId
 // ---------------------------------------------------------------------------
-
 /// Identifies a price scale within a pane.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PriceScaleId {
@@ -29,6 +27,7 @@ impl PriceScaleId {
 
 /// Price scale mode — controls how price values map to pixel coordinates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum PriceScaleMode {
     /// Auto mode — scale adjusts automatically to visible data.
     Auto,
@@ -37,6 +36,7 @@ pub enum PriceScaleMode {
     /// Locked mode — range is fixed and cannot be changed by user or auto-fit.
     Locked,
     /// Linear scale (default). Equal price increments → equal pixel distances.
+    #[default]
     Normal,
     /// Logarithmic scale. Useful for crypto and wide-range assets.
     Logarithmic,
@@ -48,11 +48,6 @@ pub enum PriceScaleMode {
     Inverted,
 }
 
-impl Default for PriceScaleMode {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
 
 // ---------------------------------------------------------------------------
 // PriceScaleOptions
@@ -235,13 +230,14 @@ impl PriceFormatter for DefaultPriceFormatter {
 mod tests {
     use super::*;
 
-    // --- PriceScaleId ---
 
+    // Clasificación: determinística — verifica left_and_right_are_distinct
     #[test]
     fn left_and_right_are_distinct() {
         assert_ne!(PriceScaleId::Left, PriceScaleId::Right);
     }
 
+    // Clasificación: determinística — verifica overlay_equality_by_name
     #[test]
     fn overlay_equality_by_name() {
         let a = PriceScaleId::Overlay("RSI".into());
@@ -249,6 +245,7 @@ mod tests {
         assert_eq!(a, b);
     }
 
+    // Clasificación: determinística — verifica overlay_inequality_by_name
     #[test]
     fn overlay_inequality_by_name() {
         let a = PriceScaleId::Overlay("RSI".into());
@@ -256,8 +253,8 @@ mod tests {
         assert_ne!(a, b);
     }
 
-    // --- auto_fit ---
 
+    // Clasificación: determinística — verifica auto_fit_padds_range
     #[test]
     fn auto_fit_padds_range() {
         let mut scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
@@ -267,6 +264,7 @@ mod tests {
         assert!((scale.value_max - 205.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica auto_fit_disabled_noop
     #[test]
     fn auto_fit_disabled_noop() {
         let mut scale = PriceScale::new(
@@ -281,6 +279,7 @@ mod tests {
         assert!((scale.value_max - 100.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica auto_fit_zero_range
     #[test]
     fn auto_fit_zero_range() {
         let mut scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
@@ -289,6 +288,7 @@ mod tests {
         assert!((scale.value_max - 51.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica auto_fit_locked_noop
     #[test]
     fn auto_fit_locked_noop() {
         let mut scale = PriceScale::new(
@@ -305,6 +305,7 @@ mod tests {
         assert!((scale.value_max - 90.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica auto_fit_with_margins
     #[test]
     fn auto_fit_with_margins() {
         let mut scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
@@ -316,8 +317,8 @@ mod tests {
         assert!((scale.value_max - 215.0).abs() < f64::EPSILON);
     }
 
-    // --- set_mode / is_editable ---
 
+    // Clasificación: determinística — verifica set_mode_changes_mode
     #[test]
     fn set_mode_changes_mode() {
         let mut scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
@@ -326,12 +327,14 @@ mod tests {
         assert_eq!(scale.options.mode, PriceScaleMode::Logarithmic);
     }
 
+    // Clasificación: determinística — verifica is_editable_normal
     #[test]
     fn is_editable_normal() {
         let scale = PriceScale::new(PriceScaleId::Right, PriceScaleOptions::default());
         assert!(scale.is_editable());
     }
 
+    // Clasificación: determinística — verifica is_editable_locked
     #[test]
     fn is_editable_locked() {
         let scale = PriceScale::new(
@@ -344,8 +347,8 @@ mod tests {
         assert!(!scale.is_editable());
     }
 
-    // --- PriceScaleMode variants ---
 
+    // Clasificación: determinística — verifica all_modes_exist
     #[test]
     fn all_modes_exist() {
         let _ = PriceScaleMode::Auto;
@@ -358,13 +361,14 @@ mod tests {
         let _ = PriceScaleMode::Inverted;
     }
 
+    // Clasificación: determinística — verifica que el modo por defecto es Normal
     #[test]
     fn default_mode_is_normal() {
         assert_eq!(PriceScaleMode::default(), PriceScaleMode::Normal);
     }
 
-    // --- contains ---
 
+    // Clasificación: determinística — verifica contains_inside_range
     #[test]
     fn contains_inside_range() {
         let scale = PriceScale {
@@ -382,8 +386,8 @@ mod tests {
         assert!(!scale.contains(20.1));
     }
 
-    // --- DefaultPriceFormatter ---
 
+    // Clasificación: determinística — verifica default_format_auto_detects_precision
     #[test]
     fn default_format_auto_detects_precision() {
         let fmt = DefaultPriceFormatter::default();
@@ -395,18 +399,21 @@ mod tests {
         assert_eq!(fmt.format(0.5), "0.5000");
     }
 
+    // Clasificación: determinística — verifica explicit_format
     #[test]
     fn explicit_format() {
         let fmt = DefaultPriceFormatter::new(Some(4));
         assert_eq!(fmt.format(105.2), "105.2000");
     }
 
+    // Clasificación: determinística — verifica format_nan
     #[test]
     fn format_nan() {
         let fmt = DefaultPriceFormatter::default();
         assert_eq!(fmt.format(f64::NAN), "NaN");
     }
 
+    // Clasificación: determinística — verifica format_infinity
     #[test]
     fn format_infinity() {
         let fmt = DefaultPriceFormatter::default();
@@ -414,6 +421,7 @@ mod tests {
         assert_eq!(fmt.format(f64::NEG_INFINITY), "-∞");
     }
 
+    // Clasificación: determinística — verifica format_short_uses_k_suffix
     #[test]
     fn format_short_uses_k_suffix() {
         let fmt = DefaultPriceFormatter::default();
@@ -421,6 +429,7 @@ mod tests {
         assert_eq!(fmt.format_short(12_345.0), "12.3K");
     }
 
+    // Clasificación: determinística — verifica format_short_small_prices
     #[test]
     fn format_short_small_prices() {
         let fmt = DefaultPriceFormatter::default();

@@ -36,7 +36,7 @@ impl<T, const N: usize> TimeSeries<T, N> {
             // Safety: head always points to an initialized slot when len == N.
             // ptr::read moves the value out without dropping; the slot is then
             // overwritten by write(), so no double-drop occurs.
-            overwritten = Some(unsafe { (slot.as_ptr() as *const T).read() });
+            overwritten = Some(unsafe { slot.as_ptr().read() });
             slot.write(value);
         } else {
             overwritten = None;
@@ -147,6 +147,7 @@ impl<T, const N: usize> Default for TimeSeries<T, N> {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica empty_series
     #[test]
     fn empty_series() {
         let s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -155,6 +156,7 @@ mod tests {
         assert_eq!(s.capacity(), 10);
     }
 
+    // Clasificación: determinística — verifica push_single
     #[test]
     fn push_single() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -163,6 +165,7 @@ mod tests {
         assert_eq!(s.latest(), Some(&42));
     }
 
+    // Clasificación: determinística — verifica push_maintains_order
     #[test]
     fn push_maintains_order() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -173,6 +176,7 @@ mod tests {
         assert_eq!(items, vec![&1, &2, &3]);
     }
 
+    // Clasificación: determinística — verifica overflow_overwrites_oldest
     #[test]
     fn overflow_overwrites_oldest() {
         let mut s: TimeSeries<i32, 3> = TimeSeries::new();
@@ -185,6 +189,7 @@ mod tests {
         assert_eq!(items, vec![&2, &3, &4]);
     }
 
+    // Clasificación: determinística — verifica get_returns_none_for_out_of_bounds
     #[test]
     fn get_returns_none_for_out_of_bounds() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -193,6 +198,7 @@ mod tests {
         assert!(s.get(100).is_none());
     }
 
+    // Clasificación: determinística — verifica get_returns_correct_values
     #[test]
     fn get_returns_correct_values() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -204,12 +210,14 @@ mod tests {
         assert_eq!(s.get(2), Some(&30));
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn latest_on_empty() {
         let s: TimeSeries<i32, 10> = TimeSeries::new();
         assert!(s.latest().is_none());
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn drain_latest_basic() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -222,6 +230,7 @@ mod tests {
         assert_eq!(s.latest(), Some(&1));
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn drain_latest_more_than_available() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -232,6 +241,7 @@ mod tests {
         assert!(s.is_empty());
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn drain_latest_on_empty() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -239,6 +249,7 @@ mod tests {
         assert!(drained.is_empty());
     }
 
+    // Clasificación: determinística — verifica many_pushes_after_overflow
     #[test]
     fn many_pushes_after_overflow() {
         let mut s: TimeSeries<i32, 3> = TimeSeries::new();
@@ -250,18 +261,21 @@ mod tests {
         assert_eq!(items, vec![&97, &98, &99]);
     }
 
+    // Clasificación: determinística — verifica iter_on_empty
     #[test]
     fn iter_on_empty() {
         let s: TimeSeries<i32, 10> = TimeSeries::new();
         assert_eq!(s.iter().count(), 0);
     }
 
+    // Clasificación: determinística — verifica default_is_empty
     #[test]
     fn default_is_empty() {
         let s: TimeSeries<i32, 5> = TimeSeries::default();
         assert!(s.is_empty());
     }
 
+    // Clasificación: determinística — verifica push_returns_overwritten_after_exact_capacity
     #[test]
     fn push_returns_overwritten_after_exact_capacity() {
         let mut s: TimeSeries<i32, 2> = TimeSeries::new();
@@ -272,6 +286,7 @@ mod tests {
         assert_eq!(evicted, Some(10));
     }
 
+    // Clasificación: determinística — verifica drop_correctness
     #[test]
     fn drop_correctness() {
         // Verify no double-free or leak by running under valgrind via cargo test
@@ -282,6 +297,7 @@ mod tests {
         drop(s);
     }
 
+    // Clasificación: determinística — verifica drain_returns_newest_first
     #[test]
     fn drain_returns_newest_first() {
         let mut s: TimeSeries<i32, 10> = TimeSeries::new();
@@ -292,6 +308,7 @@ mod tests {
         assert_eq!(drained, vec![4, 3, 2]);
     }
 
+    // Clasificación: determinística — verifica overflow_after_wraparound
     #[test]
     fn overflow_after_wraparound() {
         let mut s: TimeSeries<i32, 3> = TimeSeries::new();
@@ -305,6 +322,7 @@ mod tests {
         assert_eq!(items, vec![&4, &5, &6]);
     }
 
+    // Clasificación: determinística — verifica get_after_wraparound
     #[test]
     fn get_after_wraparound() {
         let mut s: TimeSeries<i32, 3> = TimeSeries::new();

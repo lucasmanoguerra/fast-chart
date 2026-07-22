@@ -27,15 +27,17 @@ pub struct LayoutManager {
     /// Visual thickness of dividers in pixels.
     divider_height: f32,
     /// Hit zone in pixels for divider interaction.
+    #[allow(dead_code)]
     divider_hit_zone_px: f32,
 }
 
 impl LayoutManager {
     /// Create the default layout: main pane (70%) + indicator pane (30%).
     pub fn new() -> Self {
-        let mut panes = Vec::new();
-        panes.push(Pane::new(0, 0.7)); // Main chart pane: 70%
-        panes.push(Pane::new(1, 0.3)); // Indicator pane: 30%
+        let panes = vec![
+            Pane::new(0, 0.7), // Main chart pane: 70%
+            Pane::new(1, 0.3), // Indicator pane: 30%
+        ];
 
         Self {
             engine: Box::new(VerticalStack::with_heights(vec![0.7, 0.3])),
@@ -258,6 +260,7 @@ impl Default for LayoutManager {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica default_layout
     #[test]
     fn default_layout() {
         let layout = LayoutManager::new();
@@ -267,6 +270,7 @@ mod tests {
         assert!((layout.dividers[0].position - 0.7).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn default_pane_heights() {
         let layout = LayoutManager::new();
@@ -274,6 +278,7 @@ mod tests {
         assert!((layout.panes[1].height - 0.3).abs() < 0.001);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn divider_hit_test() {
         let layout = LayoutManager::new();
@@ -284,6 +289,7 @@ mod tests {
         assert!(layout.hit_test_divider(600.0, 700.0).is_none());
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn hit_test_returns_correct_index() {
         let mut layout = LayoutManager::new();
@@ -292,6 +298,7 @@ mod tests {
         assert_eq!(idx, Some(0));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn add_pane_rebalances() {
         let mut layout = LayoutManager::new();
@@ -301,6 +308,7 @@ mod tests {
         assert_eq!(layout.dividers.len(), 2);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn remove_pane_rebalances() {
         let mut layout = LayoutManager::new();
@@ -310,6 +318,7 @@ mod tests {
         assert!(layout.dividers.is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn remove_pane_reindexes() {
         let mut layout = LayoutManager::new();
@@ -319,6 +328,7 @@ mod tests {
         assert_eq!(layout.panes[1].id, 1);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn cannot_remove_last_pane() {
         let mut layout = LayoutManager::new();
@@ -326,6 +336,7 @@ mod tests {
         assert_eq!(layout.panes.len(), 1); // still 1
     }
 
+    // Clasificación: determinística — verifica min_height_enforced
     #[test]
     fn min_height_enforced() {
         let mut layout = LayoutManager::new();
@@ -335,6 +346,7 @@ mod tests {
         assert!(layout.panes[0].height >= layout.min_pane_height() - 0.001);
     }
 
+    // Clasificación: determinística — verifica min_height_enforced_drag_down
     #[test]
     fn min_height_enforced_drag_down() {
         let mut layout = LayoutManager::new();
@@ -344,6 +356,7 @@ mod tests {
         assert!(layout.panes[1].height >= layout.min_pane_height() - 0.001);
     }
 
+    // Clasificación: determinística — verifica drag_adjusts_heights
     #[test]
     fn drag_adjusts_heights() {
         let mut layout = LayoutManager::new();
@@ -356,6 +369,7 @@ mod tests {
         assert!((layout.total_height() - 1.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_y_offset() {
         let layout = LayoutManager::new();
@@ -363,6 +377,7 @@ mod tests {
         assert!((layout.pane_y_offset(1) - 0.7).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_pixel_dimensions() {
         let layout = LayoutManager::new();
@@ -372,6 +387,7 @@ mod tests {
         assert!((layout.pane_pixel_height(1, 700.0) - 210.0).abs() < 0.001);
     }
 
+    // Clasificación: determinística — verifica sincronización entre crosshairs del mismo grupo
     #[test]
     fn sync_time_range() {
         let mut layout = LayoutManager::new();
@@ -382,6 +398,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica sincronización entre crosshairs del mismo grupo
     #[test]
     fn sync_zoom() {
         let mut layout = LayoutManager::new();
@@ -391,6 +408,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica rebuild_dividers_after_add
     #[test]
     fn rebuild_dividers_after_add() {
         let mut layout = LayoutManager::new();
@@ -404,6 +422,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn three_pane_layout() {
         let mut layout = LayoutManager::new();
@@ -413,6 +432,7 @@ mod tests {
         assert_eq!(layout.dividers.len(), 2);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn divider_hit_test_delegates_to_pane_divider() {
         let layout = LayoutManager::new();
@@ -422,6 +442,7 @@ mod tests {
         assert!(!divider.hit_test(100.0, 700.0));
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn divider_position_updates_on_drag() {
         let mut layout = LayoutManager::new();
@@ -433,8 +454,7 @@ mod tests {
         layout.end_drag();
     }
 
-    // -- Engine integration tests -------------------------------------------
-
+    // Clasificación: determinística — verifica compute_rects_uses_engine
     #[test]
     fn compute_rects_uses_engine() {
         let layout = LayoutManager::new();
@@ -449,6 +469,7 @@ mod tests {
         assert!((rects[1].y - 494.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica set_engine_swaps_layout_strategy
     #[test]
     fn set_engine_swaps_layout_strategy() {
         let mut layout = LayoutManager::new();
@@ -466,6 +487,7 @@ mod tests {
         assert!((rects_after[1].height - 300.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica vertical_stack_compute_rects_matches_inline
     #[test]
     fn vertical_stack_compute_rects_matches_inline() {
         let layout = LayoutManager::new();
@@ -482,6 +504,7 @@ mod tests {
         assert!((engine_rects[1].height as f64 - layout.pane_pixel_height(1, canvas_height)).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica engine_accessor_returns_immutable_reference
     #[test]
     fn engine_accessor_returns_immutable_reference() {
         let layout = LayoutManager::new();
@@ -491,6 +514,7 @@ mod tests {
         assert_eq!(hint, 0);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn compute_rects_with_three_panes() {
         let mut layout = LayoutManager::new();

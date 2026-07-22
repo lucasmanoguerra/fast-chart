@@ -579,8 +579,8 @@ impl GpuRenderer {
             .time_series
             .iter()
             .filter(|b| {
-                b.timestamp >= viewport.time_start as u64
-                    && b.timestamp <= viewport.time_end as u64
+                b.timestamp >= viewport.time_start
+                    && b.timestamp <= viewport.time_end
             })
             .copied()
             .collect();
@@ -654,8 +654,8 @@ impl GpuRenderer {
             .time_series
             .iter()
             .filter(|b| {
-                b.timestamp >= viewport.time_start as u64
-                    && b.timestamp <= viewport.time_end as u64
+                b.timestamp >= viewport.time_start
+                    && b.timestamp <= viewport.time_end
             })
             .copied()
             .collect();
@@ -729,8 +729,8 @@ impl GpuRenderer {
             .time_series
             .iter()
             .filter(|b| {
-                b.timestamp >= viewport.time_start as u64
-                    && b.timestamp <= viewport.time_end as u64
+                b.timestamp >= viewport.time_start
+                    && b.timestamp <= viewport.time_end
             })
             .copied()
             .collect();

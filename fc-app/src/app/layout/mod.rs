@@ -246,8 +246,8 @@ mod tests {
         Rect::new(0.0, 0.0, 800.0, 600.0)
     }
 
-    // ---- VerticalStack ----
 
+    // Clasificación: determinística — verifica vertical_stack_equal
     #[test]
     fn vertical_stack_equal() {
         let layout = VerticalStack::new();
@@ -264,6 +264,7 @@ mod tests {
         assert!((rects[2].y - 400.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica vertical_stack_proportional
     #[test]
     fn vertical_stack_proportional() {
         let layout = VerticalStack::with_heights(vec![0.7, 0.3]);
@@ -273,6 +274,7 @@ mod tests {
         assert!((rects[1].height - 180.0).abs() < 1.0); // 0.3 * 600
     }
 
+    // Clasificación: determinística — verifica vertical_stack_with_gap
     #[test]
     fn vertical_stack_with_gap() {
         let layout = VerticalStack::new().with_gap(10.0);
@@ -285,6 +287,7 @@ mod tests {
         assert!((rects[1].y - (rects[0].y + rects[0].height + 10.0)).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica vertical_stack_empty
     #[test]
     fn vertical_stack_empty() {
         let layout = VerticalStack::new();
@@ -292,8 +295,8 @@ mod tests {
         assert!(rects.is_empty());
     }
 
-    // ---- HorizontalSplit ----
 
+    // Clasificación: determinística — verifica horizontal_split_equal
     #[test]
     fn horizontal_split_equal() {
         let layout = HorizontalSplit::new();
@@ -307,6 +310,7 @@ mod tests {
         assert!((rects[1].x - 400.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica horizontal_split_proportional
     #[test]
     fn horizontal_split_proportional() {
         let layout = HorizontalSplit::with_widths(vec![0.6, 0.4]);
@@ -315,6 +319,7 @@ mod tests {
         assert!((rects[1].width - 320.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica horizontal_split_with_gap
     #[test]
     fn horizontal_split_with_gap() {
         let layout = HorizontalSplit::new().with_gap(20.0);
@@ -324,6 +329,7 @@ mod tests {
         assert!((rects[1].width - 390.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica horizontal_split_empty
     #[test]
     fn horizontal_split_empty() {
         let layout = HorizontalSplit::new();
@@ -331,8 +337,8 @@ mod tests {
         assert!(rects.is_empty());
     }
 
-    // ---- GridLayout ----
 
+    // Clasificación: determinística — verifica grid_2x2
     #[test]
     fn grid_2x2() {
         let layout = GridLayout::new(2, 2);
@@ -354,6 +360,7 @@ mod tests {
         assert!((rects[3].y - 300.0).abs() < 1.0);
     }
 
+    // Clasificación: determinística — verifica grid_2x2_with_gaps
     #[test]
     fn grid_2x2_with_gaps() {
         let layout = GridLayout::new(2, 2).with_gaps(10.0, 10.0);
@@ -365,6 +372,7 @@ mod tests {
         assert!((rects[1].x - 405.0).abs() < 1.0); // 0 + 395 + 10
     }
 
+    // Clasificación: determinística — verifica grid_3x1
     #[test]
     fn grid_3x1() {
         let layout = GridLayout::new(3, 1);
@@ -377,6 +385,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn grid_fewer_panes_than_cells() {
         let layout = GridLayout::new(2, 2);
@@ -384,6 +393,7 @@ mod tests {
         assert_eq!(rects.len(), 2);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn grid_more_panes_than_cells() {
         let layout = GridLayout::new(2, 2);
@@ -391,6 +401,7 @@ mod tests {
         assert_eq!(rects.len(), 4); // clamped to 2x2
     }
 
+    // Clasificación: determinística — verifica grid_zero
     #[test]
     fn grid_zero() {
         let layout = GridLayout::new(2, 2);
@@ -398,14 +409,15 @@ mod tests {
         assert!(rects.is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn grid_pane_count_hint() {
         let layout = GridLayout::new(3, 4);
         assert_eq!(layout.pane_count_hint(), 12);
     }
 
-    // ---- VerticalStack default ----
 
+    // Clasificación: determinística — verifica vertical_stack_default
     #[test]
     fn vertical_stack_default() {
         let layout = VerticalStack::default();

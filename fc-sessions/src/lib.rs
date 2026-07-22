@@ -260,6 +260,7 @@ impl SessionLineRenderer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica inicialización de sesión
     #[test]
     fn session_new() {
         let s = Session::new("Test", 10, 30, 16, 45);
@@ -274,54 +275,63 @@ mod tests {
         assert!(s.color.is_none());
     }
 
+    // Clasificación: determinística — verifica cálculo de duración de sesión
     #[test]
     fn session_duration_regular() {
         let s = ExchangeSessions::us_regular();
         assert_eq!(s.duration_minutes(), 390);
     }
 
+    // Clasificación: determinística — verifica cálculo de duración de sesión
     #[test]
     fn session_duration_overnight() {
         let s = ExchangeSessions::tokyo();
         assert_eq!(s.duration_minutes(), 360);
     }
 
+    // Clasificación: determinística — verifica cálculo de duración de sesión
     #[test]
     fn session_duration_afterhours() {
         let s = ExchangeSessions::us_afterhours();
         assert_eq!(s.duration_minutes(), 240);
     }
 
+    // Clasificación: determinística — verifica pertenencia de tiempo a sesión
     #[test]
     fn session_contains_utc_inside() {
         let s = ExchangeSessions::us_regular();
         assert!(s.contains_utc(15, 0));
     }
 
+    // Clasificación: determinística — verifica pertenencia de tiempo a sesión
     #[test]
     fn session_contains_utc_outside() {
         let s = ExchangeSessions::us_regular();
         assert!(!s.contains_utc(12, 0));
     }
 
+    // Clasificación: determinística — verifica pertenencia de tiempo a sesión
     #[test]
     fn session_contains_utc_overnight() {
         let s = ExchangeSessions::us_afterhours();
         assert!(s.contains_utc(23, 0));
     }
 
+    // Clasificación: determinística — verifica pertenencia de tiempo a sesión
     #[test]
     fn session_contains_utc_boundary_open() {
         let s = ExchangeSessions::us_regular();
         assert!(s.contains_utc(14, 30));
     }
 
+    // Clasificación: determinística — verifica pertenencia de tiempo a sesión
     #[test]
     fn session_contains_utc_boundary_close() {
         let s = ExchangeSessions::us_regular();
         assert!(!s.contains_utc(21, 0));
     }
 
+    // Clasificación: determinística — verifica us_regular_times
     #[test]
     fn us_regular_times() {
         let s = ExchangeSessions::us_regular();
@@ -331,6 +341,7 @@ mod tests {
         assert_eq!(s.close_minute, 0);
     }
 
+    // Clasificación: determinística — verifica cálculo de indicador financiero
     #[test]
     fn us_premarket_times() {
         let s = ExchangeSessions::us_premarket();
@@ -340,6 +351,7 @@ mod tests {
         assert_eq!(s.close_minute, 30);
     }
 
+    // Clasificación: determinística — verifica london_times
     #[test]
     fn london_times() {
         let s = ExchangeSessions::london();
@@ -349,6 +361,7 @@ mod tests {
         assert_eq!(s.close_minute, 30);
     }
 
+    // Clasificación: determinística — verifica tokyo_times
     #[test]
     fn tokyo_times() {
         let s = ExchangeSessions::tokyo();
@@ -358,6 +371,7 @@ mod tests {
         assert_eq!(s.close_minute, 0);
     }
 
+    // Clasificación: determinística — verifica renderizado de líneas de sesión
     #[test]
     fn session_line_renderer_produces_lines() {
         let config = SessionLineConfig {
@@ -371,6 +385,7 @@ mod tests {
         assert_eq!(lines[1].x, 21.0 * 10.0);
     }
 
+    // Clasificación: determinística — verifica renderizado de líneas de sesión
     #[test]
     fn session_line_renderer_skips_inactive() {
         let mut session = ExchangeSessions::us_regular();
@@ -384,6 +399,7 @@ mod tests {
         assert!(lines.is_empty());
     }
 
+    // Clasificación: determinística — verifica renderizado de líneas de sesión
     #[test]
     fn session_line_renderer_uses_custom_color() {
         let mut session = ExchangeSessions::us_regular();
@@ -399,6 +415,7 @@ mod tests {
         assert_eq!(lines[1].color, Rgba::new(1.0, 0.0, 0.0, 1.0));
     }
 
+    // Clasificación: determinística — verifica renderizado de líneas de sesión
     #[test]
     fn session_line_renderer_default_color() {
         let config = SessionLineConfig::default();
@@ -408,6 +425,7 @@ mod tests {
         assert_eq!(lines[0].color, Rgba::new(0.5, 0.5, 0.5, 0.3));
     }
 
+    // Clasificación: determinística — verifica renderizado de líneas de sesión
     #[test]
     fn session_line_renderer_clips_to_visible() {
         let config = SessionLineConfig {
@@ -419,6 +437,7 @@ mod tests {
         assert!(lines.is_empty());
     }
 
+    // Clasificación: determinística — verifica renderizado de líneas de sesión
     #[test]
     fn session_line_renderer_multiple_sessions() {
         let config = SessionLineConfig {
@@ -433,6 +452,7 @@ mod tests {
         assert_eq!(lines.len(), 4);
     }
 
+    // Clasificación: determinística — verifica session_line_preserves_dimensions
     #[test]
     fn session_line_preserves_dimensions() {
         let mut session = ExchangeSessions::us_regular();

@@ -47,12 +47,14 @@ impl Default for FrameCounter {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica frame_counter_new
     #[test]
     fn frame_counter_new() {
         let fc = FrameCounter::new();
         assert_eq!(fc.fps(), 0.0);
     }
 
+    // Clasificación: determinística — verifica frame_counter_tick_returns_none_within_second
     #[test]
     fn frame_counter_tick_returns_none_within_second() {
         let mut fc = FrameCounter::new();

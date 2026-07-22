@@ -191,56 +191,62 @@ pub fn snap_line(start: f64, end: f64) -> (f64, f64) {
 mod tests {
     use super::*;
 
-    // --- f32 ---------------------------------------------------------------
 
+    // Clasificación: determinística — verifica f32_snap_midpoint
     #[test]
     fn f32_snap_midpoint() {
         assert_eq!(3.2_f32.snap(), 3.5);
     }
 
+    // Clasificación: determinística — verifica f32_snap_whole
     #[test]
     fn f32_snap_whole() {
         assert_eq!(4.0_f32.snap(), 4.5);
     }
 
+    // Clasificación: determinística — verifica f32_snap_negative
     #[test]
     fn f32_snap_negative() {
         // negative values clamp to 0.0
         assert_eq!((-1.0_f32).snap(), 0.0);
     }
 
+    // Clasificación: determinística — verifica f32_snap_size_rounds
     #[test]
     fn f32_snap_size_rounds() {
         assert_eq!(3.7_f32.snap_size(), 4.0);
         assert_eq!(3.2_f32.snap_size(), 3.0);
     }
 
+    // Clasificación: determinística — verifica f32_floor_ceil
     #[test]
     fn f32_floor_ceil() {
         assert_eq!(3.7_f32.floor_pixel(), 3.0);
         assert_eq!(3.2_f32.ceil_pixel(), 4.0);
     }
 
-    // --- f64 ---------------------------------------------------------------
 
+    // Clasificación: determinística — verifica f64_snap_midpoint
     #[test]
     fn f64_snap_midpoint() {
         assert_eq!(3.2_f64.snap(), 3.5);
     }
 
+    // Clasificación: determinística — verifica f64_snap_whole
     #[test]
     fn f64_snap_whole() {
         assert_eq!(4.0_f64.snap(), 4.5);
     }
 
+    // Clasificación: determinística — verifica f64_snap_size_rounds
     #[test]
     fn f64_snap_size_rounds() {
         assert_eq!(3.7_f64.snap_size(), 4.0);
         assert_eq!(3.2_f64.snap_size(), 3.0);
     }
 
-    // --- helpers -----------------------------------------------------------
 
+    // Clasificación: determinística — verifica alineación pixel-perfect
     #[test]
     fn pixel_perfect_rect_outward_snapping() {
         let (x, y, w, h) = pixel_perfect_rect(3.2, 5.7, 10.3, 20.9);
@@ -252,6 +258,7 @@ mod tests {
         assert_eq!(h, 22.0);
     }
 
+    // Clasificación: determinística — verifica snap_line_normal
     #[test]
     fn snap_line_normal() {
         let (a, b) = snap_line(10.2, 50.7);
@@ -259,6 +266,7 @@ mod tests {
         assert_eq!(b, 50.5); // 50.7.snap() → floor(50.7) + 0.5 = 50.5
     }
 
+    // Clasificación: determinística — verifica snap_line_prevents_collapse
     #[test]
     fn snap_line_prevents_collapse() {
         // Without the guard these would both snap to 10.5 → zero width.
@@ -267,6 +275,7 @@ mod tests {
         assert_eq!(b, 11.5);
     }
 
+    // Clasificación: determinística — verifica snap_line_exact_one_pixel
     #[test]
     fn snap_line_exact_one_pixel() {
         let (a, b) = snap_line(10.2, 11.3);
@@ -274,6 +283,7 @@ mod tests {
         assert_eq!(b, 11.5);
     }
 
+    // Clasificación: determinística — verifica snap_point_centres_both_axes
     #[test]
     fn snap_point_centres_both_axes() {
         let p = snap_point(ScreenPoint { x: 3.2, y: 5.7 });

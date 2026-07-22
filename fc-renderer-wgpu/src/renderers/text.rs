@@ -82,6 +82,7 @@ impl SeriesRenderer for TextRenderer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = TextRenderer::new([1.0; 4], 14.0);
@@ -89,6 +90,7 @@ mod tests {
         assert_eq!(r.font_size, 14.0);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = TextRenderer::new([1.0; 4], 12.0);
@@ -101,6 +103,7 @@ mod tests {
         assert_eq!(cmds.len(), 2);
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = TextRenderer::new([1.0; 4], 12.0);
@@ -109,6 +112,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica text_has_correct_content
     #[test]
     fn text_has_correct_content() {
         let r = TextRenderer::new([1.0; 4], 14.0);

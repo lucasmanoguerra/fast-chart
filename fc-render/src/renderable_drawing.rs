@@ -146,8 +146,8 @@ impl RenderableDrawing for fc_domain::drawing::FibonacciRetracement {
         let right = ctx.time_range.1;
         for &level in &self.levels {
             let price = self.price_at_level(level);
-            let s1 = ctx.pipeline.world_to_screen(WorldPoint::new(left as f64, price));
-            let s2 = ctx.pipeline.world_to_screen(WorldPoint::new(right as f64, price));
+            let s1 = ctx.pipeline.world_to_screen(WorldPoint::new(left, price));
+            let s2 = ctx.pipeline.world_to_screen(WorldPoint::new(right, price));
             cmds.push(DrawCommand::DrawLine { x0: s1.x, y0: s1.y, x1: s2.x, y1: s2.y, color: self.color, width: self.width, style: self.style, z_index: 9 });
         }
         cmds
@@ -161,8 +161,8 @@ impl RenderableDrawing for fc_domain::drawing::FibonacciExtension {
         let right = ctx.time_range.1;
         for &level in &self.levels {
             let price = self.price_at_level(level);
-            let s1 = ctx.pipeline.world_to_screen(WorldPoint::new(left as f64, price));
-            let s2 = ctx.pipeline.world_to_screen(WorldPoint::new(right as f64, price));
+            let s1 = ctx.pipeline.world_to_screen(WorldPoint::new(left, price));
+            let s2 = ctx.pipeline.world_to_screen(WorldPoint::new(right, price));
             cmds.push(DrawCommand::DrawLine { x0: s1.x, y0: s1.y, x1: s2.x, y1: s2.y, color: self.color, width: self.width, style: self.style, z_index: 9 });
         }
         cmds

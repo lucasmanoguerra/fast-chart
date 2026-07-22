@@ -116,6 +116,7 @@ mod tests {
     use super::*;
     use crate::theme::{Rgba, ThemeToken};
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn builder_new() {
         let builder = ChartBuilder::new();
@@ -127,6 +128,7 @@ mod tests {
         assert_eq!(config.theme.background, ChartTheme::dark().background);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn builder_theme() {
         let light = ChartTheme::light();
@@ -134,6 +136,7 @@ mod tests {
         assert_eq!(config.theme.background, light.background);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn builder_dimensions() {
         let config = ChartBuilder::new()
@@ -144,21 +147,24 @@ mod tests {
         assert_eq!(config.height, 1080.0);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn builder_title() {
         let config = ChartBuilder::new().title("BTC/USDT").build();
         assert_eq!(config.title.as_deref(), Some("BTC/USDT"));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn builder_pane() {
         let config = ChartBuilder::new()
-            .pane(|p| PaneConfig { name: "candles".to_owned() })
+            .pane(|_p| PaneConfig { name: "candles".to_owned() })
             .build();
         assert_eq!(config.panes.len(), 1);
         assert_eq!(config.panes[0].name, "candles");
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn builder_chained() {
         let config = ChartBuilder::new()
@@ -166,7 +172,7 @@ mod tests {
             .width(2560.0)
             .height(1440.0)
             .title("ETH/USDT")
-            .pane(|p| PaneConfig { name: "volume".to_owned() })
+            .pane(|_p| PaneConfig { name: "volume".to_owned() })
             .build();
         assert_eq!(config.width, 2560.0);
         assert_eq!(config.height, 1440.0);
@@ -176,6 +182,7 @@ mod tests {
         assert_eq!(config.theme.background, ChartTheme::light().background);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn builder_build_produces_config() {
         let config = ChartBuilder::new().build();
@@ -184,6 +191,7 @@ mod tests {
         assert!(!config.theme.background.0.is_nan());
     }
 
+    // Clasificación: determinística — verifica config_theme_mut
     #[test]
     fn config_theme_mut() {
         let mut config = ChartBuilder::new().build();

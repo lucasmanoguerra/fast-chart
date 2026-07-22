@@ -118,12 +118,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica ichimoku_name
     #[test]
     fn ichimoku_name() {
         let ich = Ichimoku::default();
         assert_eq!(ich.name(), "ICHIMOKU");
     }
 
+    // Clasificación: determinística — verifica ichimoku_insufficient_data
     #[test]
     fn ichimoku_insufficient_data() {
         let bars = make_bars(5);
@@ -132,6 +134,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn ichimoku_tenkan_length() {
         let bars = make_bars(100);
@@ -140,6 +143,7 @@ mod tests {
         assert_eq!(full.tenkan_sen.len(), 100 - ich.tenkan + 1);
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn ichimoku_kijun_length() {
         let bars = make_bars(100);
@@ -148,6 +152,7 @@ mod tests {
         assert_eq!(full.kijun_sen.len(), 100 - ich.kijun + 1);
     }
 
+    // Clasificación: determinística — verifica ichimoku_tenkan_midpoint
     #[test]
     fn ichimoku_tenkan_midpoint() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -170,6 +175,7 @@ mod tests {
         assert_eq!(*full.tenkan_sen.get(0).unwrap(), 100.0);
     }
 
+    // Clasificación: determinística — verifica ichimoku_default_params
     #[test]
     fn ichimoku_default_params() {
         let ich = Ichimoku::default();

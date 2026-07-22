@@ -71,12 +71,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica atr_name
     #[test]
     fn atr_name() {
         let atr = Atr { period: 14 };
         assert_eq!(atr.name(), "ATR");
     }
 
+    // Clasificación: determinística — verifica atr_insufficient_data
     #[test]
     fn atr_insufficient_data() {
         let bars = make_bars(10);
@@ -85,6 +87,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica atr_basic
     #[test]
     fn atr_basic() {
         let bars = make_bars(50);
@@ -94,6 +97,7 @@ mod tests {
         assert!(result.iter().all(|v| *v >= 0.0));
     }
 
+    // Clasificación: determinística — verifica atr_exact_period
     #[test]
     fn atr_exact_period() {
         let bars = make_bars(15);
@@ -102,6 +106,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica atr_constant_range
     #[test]
     fn atr_constant_range() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -120,6 +125,7 @@ mod tests {
         assert!(result.iter().all(|v| (*v - 10.0).abs() < 1e-10));
     }
 
+    // Clasificación: determinística — verifica atr_always_non_negative
     #[test]
     fn atr_always_non_negative() {
         let bars = make_bars(100);

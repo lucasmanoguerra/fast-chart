@@ -76,6 +76,7 @@ impl Default for Rgba {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica rgba_new
     #[test]
     fn rgba_new() {
         let c = Rgba::new(0.1, 0.2, 0.3, 0.4);
@@ -85,12 +86,14 @@ mod tests {
         assert_eq!(c.3, 0.4);
     }
 
+    // Clasificación: determinística — verifica rgba_rgb
     #[test]
     fn rgba_rgb() {
         let c = Rgba::rgb(1.0, 0.5, 0.0);
         assert_eq!(c, Rgba(1.0, 0.5, 0.0, 1.0));
     }
 
+    // Clasificación: determinística — verifica rgba_from_hex
     #[test]
     fn rgba_from_hex() {
         let c = Rgba::from_hex(0xFF0000FF);
@@ -100,12 +103,14 @@ mod tests {
         assert!((c.3 - 1.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica rgba_default
     #[test]
     fn rgba_default() {
         let c = Rgba::default();
         assert_eq!(c, Rgba(0.0, 0.0, 0.0, 1.0));
     }
 
+    // Clasificación: determinística — verifica rgba_to_f32_array
     #[test]
     fn rgba_to_f32_array() {
         let c = Rgba(0.5, 0.25, 0.125, 0.75);
@@ -113,6 +118,7 @@ mod tests {
         assert_eq!(arr, [0.5f32, 0.25, 0.125, 0.75]);
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn rgba_blend() {
         let a = Rgba(0.0, 0.0, 0.0, 1.0);
@@ -121,6 +127,7 @@ mod tests {
         assert!((blended.0 - 0.5).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica rgba_with_alpha
     #[test]
     fn rgba_with_alpha() {
         let c = Rgba(1.0, 0.0, 0.0, 1.0).with_alpha(0.5);

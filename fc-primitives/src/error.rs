@@ -17,12 +17,14 @@ pub enum ChartError {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica display_invalid_price_data
     #[test]
     fn display_invalid_price_data() {
         let err = ChartError::InvalidPriceData("high < low".into());
         assert_eq!(err.to_string(), "Invalid price data: high < low");
     }
 
+    // Clasificación: determinística — verifica display_insufficient_data
     #[test]
     fn display_insufficient_data() {
         let err = ChartError::InsufficientData {
@@ -35,6 +37,7 @@ mod tests {
         );
     }
 
+    // Clasificación: determinística — verifica display_out_of_range
     #[test]
     fn display_out_of_range() {
         let err = ChartError::OutOfRange {
@@ -45,12 +48,14 @@ mod tests {
         assert_eq!(err.to_string(), "Value 150 out of range [0, 100]");
     }
 
+    // Clasificación: determinística — verifica implements_std_error
     #[test]
     fn implements_std_error() {
         let err = ChartError::InvalidPriceData("test".into());
         let _: &dyn std::error::Error = &err;
     }
 
+    // Clasificación: determinística — verifica debug_format
     #[test]
     fn debug_format() {
         let err = ChartError::OutOfRange {

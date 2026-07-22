@@ -115,6 +115,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica mock_backend_executes_commands
     #[test]
     fn mock_backend_executes_commands() {
         let mut backend = MockBackend::new(800, 600);
@@ -126,6 +127,7 @@ mod tests {
         assert_eq!(backend.executed_commands[0].len(), 1);
     }
 
+    // Clasificación: determinística — verifica mock_backend_resize
     #[test]
     fn mock_backend_resize() {
         let mut backend = MockBackend::new(800, 600);
@@ -134,6 +136,7 @@ mod tests {
         assert_eq!(backend.height(), 1080);
     }
 
+    // Clasificación: determinística — verifica mock_backend_clip
     #[test]
     fn mock_backend_clip() {
         let mut backend = MockBackend::new(800, 600);
@@ -147,12 +150,14 @@ mod tests {
         assert!(backend.clip.is_none());
     }
 
+    // Clasificación: determinística — verifica mock_backend_default_scale_factor
     #[test]
     fn mock_backend_default_scale_factor() {
         let backend = MockBackend::new(800, 600);
         assert_eq!(backend.scale_factor(), 1.0);
     }
 
+    // Clasificación: determinística — verifica mock_backend_begin_end_frame
     #[test]
     fn mock_backend_begin_end_frame() {
         let mut backend = MockBackend::new(800, 600);
@@ -161,6 +166,7 @@ mod tests {
         backend.end_frame();
     }
 
+    // Clasificación: determinística — verifica backend_is_object_safe
     #[test]
     fn backend_is_object_safe() {
         // Verify RendererBackend can be used as a trait object

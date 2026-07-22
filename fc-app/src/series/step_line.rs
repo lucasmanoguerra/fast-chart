@@ -240,6 +240,7 @@ mod tests {
         ]
     }
 
+    // Clasificación: determinística — verifica step_point_new
     #[test]
     fn step_point_new() {
         let p = StepPoint::new(1000, 50.0);
@@ -247,6 +248,7 @@ mod tests {
         assert!((p.value - 50.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica step_line_new
     #[test]
     fn step_line_new() {
         let s = StepLineSeries::new();
@@ -256,6 +258,7 @@ mod tests {
         assert!((s.line_width - 1.5).abs() < f32::EPSILON);
     }
 
+    // Clasificación: determinística — verifica step_line_set_data
     #[test]
     fn step_line_set_data() {
         let mut s = StepLineSeries::new();
@@ -265,6 +268,7 @@ mod tests {
         assert_eq!(s.data(), &data);
     }
 
+    // Clasificación: determinística — verifica step_line_value_range
     #[test]
     fn step_line_value_range() {
         let mut s = StepLineSeries::new();
@@ -276,6 +280,7 @@ mod tests {
         assert!((max - 130.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica step_line_empty_data_no_commands
     #[test]
     fn step_line_empty_data_no_commands() {
         let mut s = StepLineSeries::new();
@@ -283,6 +288,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica step_line_single_point_no_commands
     #[test]
     fn step_line_single_point_no_commands() {
         let mut s = StepLineSeries::new();
@@ -291,6 +297,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica step_line_generates_correct_command_count
     #[test]
     fn step_line_generates_correct_command_count() {
         let mut s = StepLineSeries::new();
@@ -300,6 +307,7 @@ mod tests {
         assert_eq!(cmds.len(), 6);
     }
 
+    // Clasificación: determinística — verifica step_line_commands_are_lines
     #[test]
     fn step_line_commands_are_lines() {
         let mut s = StepLineSeries::new();
@@ -314,6 +322,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn step_line_bounds_set_after_update() {
         let mut s = StepLineSeries::new();
@@ -323,6 +332,7 @@ mod tests {
         assert_eq!(s.bounds(), bounds);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn step_line_hit_test_returns_nearest() {
         let mut s = StepLineSeries::new();
@@ -336,18 +346,21 @@ mod tests {
         assert_eq!(hit.unwrap().index, 0);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn step_line_hit_test_empty() {
         let s = StepLineSeries::new();
         assert!(s.hit_test(0.0, 0.0).is_none());
     }
 
+    // Clasificación: determinística — verifica step_line_default
     #[test]
     fn step_line_default() {
         let s = StepLineSeries::default();
         assert!(s.is_empty());
     }
 
+    // Clasificación: determinística — verifica step_line_clone
     #[test]
     fn step_line_clone() {
         let mut s = StepLineSeries::new();
@@ -356,6 +369,7 @@ mod tests {
         assert_eq!(s.len(), s2.len());
     }
 
+    // Clasificación: determinística — verifica step_line_two_points_one_horizontal_one_vertical
     #[test]
     fn step_line_two_points_one_horizontal_one_vertical() {
         let mut s = StepLineSeries::new();

@@ -344,7 +344,7 @@ impl ApplicationHandler for App {
                         .map(|r| r.canvas_width() as f64)
                         .unwrap_or(800.0);
                     let pipeline = Self::viewport_pipeline(vp, canvas_width);
-                    let timestamp = pipeline.x_to_timestamp(self.cursor_x as f32) as f64;
+                    let timestamp = pipeline.x_to_timestamp(self.cursor_x as f32);
                     // Pass timestamp as screen_x — viewport.zoom expects a timestamp center.
                     // The InteractionCommand parameter name is misleading but functionally correct.
                     ctrl.handle_input(InteractionCommand::ZoomAtCursor {
@@ -360,8 +360,8 @@ impl ApplicationHandler for App {
                     }
                 }
             }
-            WindowEvent::KeyboardInput { event, .. } => {
-                if event.state == ElementState::Pressed {
+            WindowEvent::KeyboardInput { event, .. }
+                if event.state == ElementState::Pressed => {
                     if let PhysicalKey::Code(key_code) = event.physical_key {
                         let key_str = match key_code {
                             KeyCode::Digit1 => "1",
@@ -380,7 +380,6 @@ impl ApplicationHandler for App {
                         }
                     }
                 }
-            }
             _ => {}
         }
     }

@@ -122,12 +122,10 @@ impl ZoomController {
         let cursor_x_ratio = cursor_x_ratio.clamp(0.0, 1.0);
         let cursor_y_ratio = cursor_y_ratio.clamp(0.0, 1.0);
 
-        viewport.time_start = viewport.time_start
-            + cursor_x_ratio * (viewport.width() - new_time_width);
+        viewport.time_start += cursor_x_ratio * (viewport.width() - new_time_width);
         viewport.time_end = viewport.time_start + new_time_width;
 
-        viewport.price_max = viewport.price_max
-            - cursor_y_ratio * (viewport.height() - new_price_height);
+        viewport.price_max -= cursor_y_ratio * (viewport.height() - new_price_height);
         viewport.price_min = viewport.price_max - new_price_height;
 
         self.clamp(viewport);
@@ -281,8 +279,8 @@ mod tests {
         ZoomController::new(100.0, 10_000.0)
     }
 
-    // --- Viewport ---
 
+    // Clasificación: determinística — verifica viewport_width_height
     #[test]
     fn viewport_width_height() {
         let vp = default_viewport();
@@ -292,8 +290,8 @@ mod tests {
         assert!((vp.center_price() - 150.0).abs() < EPS);
     }
 
-    // --- Wheel zoom ---
 
+    // Clasificación: determinística — verifica wheel_zoom_in
     #[test]
     fn wheel_zoom_in() {
         let ctrl = controller();
@@ -305,6 +303,7 @@ mod tests {
         assert!((vp.center_price() - 150.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica wheel_zoom_out
     #[test]
     fn wheel_zoom_out() {
         let ctrl = controller();
@@ -314,6 +313,7 @@ mod tests {
         assert!((vp.height() - 200.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica wheel_zoom_at_left_edge
     #[test]
     fn wheel_zoom_at_left_edge() {
         let ctrl = controller();
@@ -323,6 +323,7 @@ mod tests {
         assert!((vp.time_start - 0.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica wheel_zoom_at_right_edge
     #[test]
     fn wheel_zoom_at_right_edge() {
         let ctrl = controller();
@@ -332,8 +333,8 @@ mod tests {
         assert!((vp.time_end - 1000.0).abs() < EPS);
     }
 
-    // --- Pinch zoom ---
 
+    // Clasificación: determinística — verifica gesto pinch con dos dedos
     #[test]
     fn pinch_zoom_in() {
         let ctrl = controller();
@@ -343,6 +344,7 @@ mod tests {
         assert!((vp.height() - 50.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pinch con dos dedos
     #[test]
     fn pinch_zoom_out() {
         let ctrl = controller();
@@ -352,8 +354,8 @@ mod tests {
         assert!((vp.height() - 200.0).abs() < EPS);
     }
 
-    // --- Box zoom ---
 
+    // Clasificación: determinística — verifica box_zoom
     #[test]
     fn box_zoom() {
         let ctrl = controller();
@@ -364,8 +366,8 @@ mod tests {
         assert!((vp.height() - 50.0).abs() < EPS);
     }
 
-    // --- Axis zoom ---
 
+    // Clasificación: determinística — verifica axis_zoom_time
     #[test]
     fn axis_zoom_time() {
         let ctrl = controller();
@@ -375,6 +377,7 @@ mod tests {
         assert!((vp.height() - 100.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica axis_zoom_price
     #[test]
     fn axis_zoom_price() {
         let ctrl = controller();
@@ -384,8 +387,8 @@ mod tests {
         assert!((vp.width() - 1000.0).abs() < EPS);
     }
 
-    // --- Programmatic zoom ---
 
+    // Clasificación: determinística — verifica programmatic_zoom
     #[test]
     fn programmatic_zoom() {
         let ctrl = controller();
@@ -398,8 +401,8 @@ mod tests {
         assert!((vp.price_max - 180.0).abs() < EPS);
     }
 
-    // --- Clamping ---
 
+    // Clasificación: determinística — verifica zoom_clamp_min
     #[test]
     fn zoom_clamp_min() {
         let ctrl = ZoomController::new(200.0, 10_000.0);
@@ -408,6 +411,7 @@ mod tests {
         assert!(vp.width() >= 200.0 - EPS);
     }
 
+    // Clasificación: determinística — verifica zoom_clamp_max
     #[test]
     fn zoom_clamp_max() {
         let ctrl = ZoomController::new(100.0, 500.0);
@@ -416,8 +420,8 @@ mod tests {
         assert!(vp.width() <= 500.0 + EPS);
     }
 
-    // --- Animated zoom ---
 
+    // Clasificación: determinística — verifica animated_zoom_completes
     #[test]
     fn animated_zoom_completes() {
         let mut ctrl = controller();
@@ -436,8 +440,8 @@ mod tests {
         assert!((vp.price_max - 180.0).abs() < EPS);
     }
 
-    // --- Zoom level ---
 
+    // Clasificación: determinística — verifica zoom_level_calculation
     #[test]
     fn zoom_level_calculation() {
         let ctrl = controller();
@@ -446,8 +450,8 @@ mod tests {
         assert!((level - 2.0).abs() < EPS);
     }
 
-    // --- Edge cases ---
 
+    // Clasificación: determinística — verifica wheel_zoom_clamps_price_when_too_narrow
     #[test]
     fn wheel_zoom_clamps_price_when_too_narrow() {
         let ctrl = controller();
@@ -456,6 +460,7 @@ mod tests {
         assert!(vp.price_max > vp.price_min);
     }
 
+    // Clasificación: determinística — verifica box_zoom_inverted_rect
     #[test]
     fn box_zoom_inverted_rect() {
         let ctrl = controller();
@@ -466,6 +471,7 @@ mod tests {
         assert!((vp.height() - 50.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica programmatic_zoom_clamps_too_small
     #[test]
     fn programmatic_zoom_clamps_too_small() {
         let ctrl = ZoomController::new(200.0, 10_000.0);

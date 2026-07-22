@@ -242,7 +242,7 @@ impl AnimationEngine {
     pub fn is_complete(&self, name: &str) -> bool {
         self.animations
             .get(name)
-            .map_or(false, |a| a.is_complete())
+            .is_some_and(|a| a.is_complete())
     }
 
     /// Advance all animations by `dt_ms` milliseconds.
@@ -343,8 +343,8 @@ fn spring_ease(t: f64, stiffness: f64, damping: f64) -> f64 {
 mod tests {
     use super::*;
 
-    // --- Easing tests ---
 
+    // Clasificación: determinística — verifica interpolación del easing
     #[test]
     fn easing_linear() {
         assert!((apply_easing(0.0, Easing::Linear) - 0.0).abs() < 1e-10);
@@ -352,30 +352,35 @@ mod tests {
         assert!((apply_easing(1.0, Easing::Linear) - 1.0).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica interpolación del easing
     #[test]
     fn easing_ease_in() {
         let v = apply_easing(0.5, Easing::EaseIn);
         assert!((v - 0.25).abs() < 1e-10, "EaseIn(0.5) = {v}");
     }
 
+    // Clasificación: determinística — verifica interpolación del easing
     #[test]
     fn easing_ease_out() {
         let v = apply_easing(0.5, Easing::EaseOut);
         assert!((v - 0.75).abs() < 1e-10, "EaseOut(0.5) = {v}");
     }
 
+    // Clasificación: determinística — verifica interpolación del easing
     #[test]
     fn easing_ease_in_out_first_half() {
         let v = apply_easing(0.25, Easing::EaseInOut);
         assert!((v - 0.125).abs() < 1e-10, "EaseInOut(0.25) = {v}");
     }
 
+    // Clasificación: determinística — verifica interpolación del easing
     #[test]
     fn easing_ease_in_out_second_half() {
         let v = apply_easing(0.75, Easing::EaseInOut);
         assert!((v - 0.875).abs() < 1e-10, "EaseInOut(0.75) = {v}");
     }
 
+    // Clasificación: determinística — verifica convergencia de spring en t=1.0
     #[test]
     fn easing_spring_converges() {
         let v = apply_easing(1.0, Easing::Spring { stiffness: 200.0, damping: 12.0 });
@@ -385,6 +390,7 @@ mod tests {
         );
     }
 
+    // Clasificación: determinística — verifica fronteras 0.0 y 1.0 del easing
     #[test]
     fn easing_clamps_at_boundaries() {
         let easings = [
@@ -399,8 +405,8 @@ mod tests {
         }
     }
 
-    // --- AnimatedValue tests ---
 
+    // Clasificación: determinística — verifica constructor y estado inicial
     #[test]
     fn animated_value_new() {
         let a = AnimatedValue::new(10.0, 20.0, 500.0, Easing::Linear);
@@ -411,12 +417,14 @@ mod tests {
         assert!(!a.is_complete());
     }
 
+    // Clasificación: determinística — verifica constructor y estado inicial
     #[test]
     fn animated_value_new_zero_duration_is_complete() {
         let a = AnimatedValue::new(0.0, 1.0, 0.0, Easing::Linear);
         assert!(a.is_complete());
     }
 
+    // Clasificación: determinística — verifica avance de tiempo e interpolación
     #[test]
     fn animated_value_update() {
         let mut a = AnimatedValue::new(0.0, 100.0, 1000.0, Easing::Linear);
@@ -429,6 +437,7 @@ mod tests {
         assert!((v - 25.0).abs() < 1e-10, "current = {v}");
     }
 
+    // Clasificación: determinística — verifica animated_value_complete_at_end
     #[test]
     fn animated_value_complete_at_end() {
         let mut a = AnimatedValue::new(0.0, 10.0, 200.0, Easing::Linear);
@@ -438,6 +447,7 @@ mod tests {
         assert!((v - 10.0).abs() < 1e-10, "current = {v}");
     }
 
+    // Clasificación: determinística — verifica animated_value_is_complete_flag
     #[test]
     fn animated_value_is_complete_flag() {
         let mut a = AnimatedValue::new(0.0, 1.0, 100.0, Easing::EaseIn);
@@ -448,6 +458,7 @@ mod tests {
         assert!(a.is_complete());
     }
 
+    // Clasificación: determinística — verifica force complete sin esperar duración
     #[test]
     fn animated_value_complete_force() {
         let mut a = AnimatedValue::new(0.0, 50.0, 1000.0, Easing::Linear);
@@ -458,6 +469,7 @@ mod tests {
         assert!((a.current() - 50.0).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica cambio de objetivo animado
     #[test]
     fn animated_value_retarget() {
         let mut a = AnimatedValue::new(0.0, 100.0, 1000.0, Easing::Linear);
@@ -473,6 +485,7 @@ mod tests {
         assert!(!a.is_complete());
     }
 
+    // Clasificación: determinística — edge case: tiempo excedido produce clamp
     #[test]
     fn animated_value_update_past_end_caps() {
         let mut a = AnimatedValue::new(0.0, 10.0, 100.0, Easing::Linear);
@@ -481,8 +494,8 @@ mod tests {
         assert!((a.current() - 10.0).abs() < 1e-10);
     }
 
-    // --- AnimationEngine tests ---
 
+    // Clasificación: determinística — verifica animation_engine_add_and_get
     #[test]
     fn animation_engine_add_and_get() {
         let mut engine = AnimationEngine::new();
@@ -494,6 +507,7 @@ mod tests {
         assert!((v.unwrap() - 0.0).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica animation_engine_remove
     #[test]
     fn animation_engine_remove() {
         let mut engine = AnimationEngine::new();
@@ -503,6 +517,7 @@ mod tests {
         assert!(engine.remove("nonexistent").is_none());
     }
 
+    // Clasificación: determinística — verifica update de múltiples animaciones
     #[test]
     fn animation_engine_update_all() {
         let mut engine = AnimationEngine::new();
@@ -518,6 +533,7 @@ mod tests {
         assert!(!engine.is_complete("a"));
     }
 
+    // Clasificación: determinística — verifica GC de animaciones completadas
     #[test]
     fn animation_engine_gc() {
         let mut engine = AnimationEngine::new();
@@ -532,6 +548,7 @@ mod tests {
         assert!(engine.value("running").is_some());
     }
 
+    // Clasificación: determinística — verifica animation_engine_active_count
     #[test]
     fn animation_engine_active_count() {
         let mut engine = AnimationEngine::new();
@@ -553,6 +570,7 @@ mod tests {
         assert!(engine.has_active());
     }
 
+    // Clasificación: determinística — verifica animation_engine_replace_same_name
     #[test]
     fn animation_engine_replace_same_name() {
         let mut engine = AnimationEngine::new();

@@ -93,6 +93,7 @@ mod tests {
         AxisEntry { ticks: vec![AxisTick { position: 0.0, value: 0.0, label: "0".into() }] }
     }
 
+    // Clasificación: determinística — verifica new_cache_is_empty
     #[test]
     fn new_cache_is_empty() {
         let cache = AxisCache::new(16);
@@ -100,6 +101,7 @@ mod tests {
         assert!(cache.is_empty());
     }
 
+    // Clasificación: determinística — round-trip insert/get — invariante básico
     #[test]
     fn insert_and_get() {
         let mut cache = AxisCache::new(16);
@@ -109,6 +111,7 @@ mod tests {
         assert_eq!(cache.len(), 1);
     }
 
+    // Clasificación: determinística — edge case: key inexistente retorna None sin panic
     #[test]
     fn get_missing_returns_none() {
         let mut cache = AxisCache::new(16);
@@ -116,6 +119,7 @@ mod tests {
         assert!(cache.get(&key).is_none());
     }
 
+    // Clasificación: determinística — verifica reset completo del estado
     #[test]
     fn clear_empties_cache() {
         let mut cache = AxisCache::new(16);
@@ -126,6 +130,7 @@ mod tests {
         assert_eq!(cache.hit_rate(), 0.0);
     }
 
+    // Clasificación: determinística — verifica cálculo de métrica hit/miss
     #[test]
     fn hit_rate_tracks_correctly() {
         let mut cache = AxisCache::new(16);
@@ -136,6 +141,7 @@ mod tests {
         assert!((cache.hit_rate() - 0.5).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica política de evicción al exceder capacidad
     #[test]
     fn eviction_when_full() {
         let mut cache = AxisCache::new(2);

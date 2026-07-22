@@ -186,12 +186,14 @@ impl Default for CrosshairController {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica que el modo por defecto es Normal
     #[test]
     fn default_mode_is_normal() {
         let ctrl = CrosshairController::new();
         assert_eq!(ctrl.mode(), CrosshairMode::Normal);
     }
 
+    // Clasificación: determinística — verifica cambio de modo del crosshair
     #[test]
     fn set_mode() {
         let mut ctrl = CrosshairController::new();
@@ -199,6 +201,7 @@ mod tests {
         assert_eq!(ctrl.mode(), CrosshairMode::Magnetic);
     }
 
+    // Clasificación: determinística — verifica actualización de posición del crosshair
     #[test]
     fn update_position_basic() {
         let mut ctrl = CrosshairController::new();
@@ -208,6 +211,7 @@ mod tests {
         assert_eq!(pos.price, 50.0);
     }
 
+    // Clasificación: determinística — verifica que update_position retorna referencia al pos actualizado
     #[test]
     fn update_position_returns_ref() {
         let mut ctrl = CrosshairController::new();
@@ -216,6 +220,7 @@ mod tests {
         assert_eq!(pos.price, 20.0);
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn clear_position() {
         let mut ctrl = CrosshairController::new();
@@ -225,6 +230,7 @@ mod tests {
         assert!(ctrl.position().is_none());
     }
 
+    // Clasificación: determinística — verifica snap magnético al punto de datos más cercano
     #[test]
     fn magnetic_snaps_to_data() {
         let mut ctrl = CrosshairController::new();
@@ -236,6 +242,7 @@ mod tests {
         assert_eq!(pos.price, 0.51);
     }
 
+    // Clasificación: determinística — edge case: distancia excesiva al dato más cercano — no debe hacer snap
     #[test]
     fn magnetic_no_snap_far() {
         let mut ctrl = CrosshairController::new();
@@ -247,6 +254,7 @@ mod tests {
         assert_eq!(pos.price, 0.0);
     }
 
+    // Clasificación: determinística — verifica que snap respeta el umbral configurable
     #[test]
     fn magnetic_respects_threshold() {
         let mut ctrl = CrosshairController::new();
@@ -260,6 +268,7 @@ mod tests {
         assert!(!pos2.snapped);
     }
 
+    // Clasificación: determinística — verifica que modo hidden oculta el crosshair completamente
     #[test]
     fn hidden_mode_not_visible() {
         let mut ctrl = CrosshairController::new();
@@ -267,6 +276,7 @@ mod tests {
         assert!(!ctrl.is_visible());
     }
 
+    // Clasificación: determinística — verifica position override en modo custom
     #[test]
     fn custom_position_override() {
         let mut ctrl = CrosshairController::new();
@@ -277,6 +287,7 @@ mod tests {
         assert_eq!(pos.price, 99.0);
     }
 
+    // Clasificación: determinística — verifica sincronización entre crosshairs del mismo grupo
     #[test]
     fn sync_group_same() {
         let mut a = CrosshairController::new();
@@ -286,6 +297,7 @@ mod tests {
         assert!(a.should_sync_with(&b));
     }
 
+    // Clasificación: determinística — edge case: crosshairs con sync_group diferente NO deben sincronizarse
     #[test]
     fn sync_group_different() {
         let mut a = CrosshairController::new();
@@ -295,6 +307,7 @@ mod tests {
         assert!(!a.should_sync_with(&b));
     }
 
+    // Clasificación: determinística — edge case: crosshairs sin sync_group NO deben sincronizarse
     #[test]
     fn sync_group_none() {
         let a = CrosshairController::new();
@@ -302,6 +315,7 @@ mod tests {
         assert!(!a.should_sync_with(&b));
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn visibility_toggle() {
         let mut ctrl = CrosshairController::new();
@@ -312,6 +326,7 @@ mod tests {
         assert!(ctrl.is_visible());
     }
 
+    // Clasificación: determinística — verifica que el flag snapped se actualiza correctamente
     #[test]
     fn position_snapped_flag() {
         let mut ctrl = CrosshairController::new();

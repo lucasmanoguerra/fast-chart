@@ -128,6 +128,7 @@ impl SeriesRenderer for BaselineRenderer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = BaselineRenderer::new([1.0; 4], 2.0);
@@ -135,6 +136,7 @@ mod tests {
         assert_eq!(r.below_color, [0.8, 0.0, 0.0, 1.0]);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = BaselineRenderer::new([1.0; 4], 1.5);
@@ -148,6 +150,7 @@ mod tests {
         assert!(!cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = BaselineRenderer::new([1.0; 4], 1.5);
@@ -156,6 +159,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica render_single_point_produces_nothing
     #[test]
     fn render_single_point_produces_nothing() {
         let r = BaselineRenderer::new([1.0; 4], 1.5);

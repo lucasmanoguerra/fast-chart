@@ -226,6 +226,7 @@ fn parse_hex_color(hex: &str) -> Result<crate::theme::Rgba, String> {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica parse_hex_6
     #[test]
     fn parse_hex_6() {
         use fc_primitives::color::Rgba;
@@ -234,6 +235,7 @@ mod tests {
         assert_eq!(c, expected);
     }
 
+    // Clasificación: determinística — verifica parse_hex_8
     #[test]
     fn parse_hex_8() {
         use fc_primitives::color::Rgba;
@@ -242,6 +244,7 @@ mod tests {
         assert_eq!(c, expected);
     }
 
+    // Clasificación: determinística — verifica parse_hex_no_hash
     #[test]
     fn parse_hex_no_hash() {
         use fc_primitives::color::Rgba;
@@ -250,11 +253,13 @@ mod tests {
         assert_eq!(c, expected);
     }
 
+    // Clasificación: determinística — verifica parse_hex_invalid
     #[test]
     fn parse_hex_invalid() {
         assert!(parse_hex_color("#GGG").is_err());
     }
 
+    // Clasificación: determinística — verifica parse_config_full
     #[test]
     fn parse_config_full() {
         use fc_primitives::color::Rgba;
@@ -274,6 +279,7 @@ text_font_size = 14.0
         assert_eq!(theme.text_font_size, 14.0);
     }
 
+    // Clasificación: determinística — verifica parse_config_partial
     #[test]
     fn parse_config_partial() {
         use fc_primitives::color::Rgba;
@@ -285,18 +291,21 @@ background = "#000000"
         assert_eq!(theme.background, Rgba::new(0.0, 0.0, 0.0, 1.0));
     }
 
+    // Clasificación: determinística — verifica parse_config_empty
     #[test]
     fn parse_config_empty() {
         let theme = ConfigWatcher::parse_config("").unwrap();
         assert_eq!(theme.text_font_size, 12.0);
     }
 
+    // Clasificación: determinística — verifica parse_config_invalid_toml
     #[test]
     fn parse_config_invalid_toml() {
         let result = ConfigWatcher::parse_config("not valid {{{");
         assert!(result.is_err());
     }
 
+    // Clasificación: determinística — verifica parse_config_invalid_color
     #[test]
     fn parse_config_invalid_color() {
         let s = r##"

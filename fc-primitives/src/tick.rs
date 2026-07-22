@@ -49,6 +49,7 @@ impl Tick {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica valid_construction
     #[test]
     fn valid_construction() {
         let tick = Tick::new(1000, 100.0, 100.05, 100.02, 500).unwrap();
@@ -59,30 +60,35 @@ mod tests {
         assert_eq!(tick.volume, 500);
     }
 
+    // Clasificación: determinística — verifica zero_volume_succeeds
     #[test]
     fn zero_volume_succeeds() {
         let tick = Tick::new(1, 10.0, 10.5, 10.2, 0).unwrap();
         assert_eq!(tick.volume, 0);
     }
 
+    // Clasificación: determinística — verifica spread
     #[test]
     fn spread() {
         let tick = Tick::new(1, 100.0, 100.05, 100.02, 100).unwrap();
         assert!((tick.spread() - 0.05).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica zero_spread
     #[test]
     fn zero_spread() {
         let tick = Tick::new(1, 100.0, 100.0, 100.0, 100).unwrap();
         assert_eq!(tick.spread(), 0.0);
     }
 
+    // Clasificación: determinística — verifica reject_ask_less_than_bid
     #[test]
     fn reject_ask_less_than_bid() {
         let result = Tick::new(1, 100.05, 100.0, 100.02, 100);
         assert!(matches!(result, Err(ChartError::InvalidPriceData(_))));
     }
 
+    // Clasificación: determinística — verifica reject_negative_price
     #[test]
     fn reject_negative_price() {
         let result = Tick::new(1, -1.0, 10.0, 5.0, 100);

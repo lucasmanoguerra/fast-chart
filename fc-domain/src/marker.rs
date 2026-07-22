@@ -2,8 +2,10 @@ use crate::price_scale::PriceScaleId;
 
 /// Position of a marker relative to the candle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum MarkerPosition {
     /// Above the candle (typically for sell signals).
+    #[default]
     AboveBar,
     /// Below the candle (typically for buy signals).
     BelowBar,
@@ -11,15 +13,12 @@ pub enum MarkerPosition {
     AtPrice,
 }
 
-impl Default for MarkerPosition {
-    fn default() -> Self {
-        Self::AboveBar
-    }
-}
 
 /// Shape of a marker.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum MarkerShape {
+    #[default]
     Circle,
     Square,
     ArrowUp,
@@ -27,11 +26,6 @@ pub enum MarkerShape {
     Triangle,
 }
 
-impl Default for MarkerShape {
-    fn default() -> Self {
-        Self::Circle
-    }
-}
 
 /// A point annotation at a specific timestamp.
 ///
@@ -197,6 +191,7 @@ impl MarkerSet {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica marker_new
     #[test]
     fn marker_new() {
         let m = Marker::new("buy", 1000, 105.0);
@@ -206,6 +201,7 @@ mod tests {
         assert_eq!(m.position, MarkerPosition::AboveBar);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn marker_builder() {
         let m = Marker::new("sell", 2000, 110.0)
@@ -224,6 +220,7 @@ mod tests {
         assert_eq!(m.scale_id, PriceScaleId::Left);
     }
 
+    // Clasificación: determinística — verifica marker_set_add_remove
     #[test]
     fn marker_set_add_remove() {
         let mut set = MarkerSet::new();
@@ -238,6 +235,7 @@ mod tests {
         assert!(set.get(&MarkerId("a".to_string())).is_none());
     }
 
+    // Clasificación: determinística — verifica marker_set_in_range
     #[test]
     fn marker_set_in_range() {
         let mut set = MarkerSet::new();

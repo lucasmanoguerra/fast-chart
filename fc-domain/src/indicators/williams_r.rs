@@ -91,12 +91,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica williams_r_name
     #[test]
     fn williams_r_name() {
         let wr = WilliamsR { period: 14 };
         assert_eq!(wr.name(), "Williams %R");
     }
 
+    // Clasificación: determinística — verifica williams_r_insufficient_data
     #[test]
     fn williams_r_insufficient_data() {
         let bars = make_bars(5);
@@ -105,6 +107,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica williams_r_exact_period
     #[test]
     fn williams_r_exact_period() {
         let bars = make_bars(14);
@@ -114,6 +117,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica williams_r_basic
     #[test]
     fn williams_r_basic() {
         let bars = make_bars(50);
@@ -123,6 +127,7 @@ mod tests {
         assert_eq!(result.len(), 37);
     }
 
+    // Clasificación: determinística — verifica williams_r_bounds
     #[test]
     fn williams_r_bounds() {
         let bars = make_bars(100);
@@ -132,6 +137,7 @@ mod tests {
         assert!(result.iter().all(|v| *v >= -100.0 && *v <= 0.0));
     }
 
+    // Clasificación: determinística — verifica williams_r_overbought
     #[test]
     fn williams_r_overbought() {
         // Close at highest high → %R = 0 (maximum overbought)
@@ -153,6 +159,7 @@ mod tests {
         assert_eq!(*result.latest().unwrap(), 0.0);
     }
 
+    // Clasificación: determinística — verifica williams_r_oversold
     #[test]
     fn williams_r_oversold() {
         // Close at lowest low → %R = -100 (maximum oversold)
@@ -174,6 +181,7 @@ mod tests {
         assert_eq!(*result.latest().unwrap(), -100.0);
     }
 
+    // Clasificación: determinística — verifica williams_r_constant_prices
     #[test]
     fn williams_r_constant_prices() {
         // All bars identical: high=low → range=0 → %R = 0
@@ -194,6 +202,7 @@ mod tests {
         assert!(result.iter().all(|v| *v == 0.0));
     }
 
+    // Clasificación: determinística — verifica williams_r_single_bar
     #[test]
     fn williams_r_single_bar() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -210,6 +219,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica williams_r_default_period
     #[test]
     fn williams_r_default_period() {
         let wr = WilliamsR::default_period();

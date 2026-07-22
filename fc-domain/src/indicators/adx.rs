@@ -139,12 +139,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica adx_name
     #[test]
     fn adx_name() {
         let adx = Adx { period: 14 };
         assert_eq!(adx.name(), "ADX");
     }
 
+    // Clasificación: determinística — verifica adx_insufficient_data
     #[test]
     fn adx_insufficient_data() {
         let bars = make_bars(10);
@@ -153,6 +155,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica adx_basic
     #[test]
     fn adx_basic() {
         let bars = make_bars(100);
@@ -161,6 +164,7 @@ mod tests {
         assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica adx_bounds
     #[test]
     fn adx_bounds() {
         let bars = make_bars(200);
@@ -169,6 +173,7 @@ mod tests {
         assert!(result.iter().all(|v| *v >= 0.0 && *v <= 100.0));
     }
 
+    // Clasificación: determinística — verifica adx_strong_trend
     #[test]
     fn adx_strong_trend() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -190,6 +195,7 @@ mod tests {
         assert!(last_adx > 25.0, "ADX for strong trend should be > 25, got {}", last_adx);
     }
 
+    // Clasificación: determinística — verifica adx_no_trend
     #[test]
     fn adx_no_trend() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -210,6 +216,7 @@ mod tests {
         assert!((last_adx - 0.0).abs() < 1e-10, "ADX for no trend should be 0, got {}", last_adx);
     }
 
+    // Clasificación: determinística — verifica adx_exact_period
     #[test]
     fn adx_exact_period() {
         let bars = make_bars(15);

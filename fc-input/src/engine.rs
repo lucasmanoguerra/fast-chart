@@ -522,6 +522,7 @@ mod tests {
         ModifierState { shift, ctrl, alt: false, super_key: false }
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn mouse_move_produces_update_crosshair() {
         let mut eng = InteractionEngine::new();
@@ -538,6 +539,7 @@ mod tests {
         assert_eq!(cmds[1], ChartCommand::RequestRedraw);
     }
 
+    // Clasificación: determinística — verifica mouse_down_and_up_cycle
     #[test]
     fn mouse_down_and_up_cycle() {
         let mut eng = InteractionEngine::new();
@@ -548,6 +550,7 @@ mod tests {
         assert!(up_cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica wheel_produces_zoom_in
     #[test]
     fn wheel_produces_zoom_in() {
         let mut eng = InteractionEngine::new();
@@ -560,6 +563,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica wheel_produces_zoom_out
     #[test]
     fn wheel_produces_zoom_out() {
         let mut eng = InteractionEngine::new();
@@ -572,6 +576,7 @@ mod tests {
         )));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn wheel_with_shift_produces_pan() {
         let mut eng = InteractionEngine::new();
@@ -586,6 +591,7 @@ mod tests {
         )));
     }
 
+    // Clasificación: determinística — verifica escape_cancels_drawing_and_deselects
     #[test]
     fn escape_cancels_drawing_and_deselects() {
         let mut eng = InteractionEngine::new();
@@ -600,6 +606,7 @@ mod tests {
         assert_eq!(eng.active_tool(), None);
     }
 
+    // Clasificación: determinística — verifica escape_without_tool_only_deselects
     #[test]
     fn escape_without_tool_only_deselects() {
         let mut eng = InteractionEngine::new();
@@ -609,6 +616,7 @@ mod tests {
         assert!(cmds.contains(&ChartCommand::DeselectAll));
     }
 
+    // Clasificación: determinística — verifica delete_produces_delete_selected
     #[test]
     fn delete_produces_delete_selected() {
         let mut eng = InteractionEngine::new();
@@ -617,6 +625,7 @@ mod tests {
         assert!(cmds.contains(&ChartCommand::DeleteSelected));
     }
 
+    // Clasificación: determinística — verifica backspace_produces_delete_selected
     #[test]
     fn backspace_produces_delete_selected() {
         let mut eng = InteractionEngine::new();
@@ -625,6 +634,7 @@ mod tests {
         assert!(cmds.contains(&ChartCommand::DeleteSelected));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn arrow_right_produces_pan() {
         let mut eng = InteractionEngine::new();
@@ -636,6 +646,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn arrow_left_produces_pan_negative() {
         let mut eng = InteractionEngine::new();
@@ -647,6 +658,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn arrow_up_produces_pan_price() {
         let mut eng = InteractionEngine::new();
@@ -658,6 +670,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica key_1_starts_trend_line
     #[test]
     fn key_1_starts_trend_line() {
         let mut eng = InteractionEngine::new();
@@ -670,6 +683,7 @@ mod tests {
         assert_eq!(eng.active_tool(), Some(DrawingTool::TrendLine));
     }
 
+    // Clasificación: determinística — verifica key_9_starts_fibonacci_retracement
     #[test]
     fn key_9_starts_fibonacci_retracement() {
         let mut eng = InteractionEngine::new();
@@ -680,6 +694,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica shift_tracking_across_key_down_up
     #[test]
     fn shift_tracking_across_key_down_up() {
         let mut eng = InteractionEngine::new();
@@ -701,6 +716,7 @@ mod tests {
         assert!(cmds2.iter().any(|c| matches!(c, ChartCommand::ZoomAtCursor { .. })));
     }
 
+    // Clasificación: determinística — verifica drag_cycle_mouse_down_move_up
     #[test]
     fn drag_cycle_mouse_down_move_up() {
         let mut eng = InteractionEngine::new();
@@ -711,6 +727,7 @@ mod tests {
         assert!(up_cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pinch con dos dedos
     #[test]
     fn pinch_produces_zoom() {
         let mut eng = InteractionEngine::new();
@@ -722,6 +739,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica set_tool_active_tool_is_drawing
     #[test]
     fn set_tool_active_tool_is_drawing() {
         let mut eng = InteractionEngine::new();
@@ -737,6 +755,7 @@ mod tests {
         assert!(!eng.is_drawing());
     }
 
+    // Clasificación: determinística — verifica mouse_down_with_select_tool_emits_select_drawing
     #[test]
     fn mouse_down_with_select_tool_emits_select_drawing() {
         let mut eng = InteractionEngine::new();
@@ -748,6 +767,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica mouse_down_with_drawing_tool_emits_place_point
     #[test]
     fn mouse_down_with_drawing_tool_emits_place_point() {
         let mut eng = InteractionEngine::new();
@@ -759,6 +779,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica mouse_down_right_button_is_noop
     #[test]
     fn mouse_down_right_button_is_noop() {
         let mut eng = InteractionEngine::new();
@@ -770,6 +791,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica plus_key_zooms_in
     #[test]
     fn plus_key_zooms_in() {
         let mut eng = InteractionEngine::new();
@@ -781,6 +803,7 @@ mod tests {
         )));
     }
 
+    // Clasificación: determinística — verifica minus_key_zooms_out
     #[test]
     fn minus_key_zooms_out() {
         let mut eng = InteractionEngine::new();
@@ -790,6 +813,7 @@ mod tests {
         assert!(cmds.iter().any(|c| matches!(c, ChartCommand::ZoomAtCursor { factor, .. } if (*factor - expected).abs() < 1e-10)));
     }
 
+    // Clasificación: determinística — verifica double_click_is_noop
     #[test]
     fn double_click_is_noop() {
         let mut eng = InteractionEngine::new();
@@ -797,6 +821,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica stylus_move_produces_crosshair
     #[test]
     fn stylus_move_produces_crosshair() {
         let mut eng = InteractionEngine::new();
@@ -804,6 +829,7 @@ mod tests {
         assert!(cmds.iter().any(|c| matches!(c, ChartCommand::UpdateCrosshair { screen_x: 150.0, screen_y: 250.0 })));
     }
 
+    // Clasificación: determinística — verifica touch_start_and_end_cycle
     #[test]
     fn touch_start_and_end_cycle() {
         let mut eng = InteractionEngine::new();
@@ -813,6 +839,7 @@ mod tests {
         assert!(up_cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica draw_select_drag_emits_move_selected
     #[test]
     fn draw_select_drag_emits_move_selected() {
         let mut eng = InteractionEngine::new();

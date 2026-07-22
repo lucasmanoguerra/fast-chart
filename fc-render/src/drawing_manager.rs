@@ -203,10 +203,10 @@ impl Default for DrawingManager {
 mod tests {
     use super::*;
     use fc_domain::drawing::{
-        TrendLine, HorizontalLine, VerticalLine, FibonacciRetracement,
-        FibonacciExtension, Pitchfork, Arrow,
+        TrendLine, Arrow,
     };
 
+    // Clasificación: determinística — verifica new_manager_is_empty
     #[test]
     fn new_manager_is_empty() {
         let mgr = DrawingManager::new();
@@ -215,6 +215,7 @@ mod tests {
         assert!(mgr.selected_id().is_none());
     }
 
+    // Clasificación: determinística — verifica add_and_remove_trend_line
     #[test]
     fn add_and_remove_trend_line() {
         let mut mgr = DrawingManager::new();
@@ -230,6 +231,7 @@ mod tests {
         assert!(mgr.is_empty());
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn hit_test_finds_trend_line() {
         let mut mgr = DrawingManager::new();
@@ -244,12 +246,14 @@ mod tests {
         assert_eq!(hit.unwrap().0, DrawingId("tl1".to_string()));
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn hit_test_returns_none_on_empty() {
         let mgr = DrawingManager::new();
         assert!(mgr.hit_test(ChartPoint::new(1500, 150.0), 50.0).is_none());
     }
 
+    // Clasificación: determinística — verifica select_and_deselect
     #[test]
     fn select_and_deselect() {
         let mut mgr = DrawingManager::new();
@@ -267,6 +271,7 @@ mod tests {
         assert!(mgr.selected_id().is_none());
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let mut mgr = DrawingManager::new();
@@ -291,6 +296,7 @@ mod tests {
         assert_eq!(cmds.len(), 1);
     }
 
+    // Clasificación: determinística — verifica combined_bounds
     #[test]
     fn combined_bounds() {
         let mut mgr = DrawingManager::new();
@@ -312,6 +318,7 @@ mod tests {
         assert_eq!(b.time_end, 4000);
     }
 
+    // Clasificación: determinística — verifica move_selected_drawing
     #[test]
     fn move_selected_drawing() {
         let mut mgr = DrawingManager::new();
@@ -333,12 +340,14 @@ mod tests {
         assert!((tl.start.price - 110.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn hit_test_miss() {
         let mgr = DrawingManager::new();
         assert!(mgr.hit_test(ChartPoint::new(1500, 150.0), 50.0).is_none());
     }
 
+    // Clasificación: determinística — verifica select_deselect_cycle
     #[test]
     fn select_deselect_cycle() {
         let mut mgr = DrawingManager::new();
@@ -356,6 +365,7 @@ mod tests {
         assert!(mgr.selected_id().is_none());
     }
 
+    // Clasificación: determinística — verifica move_selected
     #[test]
     fn move_selected() {
         let mut mgr = DrawingManager::new();
@@ -384,6 +394,7 @@ mod tests {
         assert_eq!(ar.start.timestamp, 3000);
     }
 
+    // Clasificación: determinística — verifica bounds_single
     #[test]
     fn bounds_single() {
         let mut mgr = DrawingManager::new();
@@ -400,6 +411,7 @@ mod tests {
         assert_eq!(b.time_end, 2000);
     }
 
+    // Clasificación: determinística — verifica render_single
     #[test]
     fn render_single() {
         let mut mgr = DrawingManager::new();

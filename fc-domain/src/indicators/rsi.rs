@@ -80,12 +80,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica rsi_name
     #[test]
     fn rsi_name() {
         let rsi = Rsi { period: 14 };
         assert_eq!(rsi.name(), "RSI");
     }
 
+    // Clasificación: determinística — verifica rsi_insufficient_data
     #[test]
     fn rsi_insufficient_data() {
         let bars = make_bars(10);
@@ -94,6 +96,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica rsi_bounds
     #[test]
     fn rsi_bounds() {
         let bars = make_bars(200);
@@ -102,6 +105,7 @@ mod tests {
         assert!(result.iter().all(|v| *v >= 0.0 && *v <= 100.0));
     }
 
+    // Clasificación: determinística — verifica rsi_all_gains
     #[test]
     fn rsi_all_gains() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -122,6 +126,7 @@ mod tests {
         assert_eq!(*result.latest().unwrap(), 100.0);
     }
 
+    // Clasificación: determinística — verifica rsi_all_losses
     #[test]
     fn rsi_all_losses() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();

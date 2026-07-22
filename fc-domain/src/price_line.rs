@@ -45,17 +45,14 @@ pub struct PriceLineId(pub String);
 
 /// Position for the price line label.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum LabelPosition {
     Left,
+    #[default]
     Right,
     Center,
 }
 
-impl Default for LabelPosition {
-    fn default() -> Self {
-        Self::Right
-    }
-}
 
 impl PriceLine {
     /// Create a new price line at the given price.
@@ -168,6 +165,7 @@ impl PriceLineSet {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica price_line_new
     #[test]
     fn price_line_new() {
         let line = PriceLine::new("support", 100.0);
@@ -176,6 +174,7 @@ mod tests {
         assert_eq!(line.scale_id, PriceScaleId::Right);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo sin NaN
     #[test]
     fn price_line_builder() {
         let line = PriceLine::new("resistance", 200.0)
@@ -194,6 +193,7 @@ mod tests {
         assert_eq!(line.label_position, LabelPosition::Left);
     }
 
+    // Clasificación: determinística — verifica price_line_set_add_remove
     #[test]
     fn price_line_set_add_remove() {
         let mut set = PriceLineSet::new();
@@ -208,6 +208,7 @@ mod tests {
         assert!(set.get(&PriceLineId("a".to_string())).is_none());
     }
 
+    // Clasificación: determinística — verifica price_line_set_for_scale
     #[test]
     fn price_line_set_for_scale() {
         let mut set = PriceLineSet::new();

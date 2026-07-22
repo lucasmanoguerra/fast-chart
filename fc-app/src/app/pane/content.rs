@@ -108,6 +108,7 @@ mod tests {
     use fc_domain::price_scale::PriceScaleId;
     use fc_primitives::series_type::SeriesType;
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_content_default_is_empty() {
         let content = PaneContent::new();
@@ -117,6 +118,7 @@ mod tests {
         assert!(content.price_lines().is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_content_push_series() {
         let mut content = PaneContent::new();
@@ -129,6 +131,7 @@ mod tests {
         assert_eq!(content.series()[0].name, "BTC");
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_content_push_indicator() {
         let mut content = PaneContent::new();
@@ -140,6 +143,7 @@ mod tests {
         assert_eq!(content.indicators()[0].name, "SMA(14)");
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_content_formatter_produces_output() {
         let content = PaneContent::new();
@@ -147,6 +151,7 @@ mod tests {
         assert_eq!(formatted, "105.20");
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_delegates_to_content() {
         let mut pane = Pane::new(0, 0.7);
@@ -155,6 +160,7 @@ mod tests {
         assert_eq!(pane.series()[0].name, "ETH");
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_markers_delegates_to_content() {
         let mut pane = Pane::new(0, 0.7);
@@ -164,6 +170,7 @@ mod tests {
         assert_eq!(pane.markers().len(), 1);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_price_lines_delegates_to_content() {
         let mut pane = Pane::new(0, 0.7);

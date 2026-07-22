@@ -241,10 +241,8 @@ impl KineticScroll {
 mod tests {
     use super::*;
 
-    // -----------------------------------------------------------------------
-    // Existing tests (backward-compatible)
-    // -----------------------------------------------------------------------
 
+    // Clasificación: determinística — verifica kinetic_new
     #[test]
     fn kinetic_new() {
         let k = KineticScroll::new(0.9);
@@ -252,6 +250,7 @@ mod tests {
         assert_eq!(k.velocity(), 0.0);
     }
 
+    // Clasificación: determinística — verifica kinetic_start
     #[test]
     fn kinetic_start() {
         let mut k = KineticScroll::new(0.9);
@@ -260,6 +259,7 @@ mod tests {
         assert_eq!(k.velocity(), 10.0);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn kinetic_update_decelerates() {
         let mut k = KineticScroll::new(0.9);
@@ -273,6 +273,7 @@ mod tests {
         assert_eq!(d2, 9.0);
     }
 
+    // Clasificación: determinística — verifica kinetic_stops_at_threshold
     #[test]
     fn kinetic_stops_at_threshold() {
         let mut k = KineticScroll::new(0.5);
@@ -288,6 +289,7 @@ mod tests {
         assert!(frames < 100);
     }
 
+    // Clasificación: determinística — verifica kinetic_stop
     #[test]
     fn kinetic_stop() {
         let mut k = KineticScroll::new(0.9);
@@ -297,6 +299,7 @@ mod tests {
         assert_eq!(k.velocity(), 0.0);
     }
 
+    // Clasificación: determinística — verifica kinetic_custom_threshold
     #[test]
     fn kinetic_custom_threshold() {
         let mut k = KineticScroll::new(0.9);
@@ -312,10 +315,8 @@ mod tests {
         assert!(!k.is_active());
     }
 
-    // -----------------------------------------------------------------------
-    // New tests (Phase 5, PR 5.5)
-    // -----------------------------------------------------------------------
 
+    // Clasificación: determinística — verifica momentum_mode_basic
     #[test]
     fn momentum_mode_basic() {
         let mut k = KineticScroll::new(0.9);
@@ -329,6 +330,7 @@ mod tests {
         assert!((k.velocity() - 81.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica inertia_mode_basic
     #[test]
     fn inertia_mode_basic() {
         let mut k = KineticScroll::with_mode(ScrollMode::Inertia);
@@ -341,6 +343,7 @@ mod tests {
         assert!((k.velocity() - expected).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn update_dt_momentum() {
         let mut k = KineticScroll::new(0.5);
@@ -353,6 +356,7 @@ mod tests {
         assert!((k.velocity() - 5.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn update_dt_inertia() {
         let mut k = KineticScroll::with_mode(ScrollMode::Inertia);
@@ -365,6 +369,7 @@ mod tests {
         assert!((k.velocity() - expected).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica inertia_faster_decay
     #[test]
     fn inertia_faster_decay() {
         let mut fast = KineticScroll::with_mode(ScrollMode::Inertia);
@@ -386,6 +391,7 @@ mod tests {
         assert!(slow.velocity() > 50.0);
     }
 
+    // Clasificación: determinística — verifica snap_target_bar_index
     #[test]
     fn snap_target_bar_index() {
         let mut k = KineticScroll::new(0.9);
@@ -400,6 +406,7 @@ mod tests {
         assert!(k.should_snap());
     }
 
+    // Clasificación: determinística — verifica snap_target_price
     #[test]
     fn snap_target_price() {
         let k = KineticScroll::new(0.9);
@@ -414,6 +421,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica snap_none
     #[test]
     fn snap_none() {
         let mut k = KineticScroll::new(0.9);
@@ -422,6 +430,7 @@ mod tests {
         assert!(!k.should_snap());
     }
 
+    // Clasificación: determinística — verifica decay_rate_change
     #[test]
     fn decay_rate_change() {
         let mut k = KineticScroll::with_mode(ScrollMode::Inertia);
@@ -443,6 +452,7 @@ mod tests {
         assert!(k.velocity() < v_after_first);
     }
 
+    // Clasificación: determinística — verifica elapsed_tracking
     #[test]
     fn elapsed_tracking() {
         let mut k = KineticScroll::new(0.9);
@@ -460,6 +470,7 @@ mod tests {
         assert!((k.elapsed()).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica que el modo por defecto es Normal
     #[test]
     fn with_mode_defaults() {
         let k = KineticScroll::with_mode(ScrollMode::Inertia);
@@ -468,6 +479,7 @@ mod tests {
         assert_eq!(k.velocity(), 0.0);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn update_dt_zero_or_negative() {
         let mut k = KineticScroll::new(0.9);

@@ -105,12 +105,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica cci_name
     #[test]
     fn cci_name() {
         let cci = Cci { period: 20 };
         assert_eq!(cci.name(), "CCI");
     }
 
+    // Clasificación: determinística — verifica cci_insufficient_data
     #[test]
     fn cci_insufficient_data() {
         let bars = make_bars(5);
@@ -119,6 +121,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica cci_exact_period
     #[test]
     fn cci_exact_period() {
         let bars = make_bars(20);
@@ -127,6 +130,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica cci_basic
     #[test]
     fn cci_basic() {
         let bars = make_bars(50);
@@ -135,6 +139,7 @@ mod tests {
         assert_eq!(result.len(), 31);
     }
 
+    // Clasificación: determinística — verifica cci_constant_prices
     #[test]
     fn cci_constant_prices() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -154,6 +159,7 @@ mod tests {
         assert!(result.iter().all(|v| *v == 0.0));
     }
 
+    // Clasificación: determinística — verifica cci_single_bar
     #[test]
     fn cci_single_bar() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -170,6 +176,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica cci_default_period
     #[test]
     fn cci_default_period() {
         let cci = Cci::default_period();

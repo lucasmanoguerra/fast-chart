@@ -76,7 +76,7 @@ impl RenderContext {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::coordinates::{CoordinatePipeline, ScreenPoint, WorldPoint};
+    use crate::coordinates::CoordinatePipeline;
 
     fn test_pipeline() -> CoordinatePipeline {
         CoordinatePipeline::new(
@@ -90,6 +90,7 @@ mod tests {
         )
     }
 
+    // Clasificación: determinística — verifica render_context_new
     #[test]
     fn render_context_new() {
         let pipeline = test_pipeline();
@@ -110,6 +111,7 @@ mod tests {
         assert_eq!(ctx.timestamp, 12345);
     }
 
+    // Clasificación: determinística — verifica render_context_from_pipeline
     #[test]
     fn render_context_from_pipeline() {
         let pipeline = test_pipeline();
@@ -123,6 +125,7 @@ mod tests {
         assert_eq!(ctx.clip_rect, ctx.pane_bounds);
     }
 
+    // Clasificación: determinística — verifica render_context_clone
     #[test]
     fn render_context_clone() {
         let pipeline = test_pipeline();

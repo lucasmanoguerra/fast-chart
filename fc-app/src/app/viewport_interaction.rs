@@ -99,6 +99,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica handle_input_sets_crosshair
     #[test]
     fn handle_input_sets_crosshair() {
         let handler = Box::new(MockInteractionHandler::new());
@@ -126,6 +127,7 @@ mod tests {
         assert_eq!(state.crosshair.time, 5000);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn handle_input_updates_viewport() {
         let handler = Box::new(MockInteractionHandler::new());
@@ -147,6 +149,7 @@ mod tests {
         assert_eq!(state.viewport.time_end, 10000);
     }
 
+    // Clasificación: determinística — verifica handle_input_zoom_at_cursor
     #[test]
     fn handle_input_zoom_at_cursor() {
         let handler = Box::new(MockInteractionHandler::new());

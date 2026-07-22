@@ -101,6 +101,7 @@ mod tests {
         Bar::new(timestamp, 100.0, 105.0, 99.0, 102.0, 1000).unwrap()
     }
 
+    // Clasificación: determinística — verifica empty_registry
     #[test]
     fn empty_registry() {
         let reg = IndicatorRegistry::new();
@@ -108,6 +109,7 @@ mod tests {
         assert_eq!(reg.len(), 0);
     }
 
+    // Clasificación: determinística — verifica que registrar un shortcut incrementa len()
     #[test]
     fn register_and_get() {
         let mut reg = IndicatorRegistry::new();
@@ -122,12 +124,14 @@ mod tests {
         assert_eq!(ind.name(), "SMA(14)");
     }
 
+    // Clasificación: determinística — verifica get_nonexistent_returns_none
     #[test]
     fn get_nonexistent_returns_none() {
         let reg = IndicatorRegistry::new();
         assert!(reg.get("unknown").is_none());
     }
 
+    // Clasificación: determinística — verifica que registrar un shortcut incrementa len()
     #[test]
     fn register_overwrites_existing() {
         let mut reg = IndicatorRegistry::new();
@@ -143,6 +147,7 @@ mod tests {
         assert_eq!(reg.get("sma").unwrap().name(), "SMA(20)");
     }
 
+    // Clasificación: determinística — verifica remove_existing
     #[test]
     fn remove_existing() {
         let mut reg = IndicatorRegistry::new();
@@ -154,12 +159,14 @@ mod tests {
         assert!(reg.is_empty());
     }
 
+    // Clasificación: determinística — verifica remove_nonexistent
     #[test]
     fn remove_nonexistent() {
         let mut reg = IndicatorRegistry::new();
         assert!(!reg.remove("unknown"));
     }
 
+    // Clasificación: determinística — verifica calculate_all
     #[test]
     fn calculate_all() {
         let mut reg = IndicatorRegistry::new();
@@ -184,6 +191,7 @@ mod tests {
         assert_eq!(results["rsi"].latest(), Some(&42.0));
     }
 
+    // Clasificación: determinística — verifica calculate_all_empty_registry
     #[test]
     fn calculate_all_empty_registry() {
         let reg = IndicatorRegistry::new();
@@ -192,6 +200,7 @@ mod tests {
         assert!(results.is_empty());
     }
 
+    // Clasificación: determinística — verifica names_returns_all
     #[test]
     fn names_returns_all() {
         let mut reg = IndicatorRegistry::new();
@@ -208,12 +217,14 @@ mod tests {
         assert_eq!(names, vec!["a", "b"]);
     }
 
+    // Clasificación: determinística — verifica default_is_empty
     #[test]
     fn default_is_empty() {
         let reg = IndicatorRegistry::default();
         assert!(reg.is_empty());
     }
 
+    // Clasificación: determinística — verifica que registrar un shortcut incrementa len()
     #[test]
     fn register_zero_indicator_and_calculate() {
         let mut reg = IndicatorRegistry::new();

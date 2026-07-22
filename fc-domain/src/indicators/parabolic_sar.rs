@@ -135,12 +135,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_name
     #[test]
     fn parabolic_sar_name() {
         let ps = ParabolicSar::default_params();
         assert_eq!(ps.name(), "Parabolic SAR");
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_insufficient_data
     #[test]
     fn parabolic_sar_insufficient_data() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -157,6 +159,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_two_bars
     #[test]
     fn parabolic_sar_two_bars() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -182,6 +185,7 @@ mod tests {
         assert_eq!(result.len(), 2);
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_basic
     #[test]
     fn parabolic_sar_basic() {
         let bars = make_bars(50);
@@ -190,6 +194,7 @@ mod tests {
         assert_eq!(result.len(), 50);
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_uptrend
     #[test]
     fn parabolic_sar_uptrend() {
         // Strong uptrend: each bar higher than the previous
@@ -223,6 +228,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_downtrend
     #[test]
     fn parabolic_sar_downtrend() {
         // Strong downtrend: each bar lower than the previous
@@ -255,6 +261,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_reversal
     #[test]
     fn parabolic_sar_reversal() {
         // Gradual uptrend, then gradual downtrend
@@ -311,6 +318,7 @@ mod tests {
         );
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_default_params
     #[test]
     fn parabolic_sar_default_params() {
         let ps = ParabolicSar::default_params();
@@ -318,6 +326,7 @@ mod tests {
         assert_eq!(ps.max_af, 0.20);
     }
 
+    // Clasificación: determinística — verifica parabolic_sar_custom_params
     #[test]
     fn parabolic_sar_custom_params() {
         let ps = ParabolicSar {

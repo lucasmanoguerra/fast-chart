@@ -576,6 +576,7 @@ impl std::fmt::Debug for ThemeHandle {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica dark_theme_defaults
     #[test]
     fn dark_theme_defaults() {
         let t = ChartTheme::dark();
@@ -587,6 +588,7 @@ mod tests {
         assert!(t.text_secondary.3 > 0.0);
     }
 
+    // Clasificación: determinística — verifica light_theme_defaults
     #[test]
     fn light_theme_defaults() {
         let t = ChartTheme::light();
@@ -594,6 +596,7 @@ mod tests {
         assert_ne!(t.bullish, t.bearish);
     }
 
+    // Clasificación: determinística — verifica que dark y light son distinguibles
     #[test]
     fn dark_and_light_differ() {
         let d = ChartTheme::dark();
@@ -606,26 +609,29 @@ mod tests {
         assert_ne!(d.watermark, l.watermark);
     }
 
+    // Clasificación: determinística — verifica retorno de tema por nombre de preset
     #[test]
     fn preset_dark() {
         let t = ChartTheme::preset("dark");
         assert_eq!(t.background, ChartTheme::dark().background);
     }
 
+    // Clasificación: determinística — verifica retorno de tema por nombre de preset
     #[test]
     fn preset_light() {
         let t = ChartTheme::preset("light");
         assert_eq!(t.background, ChartTheme::light().background);
     }
 
+    // Clasificación: determinística — edge case: preset desconocido fallback a dark
     #[test]
     fn preset_unknown_falls_back_to_dark() {
         let t = ChartTheme::preset("unknown");
         assert_eq!(t.background, ChartTheme::dark().background);
     }
 
-    // --- Builder tests ---
 
+    // Clasificación: determinística — verifica que build() produce tema completo
     #[test]
     fn builder_new_starts_with_dark() {
         let b = ChartThemeBuilder::new();
@@ -634,6 +640,7 @@ mod tests {
         assert_eq!(theme.background, dark.background);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo
     #[test]
     fn builder_override_string() {
         let red = Rgba::new(1.0, 0.0, 0.0, 1.0);
@@ -643,6 +650,7 @@ mod tests {
         assert_eq!(theme.background, red);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo
     #[test]
     fn builder_override_type_safe() {
         let green = Rgba::new(0.0, 1.0, 0.0, 1.0);
@@ -652,6 +660,7 @@ mod tests {
         assert_eq!(theme.bullish, green);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo
     #[test]
     fn builder_from_theme() {
         let custom = ChartTheme::light();
@@ -662,6 +671,7 @@ mod tests {
         assert_eq!(theme.bullish, custom.bullish);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo
     #[test]
     fn builder_build_produces_complete_theme() {
         let theme = ChartThemeBuilder::new().build();
@@ -675,6 +685,7 @@ mod tests {
         assert!(!theme.watermark.0.is_nan());
     }
 
+    // Clasificación: determinística — verifica theme_clone
     #[test]
     fn theme_clone() {
         let t1 = ChartTheme::dark();
@@ -684,6 +695,7 @@ mod tests {
         assert_eq!(t1.bearish, t2.bearish);
     }
 
+    // Clasificación: determinística — verifica line_style_variants
     #[test]
     fn line_style_variants() {
         assert_ne!(LineStyle::Solid, LineStyle::Dashed);
@@ -691,6 +703,7 @@ mod tests {
         assert_ne!(LineStyle::Solid, LineStyle::Dotted);
     }
 
+    // Clasificación: determinística — verifica que build() produce tema completo
     #[test]
     fn builder_unknown_token_is_ignored() {
         let theme = ChartThemeBuilder::new()
@@ -700,8 +713,8 @@ mod tests {
         assert_eq!(theme.background, dark.background);
     }
 
-    // --- Hot-swap tests ---
 
+    // Clasificación: determinística — verifica hot-swap de color a través del handle
     #[test]
     fn hot_swap_set_color() {
         let mut theme = ChartTheme::dark();
@@ -712,6 +725,7 @@ mod tests {
         assert_ne!(theme.get_color(ThemeToken::Bullish), original);
     }
 
+    // Clasificación: determinística — verifica hot_swap_batch_set
     #[test]
     fn hot_swap_batch_set() {
         let mut theme = ChartTheme::dark();
@@ -725,6 +739,7 @@ mod tests {
         assert_eq!(theme.get_color(ThemeToken::Background), Rgba::rgb(0.1, 0.1, 0.1));
     }
 
+    // Clasificación: determinística — round-trip SET/GET para todos los tokens
     #[test]
     fn hot_swap_all_tokens_round_trip() {
         let mut theme = ChartTheme::dark();
@@ -752,8 +767,8 @@ mod tests {
         }
     }
 
-    // --- ThemeHandle tests ---
 
+    // Clasificación: determinística — verifica handle_new_and_read
     #[test]
     fn handle_new_and_read() {
         let handle = ThemeHandle::new(ChartTheme::dark());
@@ -761,6 +776,7 @@ mod tests {
         assert_eq!(snap.background, ChartTheme::dark().background);
     }
 
+    // Clasificación: determinística — verifica handle_hot_swap_color
     #[test]
     fn handle_hot_swap_color() {
         let handle = ThemeHandle::new(ChartTheme::dark());
@@ -769,6 +785,7 @@ mod tests {
         assert_eq!(snap.get_color(ThemeToken::Bullish), Rgba::rgb(1.0, 1.0, 1.0));
     }
 
+    // Clasificación: determinística — verifica handle_hot_swap_entire_theme
     #[test]
     fn handle_hot_swap_entire_theme() {
         let handle = ThemeHandle::new(ChartTheme::dark());
@@ -777,6 +794,7 @@ mod tests {
         assert_eq!(snap.background, ChartTheme::light().background);
     }
 
+    // Clasificación: determinística — verifica que clone comparte estado via Arc
     #[test]
     fn handle_clone_shares_state() {
         let h1 = ThemeHandle::new(ChartTheme::dark());
@@ -786,6 +804,7 @@ mod tests {
         assert_eq!(snap.get_color(ThemeToken::Bullish), Rgba::rgb(0.5, 0.5, 0.5));
     }
 
+    // Clasificación: determinística — verifica handle_write_access
     #[test]
     fn handle_write_access() {
         let handle = ThemeHandle::new(ChartTheme::dark());

@@ -145,6 +145,7 @@ impl TimeScale {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica linear_midpoint
     #[test]
     fn linear_midpoint() {
         let scale = LinearScale {
@@ -155,6 +156,7 @@ mod tests {
         assert_eq!(scale.map_to_y(105.0), 250.0);
     }
 
+    // Clasificación: determinística — verifica linear_top
     #[test]
     fn linear_top() {
         let scale = LinearScale {
@@ -165,6 +167,7 @@ mod tests {
         assert_eq!(scale.map_to_y(110.0), 0.0);
     }
 
+    // Clasificación: determinística — verifica linear_bottom
     #[test]
     fn linear_bottom() {
         let scale = LinearScale {
@@ -175,6 +178,7 @@ mod tests {
         assert_eq!(scale.map_to_y(100.0), 500.0);
     }
 
+    // Clasificación: determinística — verifica linear_roundtrip
     #[test]
     fn linear_roundtrip() {
         let scale = LinearScale {
@@ -188,6 +192,7 @@ mod tests {
         assert!((back - value).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica linear_equal_min_max
     #[test]
     fn linear_equal_min_max() {
         let scale = LinearScale {
@@ -198,6 +203,7 @@ mod tests {
         assert_eq!(scale.map_to_y(100.0), 250.0);
     }
 
+    // Clasificación: determinística — verifica time_midpoint
     #[test]
     fn time_midpoint() {
         let scale = TimeScale {
@@ -210,6 +216,7 @@ mod tests {
         assert_eq!(scale.map_to_x(500), 400.0);
     }
 
+    // Clasificación: determinística — verifica time_start
     #[test]
     fn time_start() {
         let scale = TimeScale {
@@ -222,6 +229,7 @@ mod tests {
         assert_eq!(scale.map_to_x(0), 0.0);
     }
 
+    // Clasificación: determinística — verifica time_end
     #[test]
     fn time_end() {
         let scale = TimeScale {
@@ -234,6 +242,7 @@ mod tests {
         assert_eq!(scale.map_to_x(1000), 800.0);
     }
 
+    // Clasificación: determinística — verifica time_roundtrip
     #[test]
     fn time_roundtrip() {
         let scale = TimeScale {
@@ -249,6 +258,7 @@ mod tests {
         assert_eq!(back, time);
     }
 
+    // Clasificación: determinística — verifica time_equal_start_end
     #[test]
     fn time_equal_start_end() {
         let scale = TimeScale {
@@ -261,8 +271,8 @@ mod tests {
         assert_eq!(scale.map_to_x(1000), 400.0);
     }
 
-    // ---- New tests for bar_spacing, right_offset, scroll, visible_range ----
 
+    // Clasificación: determinística — verifica visible_bars
     #[test]
     fn visible_bars() {
         let scale = TimeScale {
@@ -275,6 +285,7 @@ mod tests {
         assert_eq!(scale.visible_bars(), 100);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn visible_bars_with_offset() {
         let scale = TimeScale {
@@ -288,6 +299,7 @@ mod tests {
         assert_eq!(scale.visible_bars(), 95);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn visible_bars_zero_spacing() {
         let scale = TimeScale {
@@ -300,6 +312,7 @@ mod tests {
         assert_eq!(scale.visible_bars(), 0);
     }
 
+    // Clasificación: determinística — verifica scroll_to_end
     #[test]
     fn scroll_to_end() {
         let mut scale = TimeScale {
@@ -315,6 +328,7 @@ mod tests {
         assert_eq!(scale.end, 499);
     }
 
+    // Clasificación: determinística — verifica scroll_to_end_short_data
     #[test]
     fn scroll_to_end_short_data() {
         let mut scale = TimeScale {
@@ -330,6 +344,7 @@ mod tests {
         assert_eq!(scale.end, 9);
     }
 
+    // Clasificación: determinística — verifica scroll_to_end_empty
     #[test]
     fn scroll_to_end_empty() {
         let mut scale = TimeScale {
@@ -345,6 +360,7 @@ mod tests {
         assert_eq!(scale.end, 0);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn visible_range() {
         let scale = TimeScale {
@@ -359,6 +375,7 @@ mod tests {
         assert_eq!(last, 200);
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn visible_range_clamped() {
         let scale = TimeScale {
@@ -373,6 +390,7 @@ mod tests {
         assert_eq!(last, 149); // clamped to data_len - 1
     }
 
+    // Clasificación: determinística — verifica toggle de visibilidad del crosshair
     #[test]
     fn visible_range_empty() {
         let scale = TimeScale {
@@ -387,6 +405,7 @@ mod tests {
         assert_eq!(last, 0);
     }
 
+    // Clasificación: determinística — verifica set_bar_spacing
     #[test]
     fn set_bar_spacing() {
         let mut scale = TimeScale {
@@ -403,6 +422,7 @@ mod tests {
         assert_eq!(scale.start, 1);
     }
 
+    // Clasificación: determinística — verifica set_bar_spacing_with_offset
     #[test]
     fn set_bar_spacing_with_offset() {
         let mut scale = TimeScale {

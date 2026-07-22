@@ -90,6 +90,7 @@ mod tests {
         Bar::new(1000, 100.0, 105.0, 99.5, 102.0, 15000).unwrap()
     }
 
+    // Clasificación: determinística — verifica valid_construction
     #[test]
     fn valid_construction() {
         let bar = valid_bar();
@@ -101,66 +102,77 @@ mod tests {
         assert_eq!(bar.volume, 15000);
     }
 
+    // Clasificación: determinística — verifica reject_high_less_than_low
     #[test]
     fn reject_high_less_than_low() {
         let result = Bar::new(1, 100.0, 90.0, 95.0, 100.0, 100);
         assert!(matches!(result, Err(ChartError::InvalidPriceData(_))));
     }
 
+    // Clasificación: determinística — verifica reject_open_below_low
     #[test]
     fn reject_open_below_low() {
         let result = Bar::new(1, 90.0, 105.0, 95.0, 100.0, 100);
         assert!(matches!(result, Err(ChartError::InvalidPriceData(_))));
     }
 
+    // Clasificación: determinística — verifica reject_close_above_high
     #[test]
     fn reject_close_above_high() {
         let result = Bar::new(1, 100.0, 105.0, 99.0, 110.0, 100);
         assert!(matches!(result, Err(ChartError::InvalidPriceData(_))));
     }
 
+    // Clasificación: determinística — verifica reject_negative_price
     #[test]
     fn reject_negative_price() {
         let result = Bar::new(1, -1.0, 10.0, 0.0, 5.0, 100);
         assert!(matches!(result, Err(ChartError::InvalidPriceData(_))));
     }
 
+    // Clasificación: determinística — verifica bullish_bar
     #[test]
     fn bullish_bar() {
         let bar = Bar::new(1, 100.0, 105.0, 99.0, 102.0, 100).unwrap();
         assert!(bar.is_bullish());
     }
 
+    // Clasificación: determinística — verifica bearish_bar
     #[test]
     fn bearish_bar() {
         let bar = Bar::new(1, 102.0, 105.0, 99.0, 100.0, 100).unwrap();
         assert!(!bar.is_bullish());
     }
 
+    // Clasificación: determinística — verifica body
     #[test]
     fn body() {
         let bar = Bar::new(1, 100.0, 105.0, 99.0, 103.0, 100).unwrap();
         assert_eq!(bar.body(), 3.0);
     }
 
+    // Clasificación: determinística — verifica body_bearish
     #[test]
     fn body_bearish() {
         let bar = Bar::new(1, 103.0, 105.0, 99.0, 100.0, 100).unwrap();
         assert_eq!(bar.body(), 3.0);
     }
 
+    // Clasificación: determinística — verifica range
     #[test]
     fn range() {
         let bar = valid_bar();
         assert_eq!(bar.range(), 5.5);
     }
 
+    // Clasificación: determinística — verifica midpoint
     #[test]
     fn midpoint() {
         let bar = valid_bar();
         assert_eq!(bar.midpoint(), 102.25);
     }
 
+    // Clasificación: determinística — verifica doji_bar
     #[test]
     fn doji_bar() {
         let bar = Bar::new(1, 100.0, 105.0, 99.0, 100.0, 100).unwrap();

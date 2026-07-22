@@ -236,6 +236,7 @@ impl SeriesRenderer for PointFigureSeries {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica pf_column_rise
     #[test]
     fn pf_column_rise() {
         let c = PfColumn::Rise { boxes: 5 };
@@ -244,6 +245,7 @@ mod tests {
         assert_eq!(c.boxes(), 5);
     }
 
+    // Clasificación: determinística — verifica pf_column_fall
     #[test]
     fn pf_column_fall() {
         let c = PfColumn::Fall { boxes: 3 };
@@ -252,6 +254,7 @@ mod tests {
         assert_eq!(c.boxes(), 3);
     }
 
+    // Clasificación: determinística — verifica pf_series_new
     #[test]
     fn pf_series_new() {
         let s = PointFigureSeries::new(2.5, 3);
@@ -260,6 +263,7 @@ mod tests {
         assert_eq!(s.reversal_size, 3);
     }
 
+    // Clasificación: determinística — verifica pf_series_default
     #[test]
     fn pf_series_default() {
         let s = PointFigureSeries::default();
@@ -267,6 +271,7 @@ mod tests {
         assert_eq!(s.reversal_size, 3);
     }
 
+    // Clasificación: determinística — verifica pf_series_set_columns
     #[test]
     fn pf_series_set_columns() {
         let mut s = PointFigureSeries::new(1.0, 3);
@@ -276,6 +281,7 @@ mod tests {
         assert_eq!(s.columns(), &cols);
     }
 
+    // Clasificación: determinística — verifica pf_series_max_boxes
     #[test]
     fn pf_series_max_boxes() {
         let mut s = PointFigureSeries::new(1.0, 3);
@@ -287,6 +293,7 @@ mod tests {
         assert_eq!(s.max_boxes(), 8);
     }
 
+    // Clasificación: determinística — verifica pf_series_empty_no_commands
     #[test]
     fn pf_series_empty_no_commands() {
         let mut s = PointFigureSeries::new(1.0, 3);
@@ -294,6 +301,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica pf_series_generates_rect_commands
     #[test]
     fn pf_series_generates_rect_commands() {
         let mut s = PointFigureSeries::new(1.0, 3);
@@ -309,6 +317,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica pf_series_multiple_columns
     #[test]
     fn pf_series_multiple_columns() {
         let mut s = PointFigureSeries::new(1.0, 3);
@@ -320,6 +329,7 @@ mod tests {
         assert_eq!(cmds.len(), 5); // 3 + 2 boxes
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn pf_series_hit_test() {
         let mut s = PointFigureSeries::new(1.0, 3);
@@ -335,18 +345,21 @@ mod tests {
         assert!(hit.unwrap().index < 2);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn pf_series_hit_test_empty() {
         let s = PointFigureSeries::new(1.0, 3);
         assert!(s.hit_test(0.0, 0.0).is_none());
     }
 
+    // Clasificación: determinística — verifica pf_build_from_prices_empty
     #[test]
     fn pf_build_from_prices_empty() {
         let cols = PointFigureSeries::build_from_prices(&[], 1.0, 3);
         assert!(cols.is_empty());
     }
 
+    // Clasificación: determinística — verifica pf_build_from_prices_monotonic_rise
     #[test]
     fn pf_build_from_prices_monotonic_rise() {
         let prices = vec![
@@ -360,6 +373,7 @@ mod tests {
         assert!(cols[0].is_rise());
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn pf_series_bands_set_after_update() {
         let mut s = PointFigureSeries::new(1.0, 3);

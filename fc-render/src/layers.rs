@@ -10,6 +10,7 @@ use std::fmt;
 /// are sorted by their individual z-index. This ensures correct visual
 /// ordering: grid lines behind candles behind crosshair behind tooltips.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Default)]
 pub enum DrawLayer {
     /// Background fill (z: 0–99)
     Background,
@@ -24,6 +25,7 @@ pub enum DrawLayer {
     /// Indicator overlays (z: 500–599)
     Indicators,
     /// Candlestick / OHLC bars (z: 600–699)
+    #[default]
     Candles,
     /// Volume bars (z: 700–799)
     Volume,
@@ -102,11 +104,6 @@ impl DrawLayer {
     }
 }
 
-impl Default for DrawLayer {
-    fn default() -> Self {
-        Self::Candles
-    }
-}
 
 impl fmt::Display for DrawLayer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -138,6 +135,7 @@ impl fmt::Display for DrawLayer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica all_layers_have_unique_z_ranges
     #[test]
     fn all_layers_have_unique_z_ranges() {
         let layers = DrawLayer::all();
@@ -151,11 +149,13 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica layer_count
     #[test]
     fn layer_count() {
         assert_eq!(DrawLayer::count(), 15);
     }
 
+    // Clasificación: determinística — verifica layers_are_ordered
     #[test]
     fn layers_are_ordered() {
         let layers = DrawLayer::all();
@@ -169,11 +169,13 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica default_is_candles
     #[test]
     fn default_is_candles() {
         assert_eq!(DrawLayer::default(), DrawLayer::Candles);
     }
 
+    // Clasificación: determinística — verifica z_mid_is_center
     #[test]
     fn z_mid_is_center() {
         for &layer in DrawLayer::all() {
@@ -181,6 +183,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica display_format
     #[test]
     fn display_format() {
         assert_eq!(DrawLayer::Background.to_string(), "Background");
@@ -188,12 +191,14 @@ mod tests {
         assert_eq!(DrawLayer::Cursor.to_string(), "Cursor");
     }
 
+    // Clasificación: determinística — verifica debug_format
     #[test]
     fn debug_format() {
         let dbg = format!("{:?}", DrawLayer::Grid);
         assert_eq!(dbg, "Grid");
     }
 
+    // Clasificación: determinística — verifica hash_consistency
     #[test]
     fn hash_consistency() {
         use std::collections::HashSet;

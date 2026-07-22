@@ -56,8 +56,8 @@ pub trait SeriesRenderer: Send + Sync {
 mod tests {
     use super::*;
 
-    // ---- SeriesHit ----
 
+    // Clasificación: determinística — verifica series_hit_equality
     #[test]
     fn series_hit_equality() {
         let h1 = SeriesHit {
@@ -71,6 +71,7 @@ mod tests {
         assert_eq!(h1, h2);
     }
 
+    // Clasificación: determinística — verifica series_hit_different_index
     #[test]
     fn series_hit_different_index() {
         let h1 = SeriesHit {

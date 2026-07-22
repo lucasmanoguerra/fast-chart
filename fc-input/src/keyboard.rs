@@ -273,6 +273,7 @@ mod tests {
     fn cmd_cancel() -> ChartCommand { ChartCommand::CancelDrawing }
     fn cmd_deselect() -> ChartCommand { ChartCommand::DeselectAll }
 
+    // Clasificación: determinística — verifica que un mapa vacío reporta is_empty=true y len=0
     #[test]
     fn empty_map() {
         let map = KeyboardShortcutMap::new();
@@ -280,6 +281,7 @@ mod tests {
         assert_eq!(map.len(), 0);
     }
 
+    // Clasificación: determinística — verifica que registrar un shortcut incrementa len()
     #[test]
     fn register_shortcut() {
         let mut map = KeyboardShortcutMap::new();
@@ -290,6 +292,7 @@ mod tests {
         assert!(!map.is_empty());
     }
 
+    // Clasificación: determinística — verifica que eventos coincidentes retornan el comando correcto
     #[test]
     fn handle_event_match() {
         let mut map = KeyboardShortcutMap::new();
@@ -299,6 +302,7 @@ mod tests {
         assert_eq!(map.handle_event("Escape", &Modifiers::NONE), Some(&cmd_cancel()));
     }
 
+    // Clasificación: determinística — verifica que eventos coincidentes retornan el comando correcto
     #[test]
     fn handle_event_no_match() {
         let mut map = KeyboardShortcutMap::new();
@@ -308,6 +312,7 @@ mod tests {
         assert!(map.handle_event("Delete", &Modifiers::NONE).is_none());
     }
 
+    // Clasificación: determinística — verifica matching con modifiers (Shift, Ctrl, Alt, Meta)
     #[test]
     fn handle_event_with_modifier() {
         let mut map = KeyboardShortcutMap::new();
@@ -317,6 +322,7 @@ mod tests {
         assert_eq!(map.handle_event("z", &Modifiers::new(true, true, false, false)), Some(&cmd_cancel()));
     }
 
+    // Clasificación: determinística — edge case: modifier incorrecto — shortcut no debe coincidir
     #[test]
     fn handle_event_wrong_modifier() {
         let mut map = KeyboardShortcutMap::new();
@@ -326,6 +332,7 @@ mod tests {
         assert!(map.handle_event("z", &Modifiers::NONE).is_none());
     }
 
+    // Clasificación: determinística — verifica búsqueda de shortcut por key + modifiers
     #[test]
     fn find_shortcut() {
         let mut map = KeyboardShortcutMap::new();
@@ -338,6 +345,7 @@ mod tests {
         assert_eq!(found.unwrap().key, "Delete");
     }
 
+    // Clasificación: determinística — verifica que remove() elimina el shortcut y retorna true
     #[test]
     fn remove_shortcut() {
         let mut map = KeyboardShortcutMap::new();
@@ -348,6 +356,7 @@ mod tests {
         assert!(map.is_empty());
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn clear_shortcuts() {
         let mut map = KeyboardShortcutMap::new();
@@ -357,6 +366,7 @@ mod tests {
         assert!(map.is_empty());
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn len_and_empty() {
         let mut map = KeyboardShortcutMap::new();
@@ -369,6 +379,7 @@ mod tests {
         assert_eq!(map.len(), 2);
     }
 
+    // Clasificación: determinística — verifica que reset() limpia todo el estado del detector de gestos
     #[test]
     fn default_preset_has_basics() {
         let map = KeyboardPresets::default_shortcuts();
@@ -383,6 +394,7 @@ mod tests {
         assert!(map.find("1", &Modifiers::NONE).is_some());
     }
 
+    // Clasificación: determinística — verifica que reset() limpia todo el estado del detector de gestos
     #[test]
     fn trading_preset_has_more() {
         let default = KeyboardPresets::default_shortcuts();
@@ -393,6 +405,7 @@ mod tests {
         assert!(trading.find(" ", &Modifiers::NONE).is_some());
     }
 
+    // Clasificación: determinística — verifica que reset() limpia todo el estado del detector de gestos
     #[test]
     fn minimal_preset_has_few() {
         let map = KeyboardPresets::minimal_shortcuts();
@@ -403,6 +416,7 @@ mod tests {
         assert!(map.find("Delete", &Modifiers::NONE).is_some());
     }
 
+    // Clasificación: determinística — verifica que registrar un shortcut incrementa len()
     #[test]
     fn duplicate_key_register() {
         let mut map = KeyboardShortcutMap::new();
@@ -412,6 +426,7 @@ mod tests {
         assert_eq!(map.handle_event("Escape", &Modifiers::NONE), Some(&cmd_cancel()));
     }
 
+    // Clasificación: determinística — verifica que el campo description se preserva correctamente
     #[test]
     fn description_field() {
         let shortcut = KeyboardShortcut {

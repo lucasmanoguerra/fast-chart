@@ -35,6 +35,7 @@ pub use tick::Tick;
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica bar_roundtrip
     #[test]
     fn bar_roundtrip() {
         let bar = Bar::new(1000, 100.0, 105.0, 99.0, 102.0, 5000).unwrap();
@@ -42,6 +43,7 @@ mod tests {
         assert_eq!(bar.close, 102.0);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn series_push_and_latest() {
         let mut series: TimeSeries<Bar, 100> = TimeSeries::new();

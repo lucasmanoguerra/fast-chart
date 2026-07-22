@@ -65,10 +65,8 @@ impl RendererBackend for RecordingBackend {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Test 1: Full pipeline setup and execution
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica pipeline_full_frame_execution
 #[test]
 fn pipeline_full_frame_execution() {
     let mut pipeline = RenderPipeline::new();
@@ -100,10 +98,8 @@ fn pipeline_full_frame_execution() {
     assert!(pipeline.pass_tracker().is_dirty(RenderPass::Overlay));
 }
 
-// ---------------------------------------------------------------------------
-// Test 2: Dirty region filtering — only dirty pass runs
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica cálculo de región sucia
 #[test]
 fn dirty_region_filters_non_dirty_passes() {
     let mut pipeline = RenderPipeline::new();
@@ -127,10 +123,8 @@ fn dirty_region_filters_non_dirty_passes() {
     assert_eq!(pipeline.stats().passes_skipped, 1);
 }
 
-// ---------------------------------------------------------------------------
-// Test 3: Scissor manager in pipeline — pane clipping
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica scissor_clipping_in_pipeline
 #[test]
 fn scissor_clipping_in_pipeline() {
     let mut scissor = ScissorManager::new(1920, 1080);
@@ -161,10 +155,8 @@ fn scissor_clipping_in_pipeline() {
     assert_eq!(scissor.depth(), 0);
 }
 
-// ---------------------------------------------------------------------------
-// Test 4: Cache stores and retrieves
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica cache_stores_and_retrieves
 #[test]
 fn cache_stores_and_retrieves() {
     let cache = GpuCache::new(2048);
@@ -174,10 +166,8 @@ fn cache_stores_and_retrieves() {
     assert_eq!(default_cache.capacity(), 1024);
 }
 
-// ---------------------------------------------------------------------------
-// Test 5: PixelPerfect alignment in render flow
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica alineación pixel-perfect
 #[test]
 fn pixel_perfect_in_render_flow() {
     // 1px line: snap endpoints to pixel centres.
@@ -217,10 +207,8 @@ fn pixel_perfect_in_render_flow() {
     assert_eq!(v.ceil_pixel(), 3.0);
 }
 
-// ---------------------------------------------------------------------------
-// Test 6: Multi-pass rendering — execution order matches z-order
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica multi_pass_render_order
 #[test]
 fn multi_pass_render_order() {
     let mut pipeline = RenderPipeline::new();
@@ -252,10 +240,8 @@ fn multi_pass_render_order() {
     assert_eq!(backend.calls[2].len(), 1); // Crosshair: 1 command
 }
 
-// ---------------------------------------------------------------------------
-// Test 7: Resize invalidates scissor and dirty regions
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica eliminación de entry y actualización de orden
 #[test]
 fn resize_invalidates_scissor_and_dirty() {
     let mut scissor = ScissorManager::new(1920, 1080);
@@ -277,10 +263,8 @@ fn resize_invalidates_scissor_and_dirty() {
     assert_eq!(merged, ScreenRect::full(1920.0, 1080.0));
 }
 
-// ---------------------------------------------------------------------------
-// Test 8: Full chart rendering flow (end-to-end)
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica full_chart_render_flow
 #[test]
 fn full_chart_render_flow() {
     // End-to-end: pipeline + dirty tracking + scissor + pixel-perfect + vertex gen.
@@ -373,10 +357,8 @@ fn full_chart_render_flow() {
     assert!(scissor.current().is_none());
 }
 
-// ---------------------------------------------------------------------------
-// Test 9: Series renderer commands → pipeline consumption
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica series_renderer_commands_to_pipeline
 #[test]
 fn series_renderer_commands_to_pipeline() {
     use fc_renderer_wgpu::renderers::candle::{CandleRenderer, DataPoint as CandleData};
@@ -429,10 +411,8 @@ fn series_renderer_commands_to_pipeline() {
     assert_eq!(pipeline.stats().total_commands, 5); // 4 candle + 1 line
 }
 
-// ---------------------------------------------------------------------------
-// Test 10: Scissor nested panes — intersection behavior
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn scissor_nested_panes() {
     let mut scissor = ScissorManager::new(1920, 1080);
@@ -468,10 +448,8 @@ fn scissor_nested_panes() {
     assert!(scissor.current().is_none());
 }
 
-// ---------------------------------------------------------------------------
-// Test 11: Dirty region tracker — union and merge
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica cálculo de región sucia
 #[test]
 fn dirty_region_tracker_union_and_merge() {
     let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -501,10 +479,8 @@ fn dirty_region_tracker_union_and_merge() {
     assert_eq!(tracker2.dirty_count(), 0);
 }
 
-// ---------------------------------------------------------------------------
-// Test 12: Pipeline with disabled pass is skipped
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica pipeline_with_disabled_pass
 #[test]
 fn pipeline_with_disabled_pass() {
     let mut pipeline = RenderPipeline::new();
@@ -527,10 +503,8 @@ fn pipeline_with_disabled_pass() {
     assert_eq!(pipeline.stats().passes_skipped, 1);
 }
 
-// ---------------------------------------------------------------------------
-// Test 13: Vertex generation from DrawCommands
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica generación de vértices
 #[test]
 fn vertex_gen_from_draw_commands() {
     let w = 800.0_f32;
@@ -559,10 +533,8 @@ fn vertex_gen_from_draw_commands() {
     assert!(ndc_y.abs() < 1e-6);
 }
 
-// ---------------------------------------------------------------------------
-// Test 14: Pixel-perfect line prevents collapse
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica alineación pixel-perfect
 #[test]
 fn pixel_perfect_line_prevents_blur() {
     // Very close points should still produce a 1px line.
@@ -585,10 +557,8 @@ fn pixel_perfect_line_prevents_blur() {
     assert_eq!(b, 1.0);
 }
 
-// ---------------------------------------------------------------------------
-// Test 15: Pipeline execute and stats consistency
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica pipeline_execute_and_stats_consistency
 #[test]
 fn pipeline_execute_and_stats_consistency() {
     let mut pipeline = RenderPipeline::new();
@@ -628,10 +598,8 @@ fn pipeline_execute_and_stats_consistency() {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Test 16: ScissorRect intersection and containment
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica cálculo de rect de scissor
 #[test]
 fn scissor_rect_intersection_and_containment() {
     let a = ScissorRect::new(0, 0, 100, 100);
@@ -660,10 +628,8 @@ fn scissor_rect_intersection_and_containment() {
     assert_eq!(full.height, 1080);
 }
 
-// ---------------------------------------------------------------------------
-// Test 17: DirtyRegionTracker — mark_full_dirty and clear per pass
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica reset completo del estado
 #[test]
 fn dirty_tracker_full_dirty_and_per_pass_clear() {
     let mut tracker = DirtyRegionTracker::new(1920.0, 1080.0);
@@ -691,10 +657,8 @@ fn dirty_tracker_full_dirty_and_per_pass_clear() {
     ));
 }
 
-// ---------------------------------------------------------------------------
-// Test 18: Vertex attributes — Pod + Zeroable layout
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica vertex_pod_layout
 #[test]
 fn vertex_pod_layout() {
     use bytemuck::{Pod, Zeroable};
@@ -721,10 +685,8 @@ fn vertex_pod_layout() {
     assert_eq!(v.tex_coord, [0.1, 0.2]);
 }
 
-// ---------------------------------------------------------------------------
-// Test 19: Multiple frames — pipeline reuse
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica pipeline_multiple_frames_reuse
 #[test]
 fn pipeline_multiple_frames_reuse() {
     let mut pipeline = RenderPipeline::new();
@@ -749,10 +711,8 @@ fn pipeline_multiple_frames_reuse() {
     assert_eq!(pipeline.stats().passes_executed, 1);
 }
 
-// ---------------------------------------------------------------------------
-// Test 20: ScreenRect — utility methods
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica screen_rect_utilities
 #[test]
 fn screen_rect_utilities() {
     let r = ScreenRect::new(10.0, 20.0, 100.0, 50.0);
@@ -787,10 +747,8 @@ fn screen_rect_utilities() {
     assert_eq!(sh, 50);
 }
 
-// ---------------------------------------------------------------------------
-// Test 21: RenderPass z-index range mapping
-// ---------------------------------------------------------------------------
 
+// Clasificación: determinística — verifica renderpass_z_index_ranges
 #[test]
 fn renderpass_z_index_ranges() {
     // Each pass occupies a 1000-unit range.

@@ -73,12 +73,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica vwap_name
     #[test]
     fn vwap_name() {
         let vwap = Vwap;
         assert_eq!(vwap.name(), "VWAP");
     }
 
+    // Clasificación: determinística — verifica vwap_empty_series
     #[test]
     fn vwap_empty_series() {
         let bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -87,6 +89,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica vwap_single_bar
     #[test]
     fn vwap_single_bar() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -105,6 +108,7 @@ mod tests {
         assert!((result.get(0).unwrap() - expected_tp).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica vwap_basic
     #[test]
     fn vwap_basic() {
         let bars = make_bars(50);
@@ -114,6 +118,7 @@ mod tests {
         assert!(result.iter().all(|v| *v > 0.0));
     }
 
+    // Clasificación: determinística — verifica vwap_exact_period
     #[test]
     fn vwap_exact_period() {
         let bars = make_bars(10);
@@ -122,6 +127,7 @@ mod tests {
         assert_eq!(result.len(), 10);
     }
 
+    // Clasificación: determinística — verifica vwap_zero_volume
     #[test]
     fn vwap_zero_volume() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -147,6 +153,7 @@ mod tests {
         assert!(result.iter().all(|v| v.is_finite()));
     }
 
+    // Clasificación: determinística — verifica que reset() limpia todo el estado del detector de gestos
     #[test]
     fn vwap_session_reset() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -187,6 +194,7 @@ mod tests {
         assert!((result.get(2).unwrap() - tp3).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica vwap_cumulative_weighted
     #[test]
     fn vwap_cumulative_weighted() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();

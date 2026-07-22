@@ -87,7 +87,7 @@ impl LineBreakSeries {
         let mut current_open = bars[0].2;
         let mut current_is_up = true;
 
-        for &(high, low, close) in &bars[1..] {
+        for &(_high, _low, close) in &bars[1..] {
             let range = prev_close;
             let threshold = range * line_count as f64;
 
@@ -214,6 +214,7 @@ impl SeriesRenderer for LineBreakSeries {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica line_break_block_new
     #[test]
     fn line_break_block_new() {
         let b = LineBreakBlock::new(true, 100.0, 110.0);
@@ -222,6 +223,7 @@ mod tests {
         assert!((b.close - 110.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica line_break_series_new
     #[test]
     fn line_break_series_new() {
         let s = LineBreakSeries::new(3);
@@ -229,12 +231,14 @@ mod tests {
         assert_eq!(s.line_count, 3);
     }
 
+    // Clasificación: determinística — verifica line_break_series_default
     #[test]
     fn line_break_series_default() {
         let s = LineBreakSeries::default();
         assert_eq!(s.line_count, 3);
     }
 
+    // Clasificación: determinística — verifica line_break_series_set_blocks
     #[test]
     fn line_break_series_set_blocks() {
         let mut s = LineBreakSeries::new(3);
@@ -247,6 +251,7 @@ mod tests {
         assert_eq!(s.blocks(), &blocks);
     }
 
+    // Clasificación: determinística — verifica line_break_series_empty_no_commands
     #[test]
     fn line_break_series_empty_no_commands() {
         let mut s = LineBreakSeries::new(3);
@@ -254,6 +259,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica line_break_series_generates_rect_commands
     #[test]
     fn line_break_series_generates_rect_commands() {
         let mut s = LineBreakSeries::new(3);
@@ -272,6 +278,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica line_break_series_up_down_colors
     #[test]
     fn line_break_series_up_down_colors() {
         let mut s = LineBreakSeries::new(3);
@@ -294,18 +301,21 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica line_break_build_empty
     #[test]
     fn line_break_build_empty() {
         let blocks = LineBreakSeries::build_from_bars(&[], 3);
         assert!(blocks.is_empty());
     }
 
+    // Clasificación: determinística — verifica line_break_build_single_bar
     #[test]
     fn line_break_build_single_bar() {
         let blocks = LineBreakSeries::build_from_bars(&[(100.0, 99.0, 100.5)], 3);
         assert!(blocks.is_empty());
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn line_break_series_hit_test() {
         let mut s = LineBreakSeries::new(3);
@@ -320,6 +330,7 @@ mod tests {
         assert!(hit.unwrap().index < 2);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn line_break_hit_test_empty() {
         let s = LineBreakSeries::new(3);

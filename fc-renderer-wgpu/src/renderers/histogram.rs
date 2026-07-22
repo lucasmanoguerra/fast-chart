@@ -94,6 +94,7 @@ impl SeriesRenderer for HistogramRenderer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = HistogramRenderer::new([0.0, 1.0, 0.0, 1.0], 10.0);
@@ -101,6 +102,7 @@ mod tests {
         assert_eq!(r.bar_width, 10.0);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = HistogramRenderer::new([0.0; 4], 8.0);
@@ -113,6 +115,7 @@ mod tests {
         assert_eq!(cmds.len(), 2);
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = HistogramRenderer::new([0.0; 4], 8.0);
@@ -121,6 +124,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica histogram_positive_above_zero
     #[test]
     fn histogram_positive_above_zero() {
         let mut r = HistogramRenderer::new([0.0, 1.0, 0.0, 1.0], 8.0);
@@ -137,6 +141,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica histogram_negative_below_zero
     #[test]
     fn histogram_negative_below_zero() {
         let mut r = HistogramRenderer::new([0.0, 1.0, 0.0, 1.0], 8.0);

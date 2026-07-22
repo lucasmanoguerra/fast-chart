@@ -82,6 +82,7 @@ impl SeriesRenderer for LineRenderer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = LineRenderer::new([1.0; 4], 2.0);
@@ -89,6 +90,7 @@ mod tests {
         assert_eq!(r.width, 2.0);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = LineRenderer::new([1.0; 4], 1.5);
@@ -102,6 +104,7 @@ mod tests {
         assert_eq!(cmds.len(), 1);
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = LineRenderer::new([1.0; 4], 1.5);
@@ -110,6 +113,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica render_single_point_produces_nothing
     #[test]
     fn render_single_point_produces_nothing() {
         let r = LineRenderer::new([1.0; 4], 1.5);
@@ -118,6 +122,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica line_has_correct_points
     #[test]
     fn line_has_correct_points() {
         let r = LineRenderer::new([1.0; 4], 1.5);

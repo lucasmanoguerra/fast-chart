@@ -166,12 +166,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica kagi_name
     #[test]
     fn kagi_name() {
         let kagi = Kagi::default();
         assert_eq!(kagi.name(), "Kagi");
     }
 
+    // Clasificación: determinística — verifica kagi_empty_series
     #[test]
     fn kagi_empty_series() {
         let series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -180,6 +182,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_single_bar
     #[test]
     fn kagi_single_bar() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -198,24 +201,27 @@ mod tests {
         assert!((result.get(0).unwrap() - 102.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica kagi_basic
     #[test]
     fn kagi_basic() {
         let bars = make_bars(50);
         let kagi = Kagi { reversal_pct: 2.0, atr_period: 14 };
         let result = kagi.calculate(&bars);
         // With varying prices, should produce multiple turning points
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_exact_period
     #[test]
     fn kagi_exact_period() {
         let bars = make_bars(15);
         let kagi = Kagi { reversal_pct: 0.0, atr_period: 14 };
         let result = kagi.calculate(&bars);
         // Should produce turning points with ATR-based reversal
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_insufficient_data_for_atr
     #[test]
     fn kagi_insufficient_data_for_atr() {
         let bars = make_bars(10);
@@ -224,6 +230,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_flat_prices_no_reversal
     #[test]
     fn kagi_flat_prices_no_reversal() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -243,6 +250,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica kagi_upward_reversal
     #[test]
     fn kagi_upward_reversal() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -260,6 +268,7 @@ mod tests {
         assert!(result.len() >= 2);
     }
 
+    // Clasificación: determinística — verifica kagi_downward_reversal
     #[test]
     fn kagi_downward_reversal() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -277,15 +286,17 @@ mod tests {
         assert!(result.len() >= 2);
     }
 
+    // Clasificación: determinística — verifica kagi_atr_mode
     #[test]
     fn kagi_atr_mode() {
         let bars = make_bars(50);
         let kagi = Kagi { reversal_pct: 0.0, atr_period: 14 };
         let result = kagi.calculate(&bars);
         // Should produce turning points with ATR-based reversal
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_atr_mode_insufficient_bars
     #[test]
     fn kagi_atr_mode_insufficient_bars() {
         let bars = make_bars(5);
@@ -294,6 +305,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_trend_continuation
     #[test]
     fn kagi_trend_continuation() {
         // Bars that continue trending up without reversal
@@ -306,9 +318,10 @@ mod tests {
         let result = kagi.calculate(&series);
         // Small moves (1% of 100 = 1 < 4% threshold) → no reversal
         // But initial price is recorded
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica kagi_large_reversal
     #[test]
     fn kagi_large_reversal() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();

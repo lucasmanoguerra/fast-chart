@@ -60,12 +60,14 @@ impl Indicator<MAX_SERIES_LEN> for HeikinAshi {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica name_returns_correct_string
     #[test]
     fn name_returns_correct_string() {
         let ha = HeikinAshi;
         assert_eq!(ha.name(), "Heikin Ashi");
     }
 
+    // Clasificación: determinística — verifica empty_series
     #[test]
     fn empty_series() {
         let series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -74,6 +76,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica single_bar
     #[test]
     fn single_bar() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -92,6 +95,7 @@ mod tests {
         assert!((result.get(0).unwrap() - 101.25).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica output_count_matches_input
     #[test]
     fn output_count_matches_input() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -111,6 +115,7 @@ mod tests {
         assert_eq!(result.len(), 20);
     }
 
+    // Clasificación: determinística — verifica first_ha_close_formula
     #[test]
     fn first_ha_close_formula() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -128,6 +133,7 @@ mod tests {
         assert!((result.get(0).unwrap() - 90.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica second_bar_uses_ha_open
     #[test]
     fn second_bar_uses_ha_open() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -161,6 +167,7 @@ mod tests {
         assert!((result.get(1).unwrap() - 111.25).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica flat_prices
     #[test]
     fn flat_prices() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -181,6 +188,7 @@ mod tests {
         assert!(result.iter().all(|v| (*v - 100.0).abs() < f64::EPSILON));
     }
 
+    // Clasificación: determinística — verifica trend_smoothing
     #[test]
     fn trend_smoothing() {
         // Heikin Ashi should smooth out noise; test that consecutive values
@@ -205,7 +213,7 @@ mod tests {
         // Verify HA_Close values are between the bounds of the raw data
         for i in 0..result.len() {
             let v = *result.get(i).unwrap();
-            assert!(v >= 95.0 && v <= 110.0, "HA_Close {v} out of expected range");
+            assert!((95.0..=110.0).contains(&v), "HA_Close {v} out of expected range");
         }
     }
 }

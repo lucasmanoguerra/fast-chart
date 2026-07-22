@@ -119,6 +119,7 @@ impl Rect {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica rect_new
     #[test]
     fn rect_new() {
         let r = Rect::new(10.0, 20.0, 100.0, 50.0);
@@ -128,12 +129,14 @@ mod tests {
         assert_eq!(r.height, 50.0);
     }
 
+    // Clasificación: determinística — verifica rect_full
     #[test]
     fn rect_full() {
         let r = Rect::full(800.0, 600.0);
         assert_eq!(r, Rect::new(0.0, 0.0, 800.0, 600.0));
     }
 
+    // Clasificación: determinística — verifica rect_contains
     #[test]
     fn rect_contains() {
         let r = Rect::new(0.0, 0.0, 100.0, 100.0);
@@ -142,6 +145,7 @@ mod tests {
         assert!(!r.contains(100.0, 100.0));
     }
 
+    // Clasificación: determinística — verifica rect_contains_rect
     #[test]
     fn rect_contains_rect() {
         let outer = Rect::new(0.0, 0.0, 200.0, 200.0);
@@ -150,6 +154,7 @@ mod tests {
         assert!(!inner.contains_rect(&outer));
     }
 
+    // Clasificación: determinística — verifica rect_intersects
     #[test]
     fn rect_intersects() {
         let a = Rect::new(0.0, 0.0, 100.0, 100.0);
@@ -161,6 +166,7 @@ mod tests {
         assert!(!a.intersects(&c));
     }
 
+    // Clasificación: determinística — verifica rect_intersects_or_adjacent
     #[test]
     fn rect_intersects_or_adjacent() {
         let a = Rect::new(0.0, 0.0, 100.0, 100.0);
@@ -169,6 +175,7 @@ mod tests {
         assert!(a.intersects_or_adjacent(&b));
     }
 
+    // Clasificación: determinística — verifica rect_union
     #[test]
     fn rect_union() {
         let a = Rect::new(0.0, 0.0, 100.0, 100.0);
@@ -176,12 +183,14 @@ mod tests {
         assert_eq!(a.union(&b), Rect::new(0.0, 0.0, 150.0, 150.0));
     }
 
+    // Clasificación: determinística — verifica rect_center
     #[test]
     fn rect_center() {
         let r = Rect::new(0.0, 0.0, 100.0, 60.0);
         assert_eq!(r.center(), (50.0, 30.0));
     }
 
+    // Clasificación: determinística — verifica rect_to_scissor
     #[test]
     fn rect_to_scissor() {
         let r = Rect::new(10.0, 20.0, 100.0, 50.0);
@@ -192,12 +201,14 @@ mod tests {
         assert_eq!(h, 50);
     }
 
+    // Clasificación: determinística — verifica rect_area
     #[test]
     fn rect_area() {
         let r = Rect::new(0.0, 0.0, 100.0, 50.0);
         assert_eq!(r.area(), 5000.0);
     }
 
+    // Clasificación: determinística — verifica rect_right_bottom
     #[test]
     fn rect_right_bottom() {
         let r = Rect::new(10.0, 20.0, 90.0, 80.0);

@@ -202,8 +202,7 @@ impl ScissorManager {
 mod tests {
     use super::*;
 
-    // ── ScissorRect tests ────────────────────────────────────────────
-
+    // Clasificación: determinística — verifica cálculo de rect de scissor
     #[test]
     fn scissor_rect_new() {
         let r = ScissorRect::new(10, 20, 300, 400);
@@ -213,6 +212,7 @@ mod tests {
         assert_eq!(r.height, 400);
     }
 
+    // Clasificación: determinística — verifica scissor_rect_full
     #[test]
     fn scissor_rect_full() {
         let r = ScissorRect::full(1920, 1080);
@@ -222,6 +222,7 @@ mod tests {
         assert_eq!(r.height, 1080);
     }
 
+    // Clasificación: determinística — verifica scissor_rect_intersect_overlapping
     #[test]
     fn scissor_rect_intersect_overlapping() {
         let a = ScissorRect::new(0, 0, 100, 100);
@@ -230,6 +231,7 @@ mod tests {
         assert_eq!(result, ScissorRect::new(50, 50, 50, 50));
     }
 
+    // Clasificación: determinística — verifica scissor_rect_intersect_non_overlapping
     #[test]
     fn scissor_rect_intersect_non_overlapping() {
         let a = ScissorRect::new(0, 0, 100, 100);
@@ -237,6 +239,7 @@ mod tests {
         assert!(a.intersect(&b).is_none());
     }
 
+    // Clasificación: determinística — verifica scissor_rect_intersect_edge_touching
     #[test]
     fn scissor_rect_intersect_edge_touching() {
         let a = ScissorRect::new(0, 0, 100, 100);
@@ -244,6 +247,7 @@ mod tests {
         assert!(a.intersect(&b).is_none());
     }
 
+    // Clasificación: determinística — verifica scissor_rect_intersect_contained
     #[test]
     fn scissor_rect_intersect_contained() {
         let outer = ScissorRect::new(0, 0, 200, 200);
@@ -252,6 +256,7 @@ mod tests {
         assert_eq!(result, inner);
     }
 
+    // Clasificación: determinística — verifica scissor_rect_contains_inside
     #[test]
     fn scissor_rect_contains_inside() {
         let r = ScissorRect::new(10, 10, 80, 80);
@@ -260,6 +265,7 @@ mod tests {
         assert!(r.contains(89, 89));
     }
 
+    // Clasificación: determinística — verifica scissor_rect_contains_outside
     #[test]
     fn scissor_rect_contains_outside() {
         let r = ScissorRect::new(10, 10, 80, 80);
@@ -268,6 +274,7 @@ mod tests {
         assert!(!r.contains(50, 90));
     }
 
+    // Clasificación: determinística — verifica scissor_rect_to_wgpu_flips_y
     #[test]
     fn scissor_rect_to_wgpu_flips_y() {
         let r = ScissorRect::new(10, 100, 200, 300);
@@ -278,8 +285,7 @@ mod tests {
         assert_eq!(h, 300);
     }
 
-    // ── ScissorManager tests ─────────────────────────────────────────
-
+    // Clasificación: determinística — verifica scissor_manager_new
     #[test]
     fn scissor_manager_new() {
         let mgr = ScissorManager::new(1920, 1080);
@@ -288,6 +294,7 @@ mod tests {
         assert_eq!(mgr.current_wgpu(), (0, 0, 1920, 1080));
     }
 
+    // Clasificación: determinística — verifica push_single
     #[test]
     fn push_single() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -297,6 +304,7 @@ mod tests {
         assert_eq!(mgr.depth(), 1);
     }
 
+    // Clasificación: determinística — verifica push_multiple_intersects
     #[test]
     fn push_multiple_intersects() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -309,6 +317,7 @@ mod tests {
         assert_eq!(mgr.depth(), 2);
     }
 
+    // Clasificación: determinística — verifica push_multiple_no_overlap
     #[test]
     fn push_multiple_no_overlap() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -318,6 +327,7 @@ mod tests {
         assert!(mgr.current().is_none());
     }
 
+    // Clasificación: determinística — verifica pop_restores
     #[test]
     fn pop_restores() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -332,6 +342,7 @@ mod tests {
         assert_eq!(mgr.depth(), 1);
     }
 
+    // Clasificación: determinística — verifica pop_empty_stack
     #[test]
     fn pop_empty_stack() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -339,6 +350,7 @@ mod tests {
         assert!(mgr.current().is_none());
     }
 
+    // Clasificación: determinística — verifica que reset() limpia todo el estado del detector de gestos
     #[test]
     fn reset() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -349,6 +361,7 @@ mod tests {
         assert_eq!(mgr.depth(), 0);
     }
 
+    // Clasificación: determinística — verifica resize
     #[test]
     fn resize() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -357,6 +370,7 @@ mod tests {
         assert_eq!(mgr.current_wgpu(), (0, 0, 2560, 1440));
     }
 
+    // Clasificación: determinística — verifica current_wgpu_with_active_scissor
     #[test]
     fn current_wgpu_with_active_scissor() {
         let mut mgr = ScissorManager::new(1920, 1080);
@@ -368,6 +382,7 @@ mod tests {
         assert_eq!(h, 300);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn three_panes_sequential() {
         let mut mgr = ScissorManager::new(1920, 1080);

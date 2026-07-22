@@ -183,6 +183,7 @@ mod tests {
         (ChartController::new(provider, handler), sender)
     }
 
+    // Clasificación: determinística — verifica tick_processes_bar_events
     #[test]
     fn tick_processes_bar_events() {
         let (mut ctrl, tx) = make_controller();
@@ -194,6 +195,7 @@ mod tests {
         assert!(ctrl.state().time_series.latest().unwrap().timestamp == 1000);
     }
 
+    // Clasificación: determinística — verifica tick_renders_when_dirty
     #[test]
     fn tick_renders_when_dirty() {
         let (mut ctrl, tx) = make_controller();
@@ -204,6 +206,7 @@ mod tests {
         assert!(ctrl.state().invalidation.level() > InvalidationLevel::Nothing);
     }
 
+    // Clasificación: determinística — verifica tick_skips_render_when_no_data
     #[test]
     fn tick_skips_render_when_no_data() {
         let (mut ctrl, _tx) = make_controller();
@@ -213,6 +216,7 @@ mod tests {
         assert!(ctrl.state().invalidation.is_empty());
     }
 
+    // Clasificación: determinística — verifica tick_processes_multiple_events
     #[test]
     fn tick_processes_multiple_events() {
         let (mut ctrl, tx) = make_controller();
@@ -224,6 +228,7 @@ mod tests {
         assert_eq!(ctrl.state().time_series.len(), 5);
     }
 
+    // Clasificación: determinística — verifica handle_input_sets_crosshair
     #[test]
     fn handle_input_sets_crosshair() {
         let handler = Box::new(MockInteractionHandler::new());
@@ -247,6 +252,7 @@ mod tests {
         assert_eq!(ctrl.state().crosshair.time, 5000);
     }
 
+    // Clasificación: determinística — verifica handle_input_deactivates_crosshair
     #[test]
     fn handle_input_deactivates_crosshair() {
         let handler = Box::new(MockInteractionHandler::new());
@@ -261,6 +267,7 @@ mod tests {
         assert!(!ctrl.state().crosshair.active);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn handle_input_updates_viewport() {
         let handler = Box::new(MockInteractionHandler::new());
@@ -277,6 +284,7 @@ mod tests {
         assert_eq!(ctrl.state().viewport.time_end, 10000);
     }
 
+    // Clasificación: determinística — verifica data_provider_start_stop
     #[test]
     fn data_provider_start_stop() {
         let (mut ctrl, _tx) = make_controller();
@@ -284,6 +292,7 @@ mod tests {
         assert!(ctrl.stop_data_provider().is_ok());
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn add_and_clear_indicator_overlays() {
         let (mut ctrl, _tx) = make_controller();

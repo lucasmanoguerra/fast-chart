@@ -283,6 +283,7 @@ pub mod zoom;
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica input_event_mouse_move
     #[test]
     fn input_event_mouse_move() {
         let e = InputEvent::mouse_move(100.0, 200.0);
@@ -296,6 +297,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica input_event_mouse_left_click
     #[test]
     fn input_event_mouse_left_click() {
         let down = InputEvent::mouse_left_down(50.0, 75.0);
@@ -306,6 +308,7 @@ mod tests {
         }));
     }
 
+    // Clasificación: determinística — verifica input_event_wheel
     #[test]
     fn input_event_wheel() {
         let e = InputEvent::wheel(0.0, -3.0, 400.0, 300.0);
@@ -320,6 +323,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica input_event_key_down
     #[test]
     fn input_event_key_down() {
         let e = InputEvent::key_down(KeyCode::Escape);
@@ -332,6 +336,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica input_event_key_with_modifiers
     #[test]
     fn input_event_key_with_modifiers() {
         let mods = ModifierState { shift: true, ctrl: true, alt: false, super_key: false };
@@ -347,6 +352,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica input_event_touch
     #[test]
     fn input_event_touch() {
         let start = InputEvent::touch_start(1, 100.0, 200.0);
@@ -356,6 +362,7 @@ mod tests {
         assert_ne!(mov, end);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pinch con dos dedos
     #[test]
     fn input_event_pinch() {
         let e = InputEvent::pinch(400.0, 300.0, 200.0, 1.5);
@@ -370,6 +377,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica input_event_stylus
     #[test]
     fn input_event_stylus() {
         let e = InputEvent::stylus_move(100.0, 200.0, 0.75);
@@ -382,12 +390,14 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica input_event_double_click
     #[test]
     fn input_event_double_click() {
         let e = InputEvent::mouse_double_click(100.0, 200.0);
         assert!(matches!(e, InputEvent::MouseDoubleClick(_)));
     }
 
+    // Clasificación: determinística — verifica modifier_state_default
     #[test]
     fn modifier_state_default() {
         let m = ModifierState::default();
@@ -397,6 +407,7 @@ mod tests {
         assert!(!m.super_key);
     }
 
+    // Clasificación: determinística — verifica modifier_state_equality
     #[test]
     fn modifier_state_equality() {
         let a = ModifierState { shift: true, ctrl: false, alt: false, super_key: false };
@@ -406,6 +417,7 @@ mod tests {
         assert_ne!(a, c);
     }
 
+    // Clasificación: determinística — verifica mouse_button_variants
     #[test]
     fn mouse_button_variants() {
         assert_eq!(MouseButton::Left, MouseButton::Left);
@@ -414,6 +426,7 @@ mod tests {
         assert_eq!(MouseButton::Other(5), MouseButton::Other(5));
     }
 
+    // Clasificación: determinística — verifica key_code_clone_and_hash
     #[test]
     fn key_code_clone_and_hash() {
         let k1 = KeyCode::Letter('a');
@@ -424,6 +437,7 @@ mod tests {
         assert_eq!(set.len(), 1);
     }
 
+    // Clasificación: determinística — verifica input_event_clone
     #[test]
     fn input_event_clone() {
         let e = InputEvent::mouse_move(1.0, 2.0);
@@ -431,6 +445,7 @@ mod tests {
         assert_eq!(e, cloned);
     }
 
+    // Clasificación: determinística — verifica input_event_with_modifiers
     #[test]
     fn input_event_with_modifiers() {
         let mods = ModifierState { shift: false, ctrl: true, alt: false, super_key: false };
@@ -441,6 +456,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica wheel_with_modifiers
     #[test]
     fn wheel_with_modifiers() {
         let mods = ModifierState { shift: true, ctrl: false, alt: false, super_key: false };

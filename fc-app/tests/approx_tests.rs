@@ -2,6 +2,7 @@
 
 use approx::assert_relative_eq;
 
+// Clasificación: determinística — verifica pixel_perfect_snap_approx
 #[test]
 fn pixel_perfect_snap_approx() {
     use fc_app::render::pixel_perfect::PixelPerfect;
@@ -10,6 +11,7 @@ fn pixel_perfect_snap_approx() {
     assert_relative_eq!(0.0_f64.snap(), 0.5);
 }
 
+// Clasificación: determinística — verifica pixel_perfect_rect_approx
 #[test]
 fn pixel_perfect_rect_approx() {
     use fc_app::render::pixel_perfect::pixel_perfect_rect;
@@ -20,6 +22,7 @@ fn pixel_perfect_rect_approx() {
     assert_relative_eq!(h, 22.0);
 }
 
+// Clasificación: determinística — verifica snap_generic_f64
 #[test]
 fn snap_generic_f64() {
     use fc_app::render::pixel_perfect::snap_generic;
@@ -27,6 +30,7 @@ fn snap_generic_f64() {
     assert_relative_eq!(snap_generic(0.0_f64), 0.5);
 }
 
+// Clasificación: determinística — verifica snap_generic_f32
 #[test]
 fn snap_generic_f32() {
     use fc_app::render::pixel_perfect::snap_generic;

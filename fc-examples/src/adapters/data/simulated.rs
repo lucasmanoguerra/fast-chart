@@ -171,6 +171,7 @@ impl DataProvider for SimulatedDataProvider {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica lcg_deterministic
     #[test]
     fn lcg_deterministic() {
         let mut a = Lcg::new(42);
@@ -180,6 +181,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica lcg_different_seeds_differ
     #[test]
     fn lcg_different_seeds_differ() {
         let mut a = Lcg::new(42);
@@ -194,15 +196,17 @@ mod tests {
         assert!(same < 5, "seeds should produce distinct sequences");
     }
 
+    // Clasificación: determinística — verifica f64_in_range
     #[test]
     fn f64_in_range() {
         let mut lcg = Lcg::new(42);
         for _ in 0..10_000 {
             let v = lcg.next_f64();
-            assert!(v >= 0.0 && v < 1.0, "f64 out of range: {v}");
+            assert!((0.0..1.0).contains(&v), "f64 out of range: {v}");
         }
     }
 
+    // Clasificación: determinística — verifica normal_distribution_mean_near_zero
     #[test]
     fn normal_distribution_mean_near_zero() {
         let mut lcg = Lcg::new(42);
@@ -212,6 +216,7 @@ mod tests {
         assert!(mean.abs() < 0.1, "mean too far from 0: {mean}");
     }
 
+    // Clasificación: determinística — verifica generate_bar_ohlcv_invariants
     #[test]
     fn generate_bar_ohlcv_invariants() {
         let mut lcg = Lcg::new(42);
@@ -228,6 +233,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica generate_bar_links_consecutive_closes
     #[test]
     fn generate_bar_links_consecutive_closes() {
         let mut lcg = Lcg::new(42);
@@ -236,6 +242,7 @@ mod tests {
         assert_eq!(bar2.open, bar1.close);
     }
 
+    // Clasificación: determinística — verifica generate_bar_deterministic_with_seed
     #[test]
     fn generate_bar_deterministic_with_seed() {
         let make_bars = |seed: u64| {
@@ -262,6 +269,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica simulate_high_vol_wider_range
     #[test]
     fn simulate_high_vol_wider_range() {
         let make_avg_range = |vol: f64| -> f64 {
@@ -284,12 +292,14 @@ mod tests {
         );
     }
 
+    // Clasificación: determinística — verifica provider_implements_data_provider_trait
     #[test]
     fn provider_implements_data_provider_trait() {
         fn assert_data_provider<T: DataProvider>() {}
         assert_data_provider::<SimulatedDataProvider>();
     }
 
+    // Clasificación: determinística — verifica provider_start_stop
     #[test]
     fn provider_start_stop() {
         let mut provider = SimulatedDataProvider::new("TEST", 100.0, 1.0);
@@ -299,18 +309,21 @@ mod tests {
         assert!(provider.stop().is_ok());
     }
 
+    // Clasificación: determinística — verifica provider_receiver_available_after_construction
     #[test]
     fn provider_receiver_available_after_construction() {
         let provider = SimulatedDataProvider::new("TEST", 100.0, 1.0);
         assert!(provider.receiver().is_some());
     }
 
+    // Clasificación: determinística — verifica provider_name
     #[test]
     fn provider_name() {
         let provider = SimulatedDataProvider::new("BTC/USDT", 50000.0, 250.0);
         assert_eq!(provider.name(), "BTC/USDT");
     }
 
+    // Clasificación: determinística — verifica provider_streams_bars
     #[test]
     fn provider_streams_bars() {
         let mut provider = SimulatedDataProvider::new("TEST", 100.0, 1.0);

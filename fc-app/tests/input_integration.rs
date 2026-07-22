@@ -30,10 +30,8 @@ fn zoom_controller() -> ZoomController {
     ZoomController::new(10.0, 10_000.0)
 }
 
-// ===========================================================================
-// Zoom + Pan Interaction
-// ===========================================================================
 
+// Clasificación: determinística — verifica gesto pan (arrastre)
 #[test]
 fn zoom_then_pan() {
     let mut viewport = default_viewport();
@@ -57,6 +55,7 @@ fn zoom_then_pan() {
     assert!((viewport.time_end - 850.0).abs() < EPS);
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn pan_then_zoom() {
     let mut viewport = default_viewport();
@@ -73,6 +72,7 @@ fn pan_then_zoom() {
     assert!((center_before - center_after).abs() < EPS);
 }
 
+// Clasificación: determinística — verifica zoom_preserves_viewport_size
 #[test]
 fn zoom_preserves_viewport_size() {
     let mut viewport = default_viewport();
@@ -90,6 +90,7 @@ fn zoom_preserves_viewport_size() {
     assert!((viewport.width() - 500.0).abs() < EPS);
 }
 
+// Clasificación: determinística — verifica momentum_after_drag
 #[test]
 fn momentum_after_drag() {
     let mut pan = PanController::new();
@@ -116,6 +117,7 @@ fn momentum_after_drag() {
     );
 }
 
+// Clasificación: determinística — verifica momentum_stops_eventually
 #[test]
 fn momentum_stops_eventually() {
     let mut pan = PanController::new();
@@ -144,10 +146,8 @@ fn momentum_stops_eventually() {
     );
 }
 
-// ===========================================================================
-// Crosshair + Zoom
-// ===========================================================================
 
+// Clasificación: determinística — verifica cálculo de indicador financiero
 #[test]
 fn crosshair_persists_through_zoom() {
     let mut crosshair = CrosshairController::new();
@@ -172,6 +172,7 @@ fn crosshair_persists_through_zoom() {
     );
 }
 
+// Clasificación: determinística — verifica snap magnético al punto de datos más cercano
 #[test]
 fn magnetic_snap_after_zoom() {
     let mut crosshair = CrosshairController::new();
@@ -190,10 +191,8 @@ fn magnetic_snap_after_zoom() {
     assert!(pos.snapped, "magnetic snap should work after zoom");
 }
 
-// ===========================================================================
-// Keyboard + Zoom/Pan
-// ===========================================================================
 
+// Clasificación: determinística — verifica keyboard_zoom_in_out
 #[test]
 fn keyboard_zoom_in_out() {
     let mut engine = InteractionEngine::new();
@@ -214,6 +213,7 @@ fn keyboard_zoom_in_out() {
     )));
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn keyboard_pan_arrows() {
     let mut engine = InteractionEngine::new();
@@ -243,6 +243,7 @@ fn keyboard_pan_arrows() {
     }));
 }
 
+// Clasificación: determinística — verifica keyboard_escape_cancel
 #[test]
 fn keyboard_escape_cancel() {
     let mut engine = InteractionEngine::new();
@@ -259,10 +260,8 @@ fn keyboard_escape_cancel() {
     assert_eq!(engine.active_tool(), None);
 }
 
-// ===========================================================================
-// Gesture + Zoom
-// ===========================================================================
 
+// Clasificación: determinística — verifica gesto pinch con dos dedos
 #[test]
 fn pinch_zoom_two_fingers() {
     let mut detector = GestureDetector::with_default_config();
@@ -290,6 +289,7 @@ fn pinch_zoom_two_fingers() {
     }
 }
 
+// Clasificación: determinística — verifica detección de flick rápido (swipe con inercia)
 #[test]
 fn flick_starts_momentum() {
     let config = GestureConfig {
@@ -321,10 +321,8 @@ fn flick_starts_momentum() {
     assert!(!detector.is_tracking());
 }
 
-// ===========================================================================
-// Cross-module State
-// ===========================================================================
 
+// Clasificación: determinística — verifica interaction_engine_full_cycle
 #[test]
 fn interaction_engine_full_cycle() {
     let mut engine = InteractionEngine::new();
@@ -371,6 +369,7 @@ fn interaction_engine_full_cycle() {
     }));
 }
 
+// Clasificación: determinística — verifica drawing_tool_then_cancel
 #[test]
 fn drawing_tool_then_cancel() {
     let mut engine = InteractionEngine::new();
@@ -398,6 +397,7 @@ fn drawing_tool_then_cancel() {
     assert_eq!(engine.active_tool(), None);
 }
 
+// Clasificación: determinística — verifica zoom_mode_switch
 #[test]
 fn zoom_mode_switch() {
     let mut engine = InteractionEngine::new();
@@ -429,10 +429,8 @@ fn zoom_mode_switch() {
     assert!(!cmds.iter().any(|c| matches!(c, ChartCommand::PlaceDrawingPoint { .. })));
 }
 
-// ===========================================================================
-// Additional cross-module scenarios
-// ===========================================================================
 
+// Clasificación: determinística — verifica retorno de tema por nombre de preset
 #[test]
 fn keyboard_shortcuts_preset_matches_engine() {
     let map = KeyboardPresets::default_shortcuts();
@@ -458,6 +456,7 @@ fn keyboard_shortcuts_preset_matches_engine() {
     assert!(matches!(cmd.unwrap(), ChartCommand::ZoomAtCursor { factor, .. } if (factor - 1.5).abs() < EPS));
 }
 
+// Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
 #[test]
 fn auto_scroll_with_pan_controller() {
     let mut pan = PanController::new();
@@ -472,6 +471,7 @@ fn auto_scroll_with_pan_controller() {
     assert!((viewport.width() - width).abs() < EPS);
 }
 
+// Clasificación: determinística — verifica follow_price_with_zoom
 #[test]
 fn follow_price_with_zoom() {
     let mut pan = PanController::new();
@@ -487,6 +487,7 @@ fn follow_price_with_zoom() {
     assert_eq!(pan.follow_price_level(), Some(150.0));
 }
 
+// Clasificación: determinística — verifica sincronización entre crosshairs del mismo grupo
 #[test]
 fn crosshair_sync_groups() {
     let mut a = CrosshairController::new();
@@ -502,6 +503,7 @@ fn crosshair_sync_groups() {
     assert!(!b.should_sync_with(&c));
 }
 
+// Clasificación: determinística — verifica engine_wheel_zoom_produces_correct_factor
 #[test]
 fn engine_wheel_zoom_produces_correct_factor() {
     let mut engine = InteractionEngine::new();

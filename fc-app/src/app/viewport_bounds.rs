@@ -40,6 +40,7 @@ impl ViewportBounds {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica default_bounds
     #[test]
     fn default_bounds() {
         let b = ViewportBounds::new();
@@ -49,12 +50,14 @@ mod tests {
         assert_eq!(b.max_visible_bars, 10_000);
     }
 
+    // Clasificación: determinística — verifica clamp_zoom_identity_factor
     #[test]
     fn clamp_zoom_identity_factor() {
         let b = ViewportBounds::new();
         assert_eq!(b.clamp_zoom(1.0, 1.0), 1.0);
     }
 
+    // Clasificación: determinística — verifica clamp_zoom_clamps_to_max
     #[test]
     fn clamp_zoom_clamps_to_max() {
         let b = ViewportBounds::new();
@@ -62,6 +65,7 @@ mod tests {
         assert_eq!(result, 1000.0);
     }
 
+    // Clasificación: determinística — verifica clamp_zoom_clamps_to_min
     #[test]
     fn clamp_zoom_clamps_to_min() {
         let b = ViewportBounds::new();
@@ -69,6 +73,7 @@ mod tests {
         assert_eq!(result, 0.01);
     }
 
+    // Clasificación: determinística — verifica clamp_zoom_custom_bounds
     #[test]
     fn clamp_zoom_custom_bounds() {
         let b = ViewportBounds {
@@ -85,6 +90,7 @@ mod tests {
         assert_eq!(b.clamp_zoom(5.0, 1.0), 5.0);
     }
 
+    // Clasificación: determinística — verifica clamp_zoom_within_bounds
     #[test]
     fn clamp_zoom_within_bounds() {
         let b = ViewportBounds::new();

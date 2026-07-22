@@ -2,7 +2,7 @@
 // DrawingInteraction — interaction state machine for drawing tools
 // ---------------------------------------------------------------------------
 
-use fc_domain::drawing::{ChartPoint, DrawingId};
+use fc_domain::drawing::ChartPoint;
 
 use crate::drawing_manager::DrawingManager;
 
@@ -235,6 +235,7 @@ pub enum DrawingAction {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica select_mode_no_placement
     #[test]
     fn select_mode_no_placement() {
         let mut interaction = DrawingInteraction::new();
@@ -245,6 +246,7 @@ mod tests {
         assert!(!interaction.is_placing());
     }
 
+    // Clasificación: determinística — verifica trend_line_needs_two_clicks
     #[test]
     fn trend_line_needs_two_clicks() {
         let mut interaction = DrawingInteraction::new();
@@ -262,6 +264,7 @@ mod tests {
         assert!(!interaction.is_placing());
     }
 
+    // Clasificación: determinística — verifica horizontal_line_completes_in_one_click
     #[test]
     fn horizontal_line_completes_in_one_click() {
         let mut interaction = DrawingInteraction::new();
@@ -272,6 +275,7 @@ mod tests {
         assert!(matches!(action, Some(DrawingAction::Complete { mode: DrawingMode::HorizontalLine, points }) if points.len() == 1));
     }
 
+    // Clasificación: determinística — verifica fibonacci_extension_needs_three_clicks
     #[test]
     fn fibonacci_extension_needs_three_clicks() {
         let mut interaction = DrawingInteraction::new();
@@ -284,6 +288,7 @@ mod tests {
         assert!(matches!(action, Some(DrawingAction::Complete { mode: DrawingMode::FibonacciExtension, points }) if points.len() == 3));
     }
 
+    // Clasificación: determinística — verifica que reset() limpia todo el estado del detector de gestos
     #[test]
     fn cancel_resets_placement() {
         let mut interaction = DrawingInteraction::new();
@@ -297,6 +302,7 @@ mod tests {
         assert!(!interaction.is_placing());
     }
 
+    // Clasificación: determinística — verifica switch_mode_cancels_placement
     #[test]
     fn switch_mode_cancels_placement() {
         let mut interaction = DrawingInteraction::new();

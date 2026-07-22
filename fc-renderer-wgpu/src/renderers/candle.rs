@@ -129,6 +129,7 @@ mod tests {
         ]
     }
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = CandleRenderer::new([1.0; 4], 8.0);
@@ -136,6 +137,7 @@ mod tests {
         assert_eq!(r.bearish_color, [0.8, 0.0, 0.0, 1.0]);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = CandleRenderer::new([1.0; 4], 8.0);
@@ -144,6 +146,7 @@ mod tests {
         assert!(!cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = CandleRenderer::new([1.0; 4], 8.0);
@@ -152,6 +155,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica candle_bullish_color
     #[test]
     fn candle_bullish_color() {
         let r = CandleRenderer::new([1.0; 4], 8.0);
@@ -174,6 +178,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica candle_bearish_color
     #[test]
     fn candle_bearish_color() {
         let r = CandleRenderer::new([1.0; 4], 8.0);
@@ -195,6 +200,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica two_candles_produce_four_commands
     #[test]
     fn two_candles_produce_four_commands() {
         let r = CandleRenderer::new([1.0; 4], 8.0);

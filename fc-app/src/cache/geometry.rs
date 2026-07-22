@@ -117,6 +117,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica que el constructor inicializa correctamente el estado
     #[test]
     fn new_cache_is_empty() {
         let cache = GeometryCache::new(16);
@@ -124,6 +125,7 @@ mod tests {
         assert!(cache.is_empty());
     }
 
+    // Clasificación: determinística — verifica round-trip insert/get — invariante básico del cache
     #[test]
     fn insert_and_get() {
         let mut cache = GeometryCache::new(16);
@@ -134,6 +136,7 @@ mod tests {
         assert_eq!(cache.len(), 1);
     }
 
+    // Clasificación: determinística — edge case: buscar key inexistente no debe panic ni corrompir estado
     #[test]
     fn get_missing_returns_none() {
         let mut cache = GeometryCache::new(16);
@@ -141,6 +144,7 @@ mod tests {
         assert!(cache.get(&key).is_none());
     }
 
+    // Clasificación: determinística — verifica que invalidate() elimina la entry y actualiza el vector de orden
     #[test]
     fn invalidate_removes_entry() {
         let mut cache = GeometryCache::new(16);
@@ -151,6 +155,7 @@ mod tests {
         assert_eq!(cache.len(), 0);
     }
 
+    // Clasificación: determinística — edge case: invalidar key inexistente retorna false sin corrompir estado
     #[test]
     fn invalidate_returns_false_for_missing() {
         let mut cache = GeometryCache::new(16);
@@ -158,6 +163,7 @@ mod tests {
         assert!(!cache.invalidate(&key));
     }
 
+    // Clasificación: determinística — verifica invalidación selectiva por serie — preserva entries de otras series
     #[test]
     fn invalidate_series_removes_all_for_series() {
         let mut cache = GeometryCache::new(16);
@@ -169,6 +175,7 @@ mod tests {
         assert!(cache.get(&make_key(2, 1, 1)).is_some());
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn clear_empties_cache_and_resets_stats() {
         let mut cache = GeometryCache::new(16);
@@ -179,6 +186,7 @@ mod tests {
         assert_eq!(cache.hit_rate(), 0.0);
     }
 
+    // Clasificación: determinística — verifica el cálculo de hit rate — métrica crítica para decisiones de cache
     #[test]
     fn hit_rate_tracks_correctly() {
         let mut cache = GeometryCache::new(16);
@@ -190,6 +198,7 @@ mod tests {
         assert!((cache.hit_rate() - 2.0 / 3.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica FIFO eviction — al exceder capacidad se elimina la entrada más antigua
     #[test]
     fn eviction_removes_oldest_when_full() {
         let mut cache = GeometryCache::new(2);

@@ -187,6 +187,7 @@ mod tests {
         ]
     }
 
+    // Clasificación: determinística — verifica volume_bar_new
     #[test]
     fn volume_bar_new() {
         let b = VolumeBar::new(1000, 5000.0, true);
@@ -195,6 +196,7 @@ mod tests {
         assert!(b.bullish);
     }
 
+    // Clasificación: determinística — verifica volume_series_new
     #[test]
     fn volume_series_new() {
         let s = VolumeSeries::new();
@@ -202,6 +204,7 @@ mod tests {
         assert_eq!(s.len(), 0);
     }
 
+    // Clasificación: determinística — verifica volume_series_set_data
     #[test]
     fn volume_series_set_data() {
         let mut s = VolumeSeries::new();
@@ -211,6 +214,7 @@ mod tests {
         assert_eq!(s.data(), &data);
     }
 
+    // Clasificación: determinística — verifica volume_series_max_volume
     #[test]
     fn volume_series_max_volume() {
         let mut s = VolumeSeries::new();
@@ -218,12 +222,14 @@ mod tests {
         assert!((s.max_volume() - 7000.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica volume_series_empty_max_volume
     #[test]
     fn volume_series_empty_max_volume() {
         let s = VolumeSeries::new();
         assert!((s.max_volume()).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica volume_series_generates_rect_commands
     #[test]
     fn volume_series_generates_rect_commands() {
         let mut s = VolumeSeries::new();
@@ -239,6 +245,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica volume_series_empty_no_commands
     #[test]
     fn volume_series_empty_no_commands() {
         let mut s = VolumeSeries::new();
@@ -246,6 +253,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica volume_series_zero_volume_no_commands
     #[test]
     fn volume_series_zero_volume_no_commands() {
         let mut s = VolumeSeries::new();
@@ -254,6 +262,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn volume_series_hit_test() {
         let mut s = VolumeSeries::new();
@@ -266,18 +275,21 @@ mod tests {
         assert!(hit.unwrap().index < 4);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn volume_series_hit_test_empty() {
         let s = VolumeSeries::new();
         assert!(s.hit_test(0.0, 0.0).is_none());
     }
 
+    // Clasificación: determinística — verifica volume_series_layer_z_index
     #[test]
     fn volume_series_layer_z_index() {
         let s = VolumeSeries::new();
         assert_eq!(s.layer_z_index(), 500);
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn volume_series_bounds_set_after_update() {
         let mut s = VolumeSeries::new();
@@ -287,6 +299,7 @@ mod tests {
         assert_eq!(s.bounds(), bounds);
     }
 
+    // Clasificación: determinística — verifica volume_series_bullish_and_bearish_colors
     #[test]
     fn volume_series_bullish_and_bearish_colors() {
         let mut s = VolumeSeries::new();
@@ -307,6 +320,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica volume_series_default
     #[test]
     fn volume_series_default() {
         let s = VolumeSeries::default();

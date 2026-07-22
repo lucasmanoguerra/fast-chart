@@ -129,12 +129,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica renko_name
     #[test]
     fn renko_name() {
         let renko = Renko::default();
         assert_eq!(renko.name(), "Renko");
     }
 
+    // Clasificación: determinística — verifica renko_empty_series
     #[test]
     fn renko_empty_series() {
         let series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -143,6 +145,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica renko_single_bar
     #[test]
     fn renko_single_bar() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -161,15 +164,17 @@ mod tests {
         assert!((result.get(0).unwrap() - 102.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica renko_basic
     #[test]
     fn renko_basic() {
         let bars = make_bars(50);
         let renko = Renko { brick_size: 2.0, atr_period: 14 };
         let result = renko.calculate(&bars);
         // With varying prices there should be multiple bricks
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica renko_exact_period
     #[test]
     fn renko_exact_period() {
         // 15 bars → enough for ATR (period + 1 = 15)
@@ -177,9 +182,10 @@ mod tests {
         let renko = Renko { brick_size: 0.0, atr_period: 14 };
         let result = renko.calculate(&bars);
         // Should produce bricks (at least the initial one)
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica renko_insufficient_data_for_atr
     #[test]
     fn renko_insufficient_data_for_atr() {
         // 10 bars < period + 1 = 15, ATR mode returns empty
@@ -189,6 +195,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica renko_fixed_brick_size
     #[test]
     fn renko_fixed_brick_size() {
         // Manually construct bars that produce clear brick movements
@@ -212,6 +219,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica renko_bearish_bricks
     #[test]
     fn renko_bearish_bricks() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -231,6 +239,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica renko_flat_prices_no_new_bricks
     #[test]
     fn renko_flat_prices_no_new_bricks() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -250,6 +259,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica renko_large_move
     #[test]
     fn renko_large_move() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -263,6 +273,7 @@ mod tests {
         assert_eq!(result.len(), 11);
     }
 
+    // Clasificación: determinística — verifica renko_direction_change
     #[test]
     fn renko_direction_change() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -281,15 +292,17 @@ mod tests {
         assert!((result.latest().unwrap() - 97.0).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica renko_atr_mode
     #[test]
     fn renko_atr_mode() {
         let bars = make_bars(50);
         let renko = Renko { brick_size: 0.0, atr_period: 14 };
         let result = renko.calculate(&bars);
         // Should produce bricks from ATR-based sizing
-        assert!(result.len() >= 1);
+        assert!(!result.is_empty());
     }
 
+    // Clasificación: determinística — verifica renko_atr_mode_insufficient_bars
     #[test]
     fn renko_atr_mode_insufficient_bars() {
         let bars = make_bars(5);

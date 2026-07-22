@@ -106,6 +106,7 @@ impl<K: Clone + Eq + Hash, V> Cache<K, V> {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica new_cache_is_empty
     #[test]
     fn new_cache_is_empty() {
         let cache: Cache<u32, String> = Cache::new(4);
@@ -113,6 +114,7 @@ mod tests {
         assert!(cache.is_empty());
     }
 
+    // Clasificación: determinística — round-trip insert/get — invariante básico
     #[test]
     fn insert_and_get() {
         let mut cache = Cache::new(4);
@@ -121,12 +123,14 @@ mod tests {
         assert_eq!(cache.len(), 1);
     }
 
+    // Clasificación: determinística — edge case: key inexistente retorna None sin panic
     #[test]
     fn get_missing_returns_none() {
         let mut cache: Cache<u32, String> = Cache::new(4);
         assert_eq!(cache.get(&99), None);
     }
 
+    // Clasificación: determinística — verifica cálculo de métrica hit/miss
     #[test]
     fn hit_rate_tracks_correctly() {
         let mut cache = Cache::new(4);
@@ -137,6 +141,7 @@ mod tests {
         assert!((cache.hit_rate() - 2.0 / 3.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica política de evicción al exceder capacidad
     #[test]
     fn eviction_removes_oldest() {
         let mut cache = Cache::new(2);
@@ -149,6 +154,7 @@ mod tests {
         assert_eq!(cache.get(&3), Some(&"c".to_string()));
     }
 
+    // Clasificación: determinística — verifica eliminación de entry y actualización de orden
     #[test]
     fn invalidate_removes_entry() {
         let mut cache = Cache::new(4);
@@ -158,12 +164,14 @@ mod tests {
         assert_eq!(cache.len(), 0);
     }
 
+    // Clasificación: determinística — edge case: invalidar key inexistente
     #[test]
     fn invalidate_returns_false_for_missing() {
         let mut cache: Cache<u32, String> = Cache::new(4);
         assert!(!cache.invalidate(&99));
     }
 
+    // Clasificación: determinística — verifica invalidación condicional por predicado
     #[test]
     fn invalidate_where_filters_correctly() {
         let mut cache = Cache::new(8);
@@ -177,6 +185,7 @@ mod tests {
         assert_eq!(cache.get(&3), Some(&"c".to_string()));
     }
 
+    // Clasificación: determinística — verifica reset completo del estado
     #[test]
     fn clear_empties_cache_and_resets_stats() {
         let mut cache = Cache::new(4);

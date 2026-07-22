@@ -186,8 +186,8 @@ mod tests {
         )
     }
 
-    // ---- Timestamp to X ----
 
+    // Clasificación: determinística — verifica timestamp_to_x_min
     #[test]
     fn timestamp_to_x_min() {
         let p = default_pipeline();
@@ -196,6 +196,7 @@ mod tests {
         assert!((x - 0.5).abs() < 1.0, "x = {x}");
     }
 
+    // Clasificación: determinística — verifica timestamp_to_x_max
     #[test]
     fn timestamp_to_x_max() {
         let p = default_pipeline();
@@ -204,6 +205,7 @@ mod tests {
         assert!((x - 799.5).abs() < 1.0, "x = {x}");
     }
 
+    // Clasificación: determinística — verifica timestamp_to_x_mid
     #[test]
     fn timestamp_to_x_mid() {
         let p = default_pipeline();
@@ -212,8 +214,8 @@ mod tests {
         assert!((x - 400.0).abs() < 1.0, "x = {x}");
     }
 
-    // ---- Price to Y ----
 
+    // Clasificación: determinística — verifica price_to_y_high
     #[test]
     fn price_to_y_high() {
         let p = default_pipeline();
@@ -222,6 +224,7 @@ mod tests {
         assert!((y - 0.5).abs() < 1.0, "y = {y}");
     }
 
+    // Clasificación: determinística — verifica price_to_y_low
     #[test]
     fn price_to_y_low() {
         let p = default_pipeline();
@@ -230,6 +233,7 @@ mod tests {
         assert!((y - 599.5).abs() < 1.0, "y = {y}");
     }
 
+    // Clasificación: determinística — verifica price_to_y_mid
     #[test]
     fn price_to_y_mid() {
         let p = default_pipeline();
@@ -237,8 +241,8 @@ mod tests {
         assert!((y - 300.0).abs() < 1.0, "y = {y}");
     }
 
-    // ---- Roundtrip ----
 
+    // Clasificación: determinística — verifica roundtrip_world_screen_world
     #[test]
     fn roundtrip_world_screen_world() {
         let p = default_pipeline();
@@ -259,6 +263,7 @@ mod tests {
         );
     }
 
+    // Clasificación: determinística — verifica roundtrip_corners
     #[test]
     fn roundtrip_corners() {
         let p = default_pipeline();
@@ -281,8 +286,8 @@ mod tests {
         }
     }
 
-    // ---- Screen to World ----
 
+    // Clasificación: determinística — verifica x_to_timestamp_center
     #[test]
     fn x_to_timestamp_center() {
         let p = default_pipeline();
@@ -290,6 +295,7 @@ mod tests {
         assert!((ts - 500.0).abs() < 1.0, "ts = {ts}");
     }
 
+    // Clasificación: determinística — verifica y_to_price_center
     #[test]
     fn y_to_price_center() {
         let p = default_pipeline();
@@ -297,8 +303,8 @@ mod tests {
         assert!((price - 100.0).abs() < 1.0, "price = {price}");
     }
 
-    // ---- World to Screen / Screen to World ----
 
+    // Clasificación: determinística — verifica world_to_screen_and_back
     #[test]
     fn world_to_screen_and_back() {
         let p = default_pipeline();
@@ -319,8 +325,8 @@ mod tests {
         );
     }
 
-    // ---- Edge cases ----
 
+    // Clasificación: determinística — verifica gesto pan (arrastre)
     #[test]
     fn zero_span_time() {
         let p = CoordinatePipeline::new(
@@ -336,6 +342,7 @@ mod tests {
         assert!((x - 0.5).abs() < 1.0, "x = {x}");
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn zero_span_price() {
         let p = CoordinatePipeline::new(
@@ -351,8 +358,8 @@ mod tests {
         assert!((y - 0.5).abs() < 1.0, "y = {y}");
     }
 
-    // ---- Scale factor ----
 
+    // Clasificación: determinística — verifica scale_factor_2x
     #[test]
     fn scale_factor_2x() {
         let p = CoordinatePipeline::new(
@@ -369,8 +376,8 @@ mod tests {
         assert!((x - 200.0).abs() < 1.0, "x = {x}");
     }
 
-    // ---- Display ----
 
+    // Clasificación: determinística — verifica screen_point_display
     #[test]
     fn screen_point_display() {
         let sp = ScreenPoint::new(1.5, 2.5);
@@ -378,6 +385,7 @@ mod tests {
         assert_eq!(sp.y, 2.5);
     }
 
+    // Clasificación: determinística — verifica world_point_display
     #[test]
     fn world_point_display() {
         let wp = WorldPoint::new(1000.0, 50.5);
@@ -385,8 +393,8 @@ mod tests {
         assert_eq!(wp.price, 50.5);
     }
 
-    // ---- Clone ----
 
+    // Clasificación: determinística — verifica pipeline_clone
     #[test]
     fn pipeline_clone() {
         let p = default_pipeline();
@@ -396,8 +404,8 @@ mod tests {
         assert_eq!(cloned.area_width, p.area_width);
     }
 
-    // ---- Non-zero offsets ----
 
+    // Clasificación: determinística — verifica offset_area_timestamp
     #[test]
     fn offset_area_timestamp() {
         let p = CoordinatePipeline::new(
@@ -416,6 +424,7 @@ mod tests {
         assert!((x - 749.5).abs() < 1.0, "x = {x}");
     }
 
+    // Clasificación: determinística — verifica offset_area_price
     #[test]
     fn offset_area_price() {
         let p = CoordinatePipeline::new(
@@ -436,8 +445,8 @@ mod tests {
         assert!((y - 589.5).abs() < 1.0, "y = {y}");
     }
 
-    // ---- Asymmetric areas ----
 
+    // Clasificación: determinística — verifica narrow_area
     #[test]
     fn narrow_area() {
         let p = CoordinatePipeline::new(
@@ -456,8 +465,8 @@ mod tests {
         assert!((y - 50.0).abs() < 1.5, "y = {y}");
     }
 
-    // ---- DPI 3x ----
 
+    // Clasificación: determinística — verifica scale_factor_3x
     #[test]
     fn scale_factor_3x() {
         let p = CoordinatePipeline::new(
@@ -478,8 +487,8 @@ mod tests {
         assert!((x - 150.0).abs() < 1.5, "x = {x}");
     }
 
-    // ---- Out-of-range values (clamped) ----
 
+    // Clasificación: determinística — verifica timestamp_before_range
     #[test]
     fn timestamp_before_range() {
         let p = default_pipeline();
@@ -488,6 +497,7 @@ mod tests {
         assert!((x - 0.5).abs() < 1.0, "x = {x}");
     }
 
+    // Clasificación: determinística — verifica timestamp_after_range
     #[test]
     fn timestamp_after_range() {
         let p = default_pipeline();
@@ -496,6 +506,7 @@ mod tests {
         assert!((x - 799.5).abs() < 1.0, "x = {x}");
     }
 
+    // Clasificación: determinística — verifica price_above_range
     #[test]
     fn price_above_range() {
         let p = default_pipeline();
@@ -504,6 +515,7 @@ mod tests {
         assert!((y - 0.5).abs() < 1.0, "y = {y}");
     }
 
+    // Clasificación: determinística — verifica price_below_range
     #[test]
     fn price_below_range() {
         let p = default_pipeline();
@@ -512,8 +524,8 @@ mod tests {
         assert!((y - 599.5).abs() < 1.0, "y = {y}");
     }
 
-    // ---- Screen to World at boundaries ----
 
+    // Clasificación: determinística — verifica x_to_timestamp_left
     #[test]
     fn x_to_timestamp_left() {
         let p = default_pipeline();
@@ -521,6 +533,7 @@ mod tests {
         assert!((ts - 0.0).abs() < 1.0, "ts = {ts}");
     }
 
+    // Clasificación: determinística — verifica x_to_timestamp_right
     #[test]
     fn x_to_timestamp_right() {
         let p = default_pipeline();
@@ -528,6 +541,7 @@ mod tests {
         assert!((ts - 1000.0).abs() < 1.0, "ts = {ts}");
     }
 
+    // Clasificación: determinística — verifica y_to_price_top
     #[test]
     fn y_to_price_top() {
         let p = default_pipeline();
@@ -535,6 +549,7 @@ mod tests {
         assert!((price - 150.0).abs() < 1.0, "price = {price}");
     }
 
+    // Clasificación: determinística — verifica y_to_price_bottom
     #[test]
     fn y_to_price_bottom() {
         let p = default_pipeline();
@@ -542,8 +557,8 @@ mod tests {
         assert!((price - 50.0).abs() < 1.0, "price = {price}");
     }
 
-    // ---- Multiple roundtrips stability ----
 
+    // Clasificación: determinística — verifica multiple_roundtrips_stable
     #[test]
     fn multiple_roundtrips_stable() {
         let p = default_pipeline();
@@ -563,8 +578,8 @@ mod tests {
         );
     }
 
-    // ---- ScreenPoint / WorldPoint Debug ----
 
+    // Clasificación: determinística — verifica screen_point_debug
     #[test]
     fn screen_point_debug() {
         let sp = ScreenPoint::new(1.0, 2.0);
@@ -574,6 +589,7 @@ mod tests {
         assert!(debug.contains("2.0"));
     }
 
+    // Clasificación: determinística — verifica world_point_debug
     #[test]
     fn world_point_debug() {
         let wp = WorldPoint::new(1000.0, 50.5);

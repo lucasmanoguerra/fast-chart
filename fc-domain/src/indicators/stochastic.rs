@@ -99,12 +99,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica stochastic_name
     #[test]
     fn stochastic_name() {
         let stoch = Stochastic::default();
         assert_eq!(stoch.name(), "STOCHASTIC");
     }
 
+    // Clasificación: determinística — verifica stochastic_insufficient_data
     #[test]
     fn stochastic_insufficient_data() {
         let bars = make_bars(5);
@@ -113,6 +115,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica stochastic_k_bounds
     #[test]
     fn stochastic_k_bounds() {
         let bars = make_bars(200);
@@ -121,6 +124,7 @@ mod tests {
         assert!(full.k.iter().all(|v| *v >= 0.0 && *v <= 100.0));
     }
 
+    // Clasificación: determinística — verifica stochastic_d_bounds
     #[test]
     fn stochastic_d_bounds() {
         let bars = make_bars(200);
@@ -129,6 +133,7 @@ mod tests {
         assert!(full.d.iter().all(|v| *v >= 0.0 && *v <= 100.0));
     }
 
+    // Clasificación: determinística — verifica conteo de shortcuts registrado
     #[test]
     fn stochastic_d_length() {
         let bars = make_bars(200);
@@ -137,6 +142,7 @@ mod tests {
         assert_eq!(full.d.len(), full.k.len() - stoch.d_period + 1);
     }
 
+    // Clasificación: determinística — verifica stochastic_flat_market
     #[test]
     fn stochastic_flat_market() {
         let mut bars: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();

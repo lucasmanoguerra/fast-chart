@@ -89,12 +89,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica bollinger_name
     #[test]
     fn bollinger_name() {
         let bb = Bollinger::default();
         assert_eq!(bb.name(), "BOLLINGER");
     }
 
+    // Clasificación: determinística — verifica bollinger_insufficient_data
     #[test]
     fn bollinger_insufficient_data() {
         let bars = make_bars(5);
@@ -103,6 +105,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica bollinger_band_ordering
     #[test]
     fn bollinger_band_ordering() {
         let bars = make_bars(100);
@@ -116,6 +119,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica bollinger_middle_matches_sma
     #[test]
     fn bollinger_middle_matches_sma() {
         let bars = make_bars(100);
@@ -135,6 +139,7 @@ mod tests {
         assert!((actual_first - expected_first).abs() < 1e-10);
     }
 
+    // Clasificación: determinística — verifica bollinger_default_params
     #[test]
     fn bollinger_default_params() {
         let bb = Bollinger::default();

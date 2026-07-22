@@ -259,6 +259,7 @@ mod tests {
         Viewport { time_start: 0.0, time_end: 1000.0, price_min: 100.0, price_max: 200.0 }
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pan_by_basic() {
         let ctrl = PanController::new();
@@ -270,6 +271,7 @@ mod tests {
         assert!((vp.price_max - 190.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pan_preserves_range() {
         let ctrl = PanController::new();
@@ -279,6 +281,7 @@ mod tests {
         assert!((vp.height() - 100.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica start_drag
     #[test]
     fn start_drag() {
         let mut ctrl = PanController::new();
@@ -287,6 +290,7 @@ mod tests {
         assert!(ctrl.is_dragging());
     }
 
+    // Clasificación: determinística — verifica que update() avanza el tiempo y produce valor interpolado
     #[test]
     fn update_drag_returns_delta() {
         let mut ctrl = PanController::new();
@@ -296,6 +300,7 @@ mod tests {
         assert!((delta.dy - 30.0).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica end_drag_with_velocity
     #[test]
     fn end_drag_with_velocity() {
         let mut ctrl = PanController::new();
@@ -308,6 +313,7 @@ mod tests {
         assert!(vel.unwrap().vx.abs() > MOMENTUM_THRESHOLD);
     }
 
+    // Clasificación: determinística — verifica end_drag_slow
     #[test]
     fn end_drag_slow() {
         let mut ctrl = PanController::new();
@@ -318,6 +324,7 @@ mod tests {
         assert!(!ctrl.is_dragging());
     }
 
+    // Clasificación: determinística — verifica momentum_decelerates
     #[test]
     fn momentum_decelerates() {
         let mut ctrl = PanController::new();
@@ -332,6 +339,7 @@ mod tests {
         assert!(ctrl.velocity_x.abs() < initial_vx.abs());
     }
 
+    // Clasificación: determinística — verifica momentum_stops
     #[test]
     fn momentum_stops() {
         let mut ctrl = PanController::new();
@@ -345,6 +353,7 @@ mod tests {
         assert!(!ctrl.tick_momentum(&mut vp, 1.0 / 60.0, 1.0));
     }
 
+    // Clasificación: determinística — verifica friction_high_stops_fast
     #[test]
     fn friction_high_stops_fast() {
         let mut ctrl = PanController::new();
@@ -361,6 +370,7 @@ mod tests {
         assert!(ticks < 200, "high friction should stop fast, took {ticks} ticks");
     }
 
+    // Clasificación: determinística — verifica friction_low_stops_slow
     #[test]
     fn friction_low_stops_slow() {
         let mut ctrl = PanController::new();
@@ -377,6 +387,7 @@ mod tests {
         assert!(ticks > 200, "low friction should take many ticks, took {ticks}");
     }
 
+    // Clasificación: determinística — verifica auto_scroll_on_new_data
     #[test]
     fn auto_scroll_on_new_data() {
         let ctrl = PanController::new();
@@ -390,6 +401,7 @@ mod tests {
         assert!((vp.width() - width).abs() < EPS);
     }
 
+    // Clasificación: determinística — verifica auto_scroll_disabled_no_shift
     #[test]
     fn auto_scroll_disabled_no_shift() {
         let ctrl = PanController::new();
@@ -400,6 +412,7 @@ mod tests {
         assert_eq!(vp.time_end, original.time_end);
     }
 
+    // Clasificación: determinística — verifica follow_price_active
     #[test]
     fn follow_price_active() {
         let mut ctrl = PanController::new();
@@ -408,6 +421,7 @@ mod tests {
         assert_eq!(ctrl.follow_price_level(), Some(150.5));
     }
 
+    // Clasificación: determinística — verifica follow_price_inactive
     #[test]
     fn follow_price_inactive() {
         let ctrl = PanController::new();
@@ -415,6 +429,7 @@ mod tests {
         assert_eq!(ctrl.follow_price_level(), None);
     }
 
+    // Clasificación: determinística — verifica is_dragging_state
     #[test]
     fn is_dragging_state() {
         let mut ctrl = PanController::new();

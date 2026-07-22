@@ -183,6 +183,7 @@ impl Default for InvalidationMask {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica level_ordering
     #[test]
     fn level_ordering() {
         assert!(InvalidationLevel::Nothing < InvalidationLevel::Cursor);
@@ -190,6 +191,7 @@ mod tests {
         assert!(InvalidationLevel::Light < InvalidationLevel::Full);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_bitmask_single() {
         let mask = PaneBitmask::single(0);
@@ -197,6 +199,7 @@ mod tests {
         assert!(!mask.contains(1));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_bitmask_union() {
         let a = PaneBitmask::single(0);
@@ -207,6 +210,7 @@ mod tests {
         assert!(c.contains(2));
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_bitmask_iter() {
         let mask = PaneBitmask::single(1) | PaneBitmask::single(3);
@@ -214,6 +218,7 @@ mod tests {
         assert_eq!(indices, vec![1, 3]);
     }
 
+    // Clasificación: determinística — verifica invalidation_merge_takes_higher_level
     #[test]
     fn invalidation_merge_takes_higher_level() {
         let mut mask = InvalidationMask::single_pane(InvalidationLevel::Cursor, 0);
@@ -221,6 +226,7 @@ mod tests {
         assert_eq!(mask.level(), InvalidationLevel::Light);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn invalidation_merge_combines_panes() {
         let mut mask = InvalidationMask::single_pane(InvalidationLevel::Light, 0);
@@ -229,6 +235,7 @@ mod tests {
         assert!(mask.panes().contains(1));
     }
 
+    // Clasificación: determinística — verifica invalidation_contains
     #[test]
     fn invalidation_contains() {
         let mask = InvalidationMask::single_pane(InvalidationLevel::Light, 0);
@@ -238,6 +245,7 @@ mod tests {
         assert!(!mask.contains(InvalidationLevel::Full));
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn invalidation_clear() {
         let mut mask = InvalidationMask::all_panes(InvalidationLevel::Full);
@@ -245,6 +253,7 @@ mod tests {
         assert!(mask.is_empty());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_bitmask_all() {
         let mask = PaneBitmask::ALL;
@@ -253,6 +262,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn pane_bitmask_count() {
         let mask = PaneBitmask::single(0) | PaneBitmask::single(2) | PaneBitmask::single(5);

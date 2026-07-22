@@ -71,6 +71,7 @@ impl PaneDivider {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica divider_creation
     #[test]
     fn divider_creation() {
         let d = PaneDivider::new(0, 0.7);
@@ -78,6 +79,7 @@ mod tests {
         assert!((d.position - 0.7).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica divider_with_dimensions
     #[test]
     fn divider_with_dimensions() {
         let d = PaneDivider::new(0, 0.5).with_dimensions(6.0, 16.0);
@@ -85,6 +87,7 @@ mod tests {
         assert_eq!(d.hit_zone_height, 16.0);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn divider_hit_test_inside() {
         let d = PaneDivider::new(0, 0.5);
@@ -95,6 +98,7 @@ mod tests {
         assert!(d.hit_test(304.0, 600.0));
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn divider_hit_test_outside() {
         let d = PaneDivider::new(0, 0.5);
@@ -102,6 +106,7 @@ mod tests {
         assert!(!d.hit_test(400.0, 600.0));
     }
 
+    // Clasificación: determinística — verifica divider_rect
     #[test]
     fn divider_rect() {
         let d = PaneDivider::new(0, 0.5);
@@ -113,6 +118,7 @@ mod tests {
         assert_eq!(rect.height, 4.0);
     }
 
+    // Clasificación: determinística — verifica divider_hit_rect
     #[test]
     fn divider_hit_rect() {
         let d = PaneDivider::new(0, 0.5);
@@ -122,6 +128,7 @@ mod tests {
         assert_eq!(rect.height, 12.0);
     }
 
+    // Clasificación: determinística — verifica divider_clone
     #[test]
     fn divider_clone() {
         let d = PaneDivider::new(1, 0.6);

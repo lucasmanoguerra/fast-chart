@@ -128,6 +128,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = BarRenderer::new([1.0; 4], 6.0);
@@ -135,6 +136,7 @@ mod tests {
         assert_eq!(r.tick_width, 6.0);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = BarRenderer::new([1.0; 4], 6.0);
@@ -144,6 +146,7 @@ mod tests {
         assert_eq!(cmds.len(), 3);
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = BarRenderer::new([1.0; 4], 6.0);

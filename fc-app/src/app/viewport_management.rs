@@ -127,6 +127,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica que el constructor produce valores por defecto consistentes
     #[test]
     fn new_has_sensible_defaults() {
         let vm = ViewportManager::new();
@@ -136,6 +137,7 @@ mod tests {
         assert_eq!(vm.max_visible_bars(), 10_000);
     }
 
+    // Clasificación: determinística — verifica apply_zoom_in
     #[test]
     fn apply_zoom_in() {
         let vm = ViewportManager::new();
@@ -146,6 +148,7 @@ mod tests {
         assert_eq!(vp.zoom_level, 2.0);
     }
 
+    // Clasificación: determinística — verifica apply_zoom_out
     #[test]
     fn apply_zoom_out() {
         let vm = ViewportManager::new();
@@ -154,6 +157,7 @@ mod tests {
         assert_eq!(vp.zoom_level, 0.5);
     }
 
+    // Clasificación: determinística — verifica apply_zoom_clamps_to_min
     #[test]
     fn apply_zoom_clamps_to_min() {
         let vm = ViewportManager::new();
@@ -163,6 +167,7 @@ mod tests {
         assert_eq!(vp.zoom_level, vm.min_zoom());
     }
 
+    // Clasificación: determinística — verifica apply_zoom_clamps_to_max
     #[test]
     fn apply_zoom_clamps_to_max() {
         let vm = ViewportManager::new();
@@ -172,6 +177,7 @@ mod tests {
         assert_eq!(vp.zoom_level, vm.max_zoom());
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn apply_pan_forward() {
         let vm = ViewportManager::new();
@@ -181,6 +187,7 @@ mod tests {
         assert_eq!(vp.time_end, 2500);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn apply_pan_backward() {
         let vm = ViewportManager::new();
@@ -190,6 +197,7 @@ mod tests {
         assert_eq!(vp.time_end, 1500);
     }
 
+    // Clasificación: determinística — verifica detección de gesto pan (arrastre con un dedo)
     #[test]
     fn apply_pan_saturates_at_zero() {
         let vm = ViewportManager::new();
@@ -198,6 +206,7 @@ mod tests {
         assert_eq!(vp.time_start, 0);
     }
 
+    // Clasificación: determinística — verifica auto_fit_sets_range
     #[test]
     fn auto_fit_sets_range() {
         let vm = ViewportManager::new();
@@ -217,6 +226,7 @@ mod tests {
         assert!(vp.value_max > 110.0);
     }
 
+    // Clasificación: determinística — verifica auto_fit_empty_bars
     #[test]
     fn auto_fit_empty_bars() {
         let vm = ViewportManager::new();
@@ -227,6 +237,7 @@ mod tests {
         assert_eq!(vp.time_end, 2000);
     }
 
+    // Clasificación: determinística — verifica auto_fit_single_bar
     #[test]
     fn auto_fit_single_bar() {
         let vm = ViewportManager::new();
@@ -237,6 +248,7 @@ mod tests {
         assert_eq!(vp.time_end, 500);
     }
 
+    // Clasificación: determinística — verifica create_time_scale_from_viewport
     #[test]
     fn create_time_scale_from_viewport() {
         let vm = ViewportManager::new();
@@ -247,6 +259,7 @@ mod tests {
         assert_eq!(ts.width, 800.0);
     }
 
+    // Clasificación: determinística — verifica create_linear_scale_from_viewport
     #[test]
     fn create_linear_scale_from_viewport() {
         let vm = ViewportManager::new();
@@ -257,6 +270,7 @@ mod tests {
         assert_eq!(ls.height, 400.0);
     }
 
+    // Clasificación: determinística — verifica zoom_preserves_center
     #[test]
     fn zoom_preserves_center() {
         let vm = ViewportManager::new();
@@ -266,6 +280,7 @@ mod tests {
         assert_eq!(mid, 1500);
     }
 
+    // Clasificación: determinística — verifica scale_roundtrip_after_auto_fit
     #[test]
     fn scale_roundtrip_after_auto_fit() {
         let vm = ViewportManager::new();

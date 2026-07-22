@@ -101,6 +101,7 @@ impl SeriesRenderer for AreaRenderer {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica new_renderer
     #[test]
     fn new_renderer() {
         let r = AreaRenderer::new([1.0, 0.0, 0.0, 1.0], 2.0);
@@ -108,6 +109,7 @@ mod tests {
         assert_eq!(r.width, 2.0);
     }
 
+    // Clasificación: determinística — verifica render_produces_commands
     #[test]
     fn render_produces_commands() {
         let r = AreaRenderer::new([1.0; 4], 1.5);
@@ -122,6 +124,7 @@ mod tests {
         assert_eq!(cmds.len(), 2);
     }
 
+    // Clasificación: determinística — verifica render_empty_data
     #[test]
     fn render_empty_data() {
         let r = AreaRenderer::new([1.0; 4], 1.5);
@@ -130,6 +133,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica render_single_point_produces_nothing
     #[test]
     fn render_single_point_produces_nothing() {
         let r = AreaRenderer::new([1.0; 4], 1.5);
@@ -138,6 +142,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica fill_polygon_is_closed
     #[test]
     fn fill_polygon_is_closed() {
         let r = AreaRenderer::new([1.0; 4], 1.5);

@@ -161,7 +161,7 @@ fn bench_theme_hot_swap(c: &mut Criterion) {
 
     group.bench_function("set_color", |b| {
         b.iter_batched(
-            || ChartTheme::dark(),
+            ChartTheme::dark,
             |mut theme| {
                 theme.set_color(ThemeToken::Bullish, Rgba::rgb(0.0, 1.0, 0.0));
                 theme
@@ -177,7 +177,7 @@ fn bench_theme_hot_swap(c: &mut Criterion) {
 
     group.bench_function("set_all_tokens", |b| {
         b.iter_batched(
-            || ChartTheme::dark(),
+            ChartTheme::dark,
             |mut theme| {
                 let tokens = [
                     ThemeToken::Background,

@@ -127,12 +127,14 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica que el constructor inicializa correctamente el estado
     #[test]
     fn new_cache_is_empty() {
         let cache = AxisCache::new(16);
         assert_eq!(cache.len(), 0);
     }
 
+    // Clasificación: determinística — verifica round-trip insert/get — invariante básico del cache
     #[test]
     fn insert_and_get() {
         let mut cache = AxisCache::new(16);
@@ -142,6 +144,7 @@ mod tests {
         assert_eq!(cache.len(), 1);
     }
 
+    // Clasificación: determinística — edge case: buscar key inexistente no debe panic ni corrompir estado
     #[test]
     fn get_missing_returns_none() {
         let mut cache = AxisCache::new(16);
@@ -149,6 +152,7 @@ mod tests {
         assert!(cache.get(&key).is_none());
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn clear_empties_cache() {
         let mut cache = AxisCache::new(16);
@@ -159,6 +163,7 @@ mod tests {
         assert_eq!(cache.hit_rate(), 0.0);
     }
 
+    // Clasificación: determinística — verifica el cálculo de hit rate — métrica crítica para decisiones de cache
     #[test]
     fn hit_rate_tracks_correctly() {
         let mut cache = AxisCache::new(16);
@@ -169,6 +174,7 @@ mod tests {
         assert!((cache.hit_rate() - 0.5).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica FIFO eviction — al exceder capacidad se elimina la entrada más antigua
     #[test]
     fn eviction_when_full() {
         let mut cache = AxisCache::new(2);

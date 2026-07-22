@@ -217,6 +217,7 @@ impl SeriesRenderer for RangeSeries {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica range_bar_new
     #[test]
     fn range_bar_new() {
         let b = RangeBar::new(1000, 105.0, 100.0, true);
@@ -226,6 +227,7 @@ mod tests {
         assert!(b.bullish);
     }
 
+    // Clasificación: determinística — verifica range_series_new
     #[test]
     fn range_series_new() {
         let s = RangeSeries::new(5.0);
@@ -233,12 +235,14 @@ mod tests {
         assert!((s.range_size - 5.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica range_series_default
     #[test]
     fn range_series_default() {
         let s = RangeSeries::default();
         assert!((s.range_size - 1.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica range_series_set_data
     #[test]
     fn range_series_set_data() {
         let mut s = RangeSeries::new(5.0);
@@ -251,6 +255,7 @@ mod tests {
         assert_eq!(s.data(), &data);
     }
 
+    // Clasificación: determinística — verifica range_series_empty_no_commands
     #[test]
     fn range_series_empty_no_commands() {
         let mut s = RangeSeries::new(5.0);
@@ -258,6 +263,7 @@ mod tests {
         assert!(cmds.is_empty());
     }
 
+    // Clasificación: determinística — verifica range_series_generates_rect_commands
     #[test]
     fn range_series_generates_rect_commands() {
         let mut s = RangeSeries::new(5.0);
@@ -276,6 +282,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica range_series_bullish_bearish_colors
     #[test]
     fn range_series_bullish_bearish_colors() {
         let mut s = RangeSeries::new(5.0);
@@ -297,18 +304,21 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica range_build_empty
     #[test]
     fn range_build_empty() {
         let bars = RangeSeries::build_from_bars(&[], 5.0);
         assert!(bars.is_empty());
     }
 
+    // Clasificación: determinística — verifica range_build_zero_range
     #[test]
     fn range_build_zero_range() {
         let bars = RangeSeries::build_from_bars(&[(100.0, 99.0, 100.5)], 0.0);
         assert!(bars.is_empty());
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn range_series_hit_test() {
         let mut s = RangeSeries::new(5.0);
@@ -323,6 +333,7 @@ mod tests {
         assert!(hit.unwrap().index < 2);
     }
 
+    // Clasificación: determinística — test genérico del comportamiento
     #[test]
     fn range_hit_test_empty() {
         let s = RangeSeries::new(5.0);

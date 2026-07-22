@@ -157,6 +157,7 @@ impl Default for PassTracker {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica pass_order
     #[test]
     fn pass_order() {
         for (i, pass) in RenderPass::ALL.iter().enumerate() {
@@ -164,6 +165,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica pass_z_range
     #[test]
     fn pass_z_range() {
         let bg = RenderPass::Background.z_range();
@@ -176,6 +178,7 @@ mod tests {
         assert_eq!(debug, (11000, 11999));
     }
 
+    // Clasificación: determinística — verifica pass_names
     #[test]
     fn pass_names() {
         assert_eq!(RenderPass::Background.name(), "Background");
@@ -184,12 +187,14 @@ mod tests {
         assert_eq!(RenderPass::Debug.name(), "Debug");
     }
 
+    // Clasificación: determinística — verifica pass_display
     #[test]
     fn pass_display() {
         assert_eq!(RenderPass::Crosshair.to_string(), "Crosshair");
         assert_eq!(RenderPass::Tooltip.to_string(), "Tooltip");
     }
 
+    // Clasificación: determinística — verifica pass_skippable
     #[test]
     fn pass_skippable() {
         assert!(RenderPass::Session.is_skippable());
@@ -197,6 +202,7 @@ mod tests {
         assert!(RenderPass::Debug.is_skippable());
     }
 
+    // Clasificación: determinística — verifica pass_is_not_skippable
     #[test]
     fn pass_is_not_skippable() {
         assert!(!RenderPass::Background.is_skippable());
@@ -204,6 +210,7 @@ mod tests {
         assert!(!RenderPass::Series.is_skippable());
     }
 
+    // Clasificación: determinística — verifica pass_tracker_new
     #[test]
     fn pass_tracker_new() {
         let tracker = PassTracker::new();
@@ -213,6 +220,7 @@ mod tests {
         }
     }
 
+    // Clasificación: determinística — verifica pass_tracker_disable
     #[test]
     fn pass_tracker_disable() {
         let mut tracker = PassTracker::new();
@@ -221,6 +229,7 @@ mod tests {
         assert!(tracker.is_enabled(RenderPass::Series));
     }
 
+    // Clasificación: determinística — verifica pass_tracker_mark_dirty
     #[test]
     fn pass_tracker_mark_dirty() {
         let mut tracker = PassTracker::new();
@@ -230,6 +239,7 @@ mod tests {
         assert!(tracker.is_dirty(RenderPass::Indicator));
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn pass_tracker_clear_dirty() {
         let mut tracker = PassTracker::new();
@@ -238,6 +248,7 @@ mod tests {
         assert!(!tracker.is_dirty(RenderPass::Drawing));
     }
 
+    // Clasificación: determinística — verifica pass_tracker_passes_to_execute
     #[test]
     fn pass_tracker_passes_to_execute() {
         let mut tracker = PassTracker::new();
@@ -253,6 +264,7 @@ mod tests {
         assert!(passes.contains(&RenderPass::Series));
     }
 
+    // Clasificación: determinística — verifica pass_tracker_mark_all_dirty
     #[test]
     fn pass_tracker_mark_all_dirty() {
         let mut tracker = PassTracker::new();

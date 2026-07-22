@@ -51,12 +51,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica sma_name
     #[test]
     fn sma_name() {
         let sma = Sma { period: 10 };
         assert_eq!(sma.name(), "SMA");
     }
 
+    // Clasificación: determinística — verifica sma_insufficient_data
     #[test]
     fn sma_insufficient_data() {
         let bars = make_bars(5);
@@ -65,6 +67,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica sma_basic
     #[test]
     fn sma_basic() {
         let bars = make_bars(50);
@@ -74,6 +77,7 @@ mod tests {
         assert!(result.iter().all(|v| *v > 0.0));
     }
 
+    // Clasificación: determinística — verifica sma_exact_period
     #[test]
     fn sma_exact_period() {
         let bars = make_bars(10);
@@ -82,6 +86,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica sma_single_period_rolling
     #[test]
     fn sma_single_period_rolling() {
         let bars = make_bars(5);

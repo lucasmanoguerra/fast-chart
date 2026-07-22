@@ -142,6 +142,7 @@ impl DirtyRegionTracker {
 mod tests {
     use super::*;
 
+    // Clasificación: determinística — verifica dirty_tracker_new
     #[test]
     fn dirty_tracker_new() {
         let tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -149,6 +150,7 @@ mod tests {
         assert!(!tracker.is_dirty(RenderPass::Grid));
     }
 
+    // Clasificación: determinística — verifica mark_dirty_single
     #[test]
     fn mark_dirty_single() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -158,6 +160,7 @@ mod tests {
         assert_eq!(tracker.dirty_regions(RenderPass::Grid).len(), 1);
     }
 
+    // Clasificación: determinística — verifica mark_dirty_multiple
     #[test]
     fn mark_dirty_multiple() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -168,6 +171,7 @@ mod tests {
         assert_eq!(tracker.dirty_regions(RenderPass::Series).len(), 2);
     }
 
+    // Clasificación: determinística — verifica mark_full_dirty
     #[test]
     fn mark_full_dirty() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -178,6 +182,7 @@ mod tests {
         assert_eq!(regions[0].rect, ScreenRect::full(800.0, 600.0));
     }
 
+    // Clasificación: determinística — verifica merged_rect_single
     #[test]
     fn merged_rect_single() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -187,6 +192,7 @@ mod tests {
         assert_eq!(merged, Some(rect));
     }
 
+    // Clasificación: determinística — verifica merged_rect_multiple
     #[test]
     fn merged_rect_multiple() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -198,6 +204,7 @@ mod tests {
         assert_eq!(merged, ScreenRect::new(0.0, 0.0, 250.0, 250.0));
     }
 
+    // Clasificación: determinística — verifica needs_redraw
     #[test]
     fn needs_redraw() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -207,6 +214,7 @@ mod tests {
         assert!(!tracker.needs_redraw(RenderPass::Series, &ScreenRect::new(50.0, 50.0, 10.0, 10.0)));
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn clear_pass() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);
@@ -217,6 +225,7 @@ mod tests {
         assert!(tracker.is_dirty(RenderPass::Series));
     }
 
+    // Clasificación: determinística — verifica que clear() resetea completamente el estado y las estadísticas
     #[test]
     fn clear_all() {
         let mut tracker = DirtyRegionTracker::new(800.0, 600.0);

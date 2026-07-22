@@ -164,12 +164,14 @@ mod tests {
         s
     }
 
+    // Clasificación: determinística — verifica name_returns_correct_string
     #[test]
     fn name_returns_correct_string() {
         let st = Supertrend::default();
         assert_eq!(st.name(), "SuperTrend");
     }
 
+    // Clasificación: determinística — verifica default_values
     #[test]
     fn default_values() {
         let st = Supertrend::default();
@@ -177,6 +179,7 @@ mod tests {
         assert!((st.multiplier - 3.0).abs() < f64::EPSILON);
     }
 
+    // Clasificación: determinística — verifica insufficient_data
     #[test]
     fn insufficient_data() {
         let bars = make_bars(10); // period + 1 = 11 needed
@@ -185,6 +188,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
+    // Clasificación: determinística — verifica exact_period_plus_one
     #[test]
     fn exact_period_plus_one() {
         // Exactly period + 1 bars → 1 output value
@@ -194,6 +198,7 @@ mod tests {
         assert_eq!(result.len(), 1);
     }
 
+    // Clasificación: determinística — verifica basic_output_count
     #[test]
     fn basic_output_count() {
         let bars = make_bars(50);
@@ -203,6 +208,7 @@ mod tests {
         assert_eq!(result.len(), 40);
     }
 
+    // Clasificación: determinística — verifica output_values_are_positive
     #[test]
     fn output_values_are_positive() {
         let bars = make_bars(100);
@@ -211,6 +217,7 @@ mod tests {
         assert!(result.iter().all(|v| *v > 0.0));
     }
 
+    // Clasificación: determinística — verifica trend_reversal
     #[test]
     fn trend_reversal() {
         // Create bars that go up then down to trigger a reversal
@@ -251,6 +258,7 @@ mod tests {
         assert_ne!(first, last);
     }
 
+    // Clasificación: determinística — verifica flat_prices
     #[test]
     fn flat_prices() {
         let mut series: TimeSeries<Bar, MAX_SERIES_LEN> = TimeSeries::new();
@@ -271,6 +279,7 @@ mod tests {
         assert!(result.iter().all(|v| *v > 0.0));
     }
 
+    // Clasificación: determinística — verifica single_bar
     #[test]
     fn single_bar() {
         let bars = make_bars(1);
